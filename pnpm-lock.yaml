@@ -108,7 +108,7 @@ importers:
     dependencies:
       '@codeany/open-agent-sdk':
         specifier: github:Nicander93/open-agent-sdk-typescript#main
-        version: git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#a074bf16a070d7fc1f6b5a9a45ac4897af26fec9
+        version: git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#66e9299e2721dc294acddc33b7560bfe0c5ef672
       '@desktop-agent/shared':
         specifier: workspace:*
         version: link:../shared
@@ -228,8 +228,8 @@ packages:
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
 
-  '@codeany/open-agent-sdk@git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#a074bf16a070d7fc1f6b5a9a45ac4897af26fec9':
-    resolution: {commit: a074bf16a070d7fc1f6b5a9a45ac4897af26fec9, repo: git@github.com:Nicander93/open-agent-sdk-typescript.git, type: git}
+  '@codeany/open-agent-sdk@git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#66e9299e2721dc294acddc33b7560bfe0c5ef672':
+    resolution: {commit: 66e9299e2721dc294acddc33b7560bfe0c5ef672, repo: git@github.com:Nicander93/open-agent-sdk-typescript.git, type: git}
     version: 0.2.0
     engines: {node: '>=18.0.0'}
 
@@ -2118,7 +2118,7 @@ snapshots:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
 
-  '@codeany/open-agent-sdk@git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#a074bf16a070d7fc1f6b5a9a45ac4897af26fec9':
+  '@codeany/open-agent-sdk@git+ssh://git@github.com/Nicander93/open-agent-sdk-typescript.git#66e9299e2721dc294acddc33b7560bfe0c5ef672':
     dependencies:
       '@anthropic-ai/sdk': 0.52.0
       '@modelcontextprotocol/sdk': 1.29.0(zod@3.25.76)
