@@ -1,0 +1,3687 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "desktop-agent",
+    "languages": [
+      "typescript",
+      "json",
+      "html",
+      "css",
+      "yaml",
+      "javascript",
+      "markdown"
+    ],
+    "frameworks": [
+      "electron",
+      "react",
+      "vite",
+      "zustand"
+    ],
+    "description": "Desktop Agent - AI桌面工作助手，基于 Electron 的 AI agent 桌面应用",
+    "analyzedAt": "2026-06-19T12:10:32.838Z",
+    "gitCommitHash": "6ae65d2fa64f33a06b0a90624f71bb6fc6cedd11"
+  },
+  "nodes": [
+    {
+      "id": "file:apps/renderer/index.html",
+      "type": "document",
+      "name": "index.html",
+      "summary": "Entry HTML file for the Desktop Agent renderer process, mounting a React app into a #root div.",
+      "tags": [
+        "html",
+        "entrypoint",
+        "renderer"
+      ],
+      "filePath": "apps/renderer/index.html",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/package.json",
+      "type": "config",
+      "name": "package.json",
+      "summary": "Package configuration for @desktop-agent/renderer, a React 19 app using Vite, Tailwind CSS 4, and Zustand for state management.",
+      "tags": [
+        "config",
+        "dependencies",
+        "scripts"
+      ],
+      "filePath": "apps/renderer/package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "summary": "TypeScript configuration extending base config, targeting React JSX with path aliases for src/ and references to the shared package.",
+      "tags": [
+        "config",
+        "typescript",
+        "jsx"
+      ],
+      "filePath": "apps/renderer/tsconfig.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "summary": "Root monorepo package manifest for desktop-agent. Defines project metadata, build/dev/test/lint scripts orchestrating multiple workspace packages, and shared dev dependencies (TypeScript, ESLint, Vitest, Prettier, concurrently).",
+      "tags": [
+        "monorepo",
+        "root-config",
+        "scripts",
+        "dev-dependencies"
+      ],
+      "filePath": "package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:pnpm-workspace.yaml",
+      "type": "config",
+      "name": "pnpm-workspace.yaml",
+      "summary": "PNPM workspace definition declaring apps/ and packages/ as workspace directories, with allowBuilds for esbuild and electron.",
+      "tags": [
+        "workspace",
+        "pnpm",
+        "monorepo",
+        "build-permissions"
+      ],
+      "filePath": "pnpm-workspace.yaml",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:tsconfig.base.json",
+      "type": "config",
+      "name": "tsconfig.base.json",
+      "summary": "Shared base TypeScript configuration targeting ES2022 with ESNext modules, bundler resolution, strict mode, and standard build artifacts (declarations, source maps).",
+      "tags": [
+        "typescript",
+        "compiler-options",
+        "strict",
+        "base-config"
+      ],
+      "filePath": "tsconfig.base.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.npmrc",
+      "type": "config",
+      "name": ".npmrc",
+      "summary": "NPM 配置文件，设置 Electron 二进制下载镜像为 npmmirror.com",
+      "tags": [
+        "npm",
+        "config",
+        "electron",
+        "mirror"
+      ],
+      "filePath": ".npmrc",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.understand-anything/.understandignore",
+      "type": "config",
+      "name": ".understandignore",
+      "summary": "代码分析工具的排除配置文件，支持 .gitignore 语法排除文件和目录",
+      "tags": [
+        "config",
+        "analysis",
+        "ignore"
+      ],
+      "filePath": ".understand-anything/.understandignore",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.understand-anything/config.json",
+      "type": "config",
+      "name": "understand-anything config",
+      "summary": "代码分析工具配置文件，输出语言设置为中文(zh)",
+      "tags": [
+        "config",
+        "analysis",
+        "language"
+      ],
+      "filePath": ".understand-anything/config.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/electron/electron.vite.config.ts",
+      "type": "config",
+      "name": "electron.vite.config",
+      "summary": "Electron-Vite 构建配置，定义 main 和 preload 两个构建目标，输出为 CJS 格式",
+      "tags": [
+        "config",
+        "vite",
+        "electron",
+        "build"
+      ],
+      "filePath": "apps/electron/electron.vite.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/electron/package.json",
+      "type": "config",
+      "name": "electron package.json",
+      "summary": "Electron 主进程包配置，依赖 agent-runtime、shared、tools 工作区包，使用 electron-vite 构建",
+      "tags": [
+        "config",
+        "package",
+        "electron",
+        "workspace"
+      ],
+      "filePath": "apps/electron/package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/electron/src/loadEnvFile.ts",
+      "type": "module",
+      "name": "loadEnvFile",
+      "summary": "环境变量文件加载器，解析 .env 文件格式并注入 process.env，支持多路径加载和 export 前缀",
+      "tags": [
+        "env",
+        "utility",
+        "config",
+        "dotenv"
+      ],
+      "filePath": "apps/electron/src/loadEnvFile.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/loadEnvFile.ts:parseEnvLine",
+      "type": "function",
+      "name": "parseEnvLine",
+      "summary": "解析单行 .env 文件内容，支持注释、export 前缀、引号包裹的值",
+      "tags": [
+        "env",
+        "parser",
+        "utility"
+      ],
+      "filePath": "apps/electron/src/loadEnvFile.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/loadEnvFile.ts:loadEnvFile",
+      "type": "function",
+      "name": "loadEnvFile",
+      "summary": "从多个路径加载 .env 文件，将环境变量注入 process.env（不覆盖已存在的值）",
+      "tags": [
+        "env",
+        "loader",
+        "utility"
+      ],
+      "filePath": "apps/electron/src/loadEnvFile.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/loadEnvFile.ts:loadProjectEnv",
+      "type": "function",
+      "name": "loadProjectEnv",
+      "summary": "加载项目级环境变量，依次尝试项目根目录、apps/electron 和 cwd 下的 .env 文件",
+      "tags": [
+        "env",
+        "project",
+        "utility"
+      ],
+      "filePath": "apps/electron/src/loadEnvFile.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/electron/src/main.ts",
+      "type": "module",
+      "name": "main",
+      "summary": "Electron 主进程入口，创建 BrowserWindow、初始化 AgentRuntime，处理 IPC 通信（会话创建、消息发送、流式响应）",
+      "tags": [
+        "electron",
+        "main-process",
+        "ipc",
+        "agent-runtime",
+        "entry-point"
+      ],
+      "filePath": "apps/electron/src/main.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/main.ts:readEnv",
+      "type": "function",
+      "name": "readEnv",
+      "summary": "读取环境变量，支持原始名称和 MAIN_VITE_ 前缀两种格式",
+      "tags": [
+        "env",
+        "utility"
+      ],
+      "filePath": "apps/electron/src/main.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/main.ts:createRuntime",
+      "type": "function",
+      "name": "createRuntime",
+      "summary": "从环境变量读取 API 配置并创建 AgentRuntime 实例",
+      "tags": [
+        "agent-runtime",
+        "initialization"
+      ],
+      "filePath": "apps/electron/src/main.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/main.ts:createWindow",
+      "type": "function",
+      "name": "createWindow",
+      "summary": "创建 Electron 主窗口，开发模式加载 localhost，生产模式加载本地 HTML 文件",
+      "tags": [
+        "electron",
+        "window",
+        "ui"
+      ],
+      "filePath": "apps/electron/src/main.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/electron/src/main.ts:getAgentErrorFromMessages",
+      "type": "function",
+      "name": "getAgentErrorFromMessages",
+      "summary": "从 Agent 响应消息中提取错误信息，处理 API Key 缺失、请求失败等场景",
+      "tags": [
+        "error-handling",
+        "agent"
+      ],
+      "filePath": "apps/electron/src/main.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/electron/src/preload.ts",
+      "type": "module",
+      "name": "preload",
+      "summary": "Electron preload 脚本，通过 contextBridge 暴露安全的 electronAPI 给渲染进程",
+      "tags": [
+        "electron",
+        "preload",
+        "ipc",
+        "context-bridge"
+      ],
+      "filePath": "apps/electron/src/preload.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/electron/tsconfig.json",
+      "type": "config",
+      "name": "electron tsconfig",
+      "summary": "TypeScript 编译配置，继承基础配置，引用 shared、tools、agent-runtime 包",
+      "tags": [
+        "config",
+        "typescript",
+        "electron"
+      ],
+      "filePath": "apps/electron/tsconfig.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/electron/vitest.config.ts",
+      "type": "config",
+      "name": "vitest config",
+      "summary": "Vitest 测试框架配置，启用全局 API 和 Node 环境",
+      "tags": [
+        "config",
+        "vitest",
+        "testing"
+      ],
+      "filePath": "apps/electron/vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/App.tsx",
+      "type": "module",
+      "name": "App",
+      "summary": "React 应用根组件，使用 RouterProvider 提供路由",
+      "tags": [
+        "react",
+        "root-component",
+        "router"
+      ],
+      "filePath": "apps/renderer/src/App.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/App.tsx:App",
+      "type": "function",
+      "name": "App",
+      "summary": "应用根组件，渲染 RouterProvider",
+      "tags": [
+        "react",
+        "component",
+        "root"
+      ],
+      "filePath": "apps/renderer/src/App.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/chat/ChatInput.tsx",
+      "type": "module",
+      "name": "ChatInput",
+      "summary": "聊天输入组件，支持自动调整高度、Enter 发送、Shift+Enter 换行，读取 isProcessing 状态",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "input"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ChatInput.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/ChatInput.tsx:ChatInput",
+      "type": "function",
+      "name": "ChatInput",
+      "summary": "聊天输入组件，包含 textarea 和发送按钮",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "input"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ChatInput.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/chat/ChatPanel.tsx",
+      "type": "module",
+      "name": "ChatPanel",
+      "summary": "聊天面板容器组件，组合 Header、MessageList、ChatInput，使用 useAgent hook 获取 sendMessage",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "panel"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ChatPanel.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "type": "function",
+      "name": "ChatPanel",
+      "summary": "聊天面板组件，组合头部、消息列表和输入框",
+      "tags": [
+        "react",
+        "component",
+        "chat"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ChatPanel.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/chat/MessageItem.tsx",
+      "type": "module",
+      "name": "MessageItem",
+      "summary": "单条消息渲染组件，区分用户消息（右对齐蓝色气泡）和 AI 消息（左侧文本+工具调用卡片）",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "message"
+      ],
+      "filePath": "apps/renderer/src/components/chat/MessageItem.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/MessageItem.tsx:MessageItem",
+      "type": "function",
+      "name": "MessageItem",
+      "summary": "渲染单条消息，根据 role 切换用户/AI 布局",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "message"
+      ],
+      "filePath": "apps/renderer/src/components/chat/MessageItem.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/chat/MessageList.tsx",
+      "type": "module",
+      "name": "MessageList",
+      "summary": "消息列表组件，自动滚动到底部，空状态显示欢迎提示",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "message-list"
+      ],
+      "filePath": "apps/renderer/src/components/chat/MessageList.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/MessageList.tsx:MessageList",
+      "type": "function",
+      "name": "MessageList",
+      "summary": "消息列表组件，读取 messages 和 isProcessing 状态",
+      "tags": [
+        "react",
+        "component",
+        "chat"
+      ],
+      "filePath": "apps/renderer/src/components/chat/MessageList.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "type": "module",
+      "name": "ToolCallCard",
+      "summary": "工具调用卡片组件，展示工具名称和执行状态（等待/执行中/完成/失败），可点击查看详情",
+      "tags": [
+        "react",
+        "component",
+        "chat",
+        "tool-call"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:ToolCallCard",
+      "type": "function",
+      "name": "ToolCallCard",
+      "summary": "工具调用卡片组件，根据 status 显示不同状态图标和文字",
+      "tags": [
+        "react",
+        "component",
+        "tool-call"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusIcon",
+      "type": "function",
+      "name": "getStatusIcon",
+      "summary": "根据工具调用状态返回对应的 lucide-react 图标",
+      "tags": [
+        "utility",
+        "icon"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusText",
+      "type": "function",
+      "name": "getStatusText",
+      "summary": "根据工具调用状态返回中文状态文字",
+      "tags": [
+        "utility",
+        "i18n"
+      ],
+      "filePath": "apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/layout/AppLayout.tsx",
+      "type": "module",
+      "name": "AppLayout",
+      "summary": "应用布局组件，左侧 NavSidebar + 右侧内容区（通过 Outlet 渲染子路由）",
+      "tags": [
+        "react",
+        "component",
+        "layout",
+        "router"
+      ],
+      "filePath": "apps/renderer/src/components/layout/AppLayout.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/layout/AppLayout.tsx:AppLayout",
+      "type": "function",
+      "name": "AppLayout",
+      "summary": "布局组件，读取 sidebarCollapsed 状态",
+      "tags": [
+        "react",
+        "component",
+        "layout"
+      ],
+      "filePath": "apps/renderer/src/components/layout/AppLayout.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/layout/Header.tsx",
+      "type": "module",
+      "name": "Header",
+      "summary": "页面头部组件，显示标题和工具面板切换按钮",
+      "tags": [
+        "react",
+        "component",
+        "layout",
+        "header"
+      ],
+      "filePath": "apps/renderer/src/components/layout/Header.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/layout/Header.tsx:Header",
+      "type": "function",
+      "name": "Header",
+      "summary": "头部组件，读取 toolPanelVisible 和 toggleToolPanel",
+      "tags": [
+        "react",
+        "component",
+        "header"
+      ],
+      "filePath": "apps/renderer/src/components/layout/Header.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/layout/NavSidebar.tsx",
+      "type": "module",
+      "name": "NavSidebar",
+      "summary": "导航侧边栏组件，包含导航链接（新对话/搜索/插件/自动化）、会话列表、设置入口和折叠按钮",
+      "tags": [
+        "react",
+        "component",
+        "layout",
+        "sidebar",
+        "navigation"
+      ],
+      "filePath": "apps/renderer/src/components/layout/NavSidebar.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/layout/NavSidebar.tsx:NavSidebar",
+      "type": "function",
+      "name": "NavSidebar",
+      "summary": "导航侧边栏组件，读取 sidebarCollapsed、sessions、currentSessionId 等状态",
+      "tags": [
+        "react",
+        "component",
+        "sidebar",
+        "navigation"
+      ],
+      "filePath": "apps/renderer/src/components/layout/NavSidebar.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/settings/GeneralSettings.tsx",
+      "type": "module",
+      "name": "GeneralSettings",
+      "summary": "通用设置页面组件，包含语言选择、主题选择和工作目录配置",
+      "tags": [
+        "react",
+        "component",
+        "settings",
+        "general"
+      ],
+      "filePath": "apps/renderer/src/components/settings/GeneralSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/GeneralSettings.tsx:GeneralSettings",
+      "type": "function",
+      "name": "GeneralSettings",
+      "summary": "通用设置组件，渲染语言、主题、工作目录表单",
+      "tags": [
+        "react",
+        "component",
+        "settings"
+      ],
+      "filePath": "apps/renderer/src/components/settings/GeneralSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/settings/McpSettings.tsx",
+      "type": "module",
+      "name": "McpSettings",
+      "summary": "MCP 服务器设置页面组件，支持添加/删除/启停 MCP 服务器（本地 stdio 或远程 SSE）",
+      "tags": [
+        "react",
+        "component",
+        "settings",
+        "mcp",
+        "server"
+      ],
+      "filePath": "apps/renderer/src/components/settings/McpSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/McpSettings.tsx:McpSettings",
+      "type": "function",
+      "name": "McpSettings",
+      "summary": "MCP 设置组件，管理服务器列表状态（添加/删除/切换）",
+      "tags": [
+        "react",
+        "component",
+        "settings",
+        "mcp"
+      ],
+      "filePath": "apps/renderer/src/components/settings/McpSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/McpSettings.tsx:addServer",
+      "type": "function",
+      "name": "addServer",
+      "summary": "向 MCP 服务器列表添加新的空服务器配置",
+      "tags": [
+        "utility",
+        "mcp"
+      ],
+      "filePath": "apps/renderer/src/components/settings/McpSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/McpSettings.tsx:removeServer",
+      "type": "function",
+      "name": "removeServer",
+      "summary": "根据 ID 从 MCP 服务器列表中移除服务器",
+      "tags": [
+        "utility",
+        "mcp"
+      ],
+      "filePath": "apps/renderer/src/components/settings/McpSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/McpSettings.tsx:toggleServer",
+      "type": "function",
+      "name": "toggleServer",
+      "summary": "切换 MCP 服务器的启用/禁用状态",
+      "tags": [
+        "utility",
+        "mcp"
+      ],
+      "filePath": "apps/renderer/src/components/settings/McpSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+      "type": "module",
+      "name": "ModelSettings",
+      "summary": "模型配置设置页面组件，支持添加/删除模型配置（provider + API Key + model 名称）",
+      "tags": [
+        "react",
+        "component",
+        "settings",
+        "model",
+        "api"
+      ],
+      "filePath": "apps/renderer/src/components/settings/ModelSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/ModelSettings.tsx:ModelSettings",
+      "type": "function",
+      "name": "ModelSettings",
+      "summary": "模型设置组件，管理模型配置列表（添加/删除）",
+      "tags": [
+        "react",
+        "component",
+        "settings",
+        "model"
+      ],
+      "filePath": "apps/renderer/src/components/settings/ModelSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/ModelSettings.tsx:addModel",
+      "type": "function",
+      "name": "addModel",
+      "summary": "向模型配置列表添加新的空模型配置",
+      "tags": [
+        "utility",
+        "model"
+      ],
+      "filePath": "apps/renderer/src/components/settings/ModelSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/settings/ModelSettings.tsx:removeModel",
+      "type": "function",
+      "name": "removeModel",
+      "summary": "根据 ID 从模型配置列表中移除模型",
+      "tags": [
+        "utility",
+        "model"
+      ],
+      "filePath": "apps/renderer/src/components/settings/ModelSettings.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/tools/DiffView.tsx",
+      "type": "module",
+      "name": "DiffView",
+      "summary": "Diff 对比视图占位组件，等待 Agent 修改文件后显示文件差异",
+      "tags": [
+        "react",
+        "component",
+        "tools",
+        "diff"
+      ],
+      "filePath": "apps/renderer/src/components/tools/DiffView.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/tools/DiffView.tsx:DiffView",
+      "type": "function",
+      "name": "DiffView",
+      "summary": "Diff 视图组件，当前显示空状态占位",
+      "tags": [
+        "react",
+        "component",
+        "diff"
+      ],
+      "filePath": "apps/renderer/src/components/tools/DiffView.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/tools/FilePreview.tsx",
+      "type": "module",
+      "name": "FilePreview",
+      "summary": "文件预览组件，根据 selectedFile 显示文件内容预览（当前为模拟数据）",
+      "tags": [
+        "react",
+        "component",
+        "tools",
+        "file",
+        "preview"
+      ],
+      "filePath": "apps/renderer/src/components/tools/FilePreview.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/tools/FilePreview.tsx:FilePreview",
+      "type": "function",
+      "name": "FilePreview",
+      "summary": "文件预览组件，读取 selectedFile 状态显示预览内容",
+      "tags": [
+        "react",
+        "component",
+        "file-preview"
+      ],
+      "filePath": "apps/renderer/src/components/tools/FilePreview.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/tools/ToolHistory.tsx",
+      "type": "module",
+      "name": "ToolHistory",
+      "summary": "工具调用历史组件，汇总所有消息中的工具调用，按 ID 倒序显示状态和输入摘要",
+      "tags": [
+        "react",
+        "component",
+        "tools",
+        "history",
+        "tool-call"
+      ],
+      "filePath": "apps/renderer/src/components/tools/ToolHistory.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/tools/ToolHistory.tsx:ToolHistory",
+      "type": "function",
+      "name": "ToolHistory",
+      "summary": "工具历史组件，从 messages 中提取并展示所有工具调用记录",
+      "tags": [
+        "react",
+        "component",
+        "tool-history"
+      ],
+      "filePath": "apps/renderer/src/components/tools/ToolHistory.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/tools/ToolHistory.tsx:getStatusIcon",
+      "type": "function",
+      "name": "getStatusIcon",
+      "summary": "根据工具调用状态返回对应图标组件",
+      "tags": [
+        "utility",
+        "icon"
+      ],
+      "filePath": "apps/renderer/src/components/tools/ToolHistory.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "type": "file",
+      "name": "ToolPanel.tsx",
+      "summary": "Side panel component with tabs for file preview, tool call history, and diff view. Controlled by UI store for visibility and active tab state.",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "tool-panel"
+      ],
+      "filePath": "apps/renderer/src/components/tools/ToolPanel.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "type": "function",
+      "name": "ToolPanel",
+      "summary": "React component rendering a collapsible side panel with three tabs (preview, history, diff) using Tab, Button, ScrollArea, FilePreview, ToolHistory, and DiffView sub-components.",
+      "tags": [
+        "component",
+        "export",
+        "side-panel"
+      ],
+      "filePath": "apps/renderer/src/components/tools/ToolPanel.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "type": "file",
+      "name": "avatar.tsx",
+      "summary": "Avatar UI primitive component providing Avatar container and AvatarFallback for displaying user/system avatars with circular styling.",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/avatar.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/avatar.tsx:Avatar",
+      "type": "function",
+      "name": "Avatar",
+      "summary": "Forwarded-ref div component rendering a circular avatar container with overflow hidden.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/avatar.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/avatar.tsx:AvatarFallback",
+      "type": "function",
+      "name": "AvatarFallback",
+      "summary": "Forwarded-ref div component rendering a centered fallback element inside an avatar (gray background, rounded).",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/avatar.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/badge.tsx",
+      "type": "file",
+      "name": "badge.tsx",
+      "summary": "Badge UI component with variant support (default, secondary, destructive, outline) using class-variance-authority for styling.",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive",
+        "cva"
+      ],
+      "filePath": "apps/renderer/src/components/ui/badge.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/badge.tsx:Badge",
+      "type": "function",
+      "name": "Badge",
+      "summary": "Badge component rendering a styled inline-flex div with variant-based color classes via cva.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/badge.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/button.tsx",
+      "type": "file",
+      "name": "button.tsx",
+      "summary": "Button UI component with multiple variants (default, destructive, outline, secondary, ghost, link) and sizes (default, sm, lg, icon) using class-variance-authority.",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive",
+        "cva"
+      ],
+      "filePath": "apps/renderer/src/components/ui/button.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "type": "function",
+      "name": "Button",
+      "summary": "Forwarded-ref button component applying cva-based variant and size classes with Tailwind CSS styling.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/button.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/input.tsx",
+      "type": "file",
+      "name": "input.tsx",
+      "summary": "Input UI component wrapping a native input element with consistent styling (border, focus ring, disabled state).",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/input.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/input.tsx:Input",
+      "type": "function",
+      "name": "Input",
+      "summary": "Forwarded-ref input component with Tailwind CSS classes for border, padding, focus ring, and disabled states.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/input.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "type": "file",
+      "name": "scroll-area.tsx",
+      "summary": "ScrollArea UI component providing a simple overflow-auto div wrapper for scrollable content areas.",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/scroll-area.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "type": "function",
+      "name": "ScrollArea",
+      "summary": "Forwarded-ref div component rendering a relative-positioned overflow-auto container with optional orientation prop.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/scroll-area.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/components/ui/textarea.tsx",
+      "type": "file",
+      "name": "textarea.tsx",
+      "summary": "Textarea UI component wrapping a native textarea with consistent styling (border, padding, focus ring, disabled state).",
+      "tags": [
+        "react",
+        "component",
+        "ui",
+        "primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/textarea.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/components/ui/textarea.tsx:Textarea",
+      "type": "function",
+      "name": "Textarea",
+      "summary": "Forwarded-ref textarea component with Tailwind CSS classes for border, padding, focus ring, min-height, and disabled states.",
+      "tags": [
+        "component",
+        "export",
+        "ui-primitive"
+      ],
+      "filePath": "apps/renderer/src/components/ui/textarea.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/hooks/useAgent.ts",
+      "type": "file",
+      "name": "useAgent.ts",
+      "summary": "Custom React hook managing agent session lifecycle and message communication via Electron IPC. Handles session creation, message sending with streaming support, and error handling.",
+      "tags": [
+        "react",
+        "hook",
+        "electron",
+        "ipc",
+        "agent",
+        "streaming"
+      ],
+      "filePath": "apps/renderer/src/hooks/useAgent.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "type": "function",
+      "name": "useAgent",
+      "summary": "Custom hook returning createSession, sendMessage, closeSession functions. Manages streaming message updates via electronAPI.agent.onStreamMessage, creates placeholder assistant messages, and handles error states.",
+      "tags": [
+        "hook",
+        "export",
+        "agent",
+        "ipc",
+        "streaming"
+      ],
+      "filePath": "apps/renderer/src/hooks/useAgent.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/hooks/useAgent.ts:createId",
+      "type": "function",
+      "name": "createId",
+      "summary": "Generates a random 13-character alphanumeric ID for messages and sessions.",
+      "tags": [
+        "utility",
+        "internal"
+      ],
+      "filePath": "apps/renderer/src/hooks/useAgent.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/lib/agentMessage.ts",
+      "type": "file",
+      "name": "agentMessage.ts",
+      "summary": "Utility module for parsing agent SDK messages. Extracts text from streaming partial messages, assistant messages, and result messages. Handles error detection and hint mapping.",
+      "tags": [
+        "utility",
+        "parser",
+        "agent",
+        "message"
+      ],
+      "filePath": "apps/renderer/src/lib/agentMessage.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/lib/agentMessage.ts:extractStreamText",
+      "type": "function",
+      "name": "extractStreamText",
+      "summary": "Extracts text from a streaming message object. Handles partial_message (text delta) and assistant message types, appending to currentContent.",
+      "tags": [
+        "utility",
+        "export",
+        "streaming",
+        "parser"
+      ],
+      "filePath": "apps/renderer/src/lib/agentMessage.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/lib/agentMessage.ts:parseMessageContent",
+      "type": "function",
+      "name": "parseMessageContent",
+      "summary": "Parses message content from string or array of text blocks into a single string.",
+      "tags": [
+        "utility",
+        "export",
+        "parser"
+      ],
+      "filePath": "apps/renderer/src/lib/agentMessage.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "type": "function",
+      "name": "analyzeAgentMessages",
+      "summary": "Analyzes an array of SDK messages, extracting the assistant text and any errors. Handles result messages with error subtypes and error hint mapping.",
+      "tags": [
+        "utility",
+        "export",
+        "parser",
+        "error-handling"
+      ],
+      "filePath": "apps/renderer/src/lib/agentMessage.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/lib/agentMessage.ts:extractAssistantText",
+      "type": "function",
+      "name": "extractAssistantText",
+      "summary": "Convenience wrapper returning only the text portion from analyzeAgentMessages.",
+      "tags": [
+        "utility",
+        "export",
+        "parser"
+      ],
+      "filePath": "apps/renderer/src/lib/agentMessage.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/lib/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "summary": "Shared utility module exporting the cn() function for merging Tailwind CSS class names using clsx and tailwind-merge.",
+      "tags": [
+        "utility",
+        "css",
+        "tailwind"
+      ],
+      "filePath": "apps/renderer/src/lib/utils.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "function",
+      "name": "cn",
+      "summary": "Merges class names using clsx and tailwind-merge, resolving Tailwind CSS class conflicts.",
+      "tags": [
+        "utility",
+        "export",
+        "css"
+      ],
+      "filePath": "apps/renderer/src/lib/utils.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/main.tsx",
+      "type": "file",
+      "name": "main.tsx",
+      "summary": "Application entry point. Creates React root and renders the App component inside StrictMode.",
+      "tags": [
+        "entry-point",
+        "react",
+        "bootstrap"
+      ],
+      "filePath": "apps/renderer/src/main.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "type": "file",
+      "name": "ChatPage.tsx",
+      "summary": "Main chat page layout component. Renders ChatPanel and conditionally shows ToolPanel based on UI store visibility state.",
+      "tags": [
+        "react",
+        "component",
+        "page",
+        "layout"
+      ],
+      "filePath": "apps/renderer/src/pages/ChatPage.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/pages/ChatPage.tsx:ChatPage",
+      "type": "function",
+      "name": "ChatPage",
+      "summary": "Page component rendering a flex layout with ChatPanel (main) and ToolPanel (side, conditional). Reads toolPanelVisible from UIStore.",
+      "tags": [
+        "component",
+        "export",
+        "page"
+      ],
+      "filePath": "apps/renderer/src/pages/ChatPage.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "type": "file",
+      "name": "SettingsPage.tsx",
+      "summary": "Settings page with sidebar navigation for General, Model, and MCP settings tabs. Uses local state for active tab management.",
+      "tags": [
+        "react",
+        "component",
+        "page",
+        "settings"
+      ],
+      "filePath": "apps/renderer/src/pages/SettingsPage.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "type": "function",
+      "name": "SettingsPage",
+      "summary": "Page component rendering settings navigation with three tabs (general, model, mcp) and corresponding settings panels inside ScrollArea.",
+      "tags": [
+        "component",
+        "export",
+        "page",
+        "settings"
+      ],
+      "filePath": "apps/renderer/src/pages/SettingsPage.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/router/index.tsx",
+      "type": "file",
+      "name": "router/index.tsx",
+      "summary": "Application router configuration using react-router-dom. Defines routes for Chat (index), Settings, Search (placeholder), Plugins (placeholder), and Automation (placeholder) inside AppLayout.",
+      "tags": [
+        "react",
+        "router",
+        "configuration"
+      ],
+      "filePath": "apps/renderer/src/router/index.tsx",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/stores/chatStore.ts",
+      "type": "file",
+      "name": "chatStore.ts",
+      "summary": "Zustand store managing chat state: messages array, processing flag, and operations for adding/updating messages and tool calls.",
+      "tags": [
+        "state",
+        "zustand",
+        "store",
+        "chat"
+      ],
+      "filePath": "apps/renderer/src/stores/chatStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/stores/chatStore.ts:useChatStore",
+      "type": "function",
+      "name": "useChatStore",
+      "summary": "Zustand store hook providing messages[], isProcessing, addMessage, updateMessage, clearMessages, setProcessing, addToolCall, updateToolCall actions.",
+      "tags": [
+        "store",
+        "export",
+        "zustand",
+        "chat"
+      ],
+      "filePath": "apps/renderer/src/stores/chatStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/stores/sessionStore.ts",
+      "type": "file",
+      "name": "sessionStore.ts",
+      "summary": "Zustand store managing session state: sessions array, current session ID, and operations for adding/removing/updating sessions.",
+      "tags": [
+        "state",
+        "zustand",
+        "store",
+        "session"
+      ],
+      "filePath": "apps/renderer/src/stores/sessionStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/stores/sessionStore.ts:useSessionStore",
+      "type": "function",
+      "name": "useSessionStore",
+      "summary": "Zustand store hook providing sessions[], currentSessionId, addSession, removeSession, setCurrentSession, updateSession actions.",
+      "tags": [
+        "store",
+        "export",
+        "zustand",
+        "session"
+      ],
+      "filePath": "apps/renderer/src/stores/sessionStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/stores/uiStore.ts",
+      "type": "file",
+      "name": "uiStore.ts",
+      "summary": "Zustand store managing UI state: sidebar collapsed, tool panel visibility/tab, selected file, and toggle/set actions.",
+      "tags": [
+        "state",
+        "zustand",
+        "store",
+        "ui"
+      ],
+      "filePath": "apps/renderer/src/stores/uiStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/renderer/src/stores/uiStore.ts:useUIStore",
+      "type": "function",
+      "name": "useUIStore",
+      "summary": "Zustand store hook providing sidebarCollapsed, toolPanelVisible, toolPanelTab, selectedFile, toggleSidebar, toggleToolPanel, setToolPanelTab, setSelectedFile actions.",
+      "tags": [
+        "store",
+        "export",
+        "zustand",
+        "ui"
+      ],
+      "filePath": "apps/renderer/src/stores/uiStore.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/renderer/src/styles/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "summary": "Global stylesheet defining Tailwind CSS theme variables (primary green palette, sidebar/content/tool background colors), base typography, and custom scrollbar styling.",
+      "tags": [
+        "css",
+        "styles",
+        "theme",
+        "tailwind"
+      ],
+      "filePath": "apps/renderer/src/styles/globals.css",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/renderer/vite.config.ts",
+      "type": "config",
+      "name": "vite.config.ts",
+      "summary": "Vite build configuration for the renderer app. Enables React and Tailwind CSS plugins, sets up @ path alias, and configures dev server on port 3000.",
+      "tags": [
+        "config",
+        "vite",
+        "build",
+        "tailwind"
+      ],
+      "filePath": "apps/renderer/vite.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/renderer/vitest.config.ts",
+      "type": "config",
+      "name": "vitest.config.ts",
+      "summary": "Vitest test configuration enabling globals and jsdom environment for unit testing the renderer app.",
+      "tags": [
+        "config",
+        "vitest",
+        "testing"
+      ],
+      "filePath": "apps/renderer/vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/spec-streaming.md",
+      "type": "document",
+      "name": "spec-streaming.md",
+      "summary": "Technical specification for implementing real streaming output from agent runtime. Documents the root cause (non-streaming LLM providers), proposes streaming architecture (StreamBus, StreamAdapter, streaming providers), defines the AgentStreamEvent protocol, and outlines phased implementation plan (P0 text streaming, P1 tool call streaming, P2 tool execution streaming).",
+      "tags": [
+        "spec",
+        "streaming",
+        "architecture",
+        "design-doc"
+      ],
+      "filePath": "docs/spec-streaming.md",
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/v0.md",
+      "type": "document",
+      "name": "v0.md",
+      "summary": "Desktop Agent V0 product requirements document. Defines product positioning (local desktop AI workstation), target users (developers, office workers, power users), V0 feature scope (Chat, Coding Agent, File Agent, Office Agents, MCP), system architecture, tool specifications, and success criteria.",
+      "tags": [
+        "prd",
+        "product",
+        "v0",
+        "requirements"
+      ],
+      "filePath": "docs/v0.md",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:eslint.config.js",
+      "type": "config",
+      "name": "eslint.config.js",
+      "summary": "ESLint flat config using typescript-eslint. Ignores dist and node_modules directories, applies recommended rules with warnings for unused vars (with _ prefix exception) and explicit any.",
+      "tags": [
+        "config",
+        "eslint",
+        "linting"
+      ],
+      "filePath": "eslint.config.js",
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/agent-runtime/package.json",
+      "type": "config",
+      "name": "agent-runtime/package.json",
+      "summary": "Package manifest for @desktop-agent/agent-runtime (v0.1.0). ESM module with build/test scripts. Depends on open-agent-sdk, @desktop-agent/shared, and @desktop-agent/tools. Dev deps: typescript, vitest.",
+      "tags": [
+        "config",
+        "package",
+        "agent-runtime"
+      ],
+      "filePath": "packages/agent-runtime/package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "summary": "Package entry point for agent-runtime. Re-exports AgentRuntime and RuntimeOptions from runtime module, SDK types (Agent, AgentOptions, SDKMessage), and all shared types from @desktop-agent/shared.",
+      "tags": [
+        "entry-point",
+        "exports",
+        "agent-runtime"
+      ],
+      "filePath": "packages/agent-runtime/src/index.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/src/runtime.ts",
+      "type": "file",
+      "name": "AgentRuntime",
+      "summary": "Core agent runtime that manages agent sessions, sends messages, executes tools, and tracks conversation history via the open-agent-sdk",
+      "tags": [
+        "runtime",
+        "agent",
+        "session-management",
+        "core",
+        "tested"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+      "type": "file",
+      "name": "StreamingOpenAIProvider",
+      "summary": "LLM provider that implements the OpenAI completions API with streaming SSE, message/tool format conversion, and text delta callbacks",
+      "tags": [
+        "llm",
+        "openai",
+        "streaming",
+        "provider",
+        "sse"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/src/types.ts",
+      "type": "file",
+      "name": "AgentRuntimeTypes",
+      "summary": "TypeScript type definitions for agent configuration, responses, artifacts, stream events, and callbacks",
+      "tags": [
+        "types",
+        "interfaces",
+        "config"
+      ],
+      "filePath": "packages/agent-runtime/src/types.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/tests/index.test.ts",
+      "type": "file",
+      "name": "AgentRuntimeTests",
+      "summary": "Vitest tests for AgentRuntime verifying agent creation and session lookup with mocked open-agent-sdk",
+      "tags": [
+        "test",
+        "vitest"
+      ],
+      "filePath": "packages/agent-runtime/tests/index.test.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/tsconfig.json",
+      "type": "config",
+      "name": "AgentRuntimeTSConfig",
+      "summary": "TypeScript config for agent-runtime package; extends base config, references shared and tools packages",
+      "tags": [
+        "typescript",
+        "config"
+      ],
+      "filePath": "packages/agent-runtime/tsconfig.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/agent-runtime/vitest.config.ts",
+      "type": "config",
+      "name": "AgentRuntimeVitestConfig",
+      "summary": "Vitest configuration for agent-runtime with globals enabled and node environment",
+      "tags": [
+        "vitest",
+        "config"
+      ],
+      "filePath": "packages/agent-runtime/vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/shared/package.json",
+      "type": "config",
+      "name": "SharedPackageJson",
+      "summary": "Package manifest for @desktop-agent/shared defining the shared types library with build/test scripts",
+      "tags": [
+        "package",
+        "config"
+      ],
+      "filePath": "packages/shared/package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/shared/src/index.ts",
+      "type": "file",
+      "name": "SharedTypes",
+      "summary": "Shared type definitions for Tool, ToolResult, Session, Message, Artifact, and ToolCall used across all packages",
+      "tags": [
+        "types",
+        "shared",
+        "interfaces",
+        "core",
+        "tested"
+      ],
+      "filePath": "packages/shared/src/index.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/shared/tests/index.test.ts",
+      "type": "file",
+      "name": "SharedTypesTests",
+      "summary": "Vitest tests verifying shared type object creation for Session and Message",
+      "tags": [
+        "test",
+        "vitest"
+      ],
+      "filePath": "packages/shared/tests/index.test.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/shared/tsconfig.json",
+      "type": "config",
+      "name": "SharedTSConfig",
+      "summary": "TypeScript config for shared package; extends base config with composite build",
+      "tags": [
+        "typescript",
+        "config"
+      ],
+      "filePath": "packages/shared/tsconfig.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/shared/vitest.config.ts",
+      "type": "config",
+      "name": "SharedVitestConfig",
+      "summary": "Vitest configuration for shared package with globals enabled and node environment",
+      "tags": [
+        "vitest",
+        "config"
+      ],
+      "filePath": "packages/shared/vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/package.json",
+      "type": "config",
+      "name": "ToolsPackageJson",
+      "summary": "Package manifest for @desktop-agent/tools; depends on @desktop-agent/shared workspace package",
+      "tags": [
+        "package",
+        "config"
+      ],
+      "filePath": "packages/tools/package.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/index.ts",
+      "type": "file",
+      "name": "ToolsIndex",
+      "summary": "Barrel export file for tools package; re-exports toolRegistry and all individual tool modules",
+      "tags": [
+        "barrel",
+        "exports"
+      ],
+      "filePath": "packages/tools/src/index.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/registry.ts",
+      "type": "file",
+      "name": "ToolRegistry",
+      "summary": "Singleton ToolRegistry class that stores, retrieves, lists, and executes registered tools by name",
+      "tags": [
+        "registry",
+        "tool-management",
+        "core",
+        "tested"
+      ],
+      "filePath": "packages/tools/src/registry.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/code.ts",
+      "type": "file",
+      "name": "CodeTool",
+      "summary": "Code operation tool (read/search/modify/generate) registered in toolRegistry; placeholder implementation",
+      "tags": [
+        "tool",
+        "code-operations"
+      ],
+      "filePath": "packages/tools/src/code.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/file.ts",
+      "type": "file",
+      "name": "FileTool",
+      "summary": "File operation tool (read/write/list/move/delete/copy) registered in toolRegistry; placeholder implementation",
+      "tags": [
+        "tool",
+        "file-operations"
+      ],
+      "filePath": "packages/tools/src/file.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/shell.ts",
+      "type": "file",
+      "name": "ShellTool",
+      "summary": "Shell command execution tool registered in toolRegistry; placeholder implementation",
+      "tags": [
+        "tool",
+        "shell",
+        "command-execution"
+      ],
+      "filePath": "packages/tools/src/shell.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/mcp.ts",
+      "type": "file",
+      "name": "McpTool",
+      "summary": "MCP (Model Context Protocol) tool for server method calls registered in toolRegistry; placeholder implementation",
+      "tags": [
+        "tool",
+        "mcp",
+        "protocol"
+      ],
+      "filePath": "packages/tools/src/mcp.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/src/office.ts",
+      "type": "file",
+      "name": "OfficeTool",
+      "summary": "Office document processing tool (docx/pptx/xlsx create/read/modify) registered in toolRegistry; placeholder implementation",
+      "tags": [
+        "tool",
+        "office",
+        "document-processing"
+      ],
+      "filePath": "packages/tools/src/office.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/tests/index.test.ts",
+      "type": "file",
+      "name": "ToolRegistryTests",
+      "summary": "Vitest tests for ToolRegistry verifying tool registration and listing",
+      "tags": [
+        "test",
+        "vitest"
+      ],
+      "filePath": "packages/tools/tests/index.test.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/tsconfig.json",
+      "type": "config",
+      "name": "ToolsTSConfig",
+      "summary": "TypeScript config for tools package; extends base config, references shared package",
+      "tags": [
+        "typescript",
+        "config"
+      ],
+      "filePath": "packages/tools/tsconfig.json",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/tools/vitest.config.ts",
+      "type": "config",
+      "name": "ToolsVitestConfig",
+      "summary": "Vitest configuration for tools package with globals enabled and node environment",
+      "tags": [
+        "vitest",
+        "config"
+      ],
+      "filePath": "packages/tools/vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:vitest.config.ts",
+      "type": "config",
+      "name": "RootVitestConfig",
+      "summary": "Root vitest configuration for the monorepo with globals enabled and node environment",
+      "tags": [
+        "vitest",
+        "config",
+        "monorepo"
+      ],
+      "filePath": "vitest.config.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:vitest.workspace.ts",
+      "type": "config",
+      "name": "VitestWorkspaceConfig",
+      "summary": "Vitest workspace configuration that aggregates vitest configs from apps/* and packages/* directories",
+      "tags": [
+        "vitest",
+        "workspace",
+        "monorepo"
+      ],
+      "filePath": "vitest.workspace.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "type": "class",
+      "name": "AgentRuntime",
+      "summary": "Manages agent instances per session: creates agents, sends messages, executes tools, retrieves message history, and handles cleanup",
+      "tags": [
+        "runtime",
+        "session-management",
+        "agent-lifecycle"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:interface:packages/agent-runtime/src/runtime.ts:RuntimeOptions",
+      "type": "interface",
+      "name": "RuntimeOptions",
+      "summary": "Configuration options for AgentRuntime including API key, model, provider type, base URL, working directory, max turns, and permission mode",
+      "tags": [
+        "config",
+        "options"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "type": "class",
+      "name": "StreamingOpenAIProvider",
+      "summary": "Implements LLMProvider interface for OpenAI completions API with streaming SSE parsing, message format conversion, and tool call handling",
+      "tags": [
+        "llm-provider",
+        "openai",
+        "streaming"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/tools/src/registry.ts:ToolRegistry",
+      "type": "class",
+      "name": "ToolRegistry",
+      "summary": "Singleton registry that stores tools by name, supports registration, lookup, listing, and execution with error handling",
+      "tags": [
+        "registry",
+        "tool-management"
+      ],
+      "filePath": "packages/tools/src/registry.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/runtime.ts:createAgent",
+      "type": "function",
+      "name": "createAgent",
+      "summary": "Method on AgentRuntime that creates and registers a new agent instance for a given session ID",
+      "tags": [
+        "agent-creation",
+        "session"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/runtime.ts:sendMessage",
+      "type": "function",
+      "name": "sendMessage",
+      "summary": "Sends a message to an agent session, auto-creating the agent if needed, returns async generator of SDK messages",
+      "tags": [
+        "messaging",
+        "async"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/runtime.ts:prompt",
+      "type": "function",
+      "name": "prompt",
+      "summary": "Sends a prompt to an agent session and returns the text result",
+      "tags": [
+        "messaging",
+        "prompt"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/runtime.ts:executeTool",
+      "type": "function",
+      "name": "executeTool",
+      "summary": "Executes a named tool with given input via an agent session, returning a ToolResult",
+      "tags": [
+        "tool-execution"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/runtime.ts:getMessages",
+      "type": "function",
+      "name": "getMessages",
+      "summary": "Retrieves and normalizes message history from an agent session into Message objects",
+      "tags": [
+        "message-history"
+      ],
+      "filePath": "packages/agent-runtime/src/runtime.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/streaming-openai-provider.ts:createMessage",
+      "type": "function",
+      "name": "createMessage",
+      "summary": "Implements LLMProvider.createMessage: converts messages/tools, calls OpenAI API with streaming, parses SSE chunks into normalized response",
+      "tags": [
+        "api-call",
+        "streaming",
+        "llm"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/streaming-openai-provider.ts:parseSSE",
+      "type": "function",
+      "name": "parseSSE",
+      "summary": "Async generator that reads a ReadableStream of SSE data, parses JSON chunks from 'data:' lines",
+      "tags": [
+        "sse",
+        "streaming",
+        "parsing"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertMessages",
+      "type": "function",
+      "name": "convertMessages",
+      "summary": "Converts normalized message params into OpenAI chat message format with system prompt support",
+      "tags": [
+        "format-conversion",
+        "messages"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertTools",
+      "type": "function",
+      "name": "convertTools",
+      "summary": "Converts normalized tool definitions into OpenAI function calling format",
+      "tags": [
+        "format-conversion",
+        "tools"
+      ],
+      "filePath": "packages/agent-runtime/src/streaming-openai-provider.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/tools/src/registry.ts:register",
+      "type": "function",
+      "name": "register",
+      "summary": "Registers a Tool instance in the ToolRegistry map by its name",
+      "tags": [
+        "registration"
+      ],
+      "filePath": "packages/tools/src/registry.ts",
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/tools/src/registry.ts:execute",
+      "type": "function",
+      "name": "execute",
+      "summary": "Looks up a tool by name in the registry and executes it with the given input, returning ToolResult",
+      "tags": [
+        "execution",
+        "tool-dispatch"
+      ],
+      "filePath": "packages/tools/src/registry.ts",
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/renderer/index.html",
+      "target": "file:apps/renderer/package.json",
+      "type": "depends_on",
+      "description": "HTML entrypoint is served by the renderer package's Vite dev server",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/package.json",
+      "target": "file:apps/renderer/tsconfig.json",
+      "type": "configures",
+      "description": "package.json defines the build scripts that use the tsconfig",
+      "direction": "forward"
+    },
+    {
+      "source": "config:package.json",
+      "target": "config:pnpm-workspace.yaml",
+      "type": "configures",
+      "description": "package.json defines scripts that operate on the pnpm workspace packages (apps/*, packages/*)",
+      "direction": "forward"
+    },
+    {
+      "source": "config:package.json",
+      "target": "config:tsconfig.base.json",
+      "type": "depends_on",
+      "description": "Root build scripts invoke TypeScript compilation which uses the base tsconfig",
+      "direction": "forward"
+    },
+    {
+      "source": "config:pnpm-workspace.yaml",
+      "target": "config:package.json",
+      "type": "configures",
+      "description": "Workspace definition scopes pnpm operations to packages defined in the root package.json",
+      "direction": "forward"
+    },
+    {
+      "source": "config:tsconfig.base.json",
+      "target": "config:package.json",
+      "type": "depends_on",
+      "description": "tsconfig is consumed by workspace packages whose build lifecycle is managed by root package.json scripts",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/electron/electron.vite.config.ts",
+      "target": "file:apps/electron/src/main.ts",
+      "type": "references",
+      "label": "main entry point",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/electron/electron.vite.config.ts",
+      "target": "file:apps/electron/src/preload.ts",
+      "type": "references",
+      "label": "preload entry point",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/electron/package.json",
+      "target": "config:apps/electron/electron.vite.config.ts",
+      "type": "depends_on",
+      "label": "uses electron-vite",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/electron/package.json",
+      "target": "config:apps/electron/vitest.config.ts",
+      "type": "depends_on",
+      "label": "uses vitest",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "file:apps/electron/src/loadEnvFile.ts",
+      "type": "imports",
+      "label": "imports loadProjectEnv",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "function:apps/electron/src/loadEnvFile.ts:loadProjectEnv",
+      "type": "calls",
+      "label": "loadProjectEnv()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/electron/src/main.ts:createRuntime",
+      "target": "function:apps/electron/src/main.ts:readEnv",
+      "type": "calls",
+      "label": "readEnv()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/electron/src/main.ts:createWindow",
+      "target": "function:apps/electron/src/main.ts:readEnv",
+      "type": "calls",
+      "label": "readEnv()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/electron/src/main.ts:getAgentErrorFromMessages",
+      "target": "function:apps/electron/src/main.ts:readEnv",
+      "type": "calls",
+      "label": "readEnv()",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/loadEnvFile.ts",
+      "target": "function:apps/electron/src/loadEnvFile.ts:parseEnvLine",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/loadEnvFile.ts",
+      "target": "function:apps/electron/src/loadEnvFile.ts:loadEnvFile",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/loadEnvFile.ts",
+      "target": "function:apps/electron/src/loadEnvFile.ts:loadProjectEnv",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/electron/src/loadEnvFile.ts:loadProjectEnv",
+      "target": "function:apps/electron/src/loadEnvFile.ts:loadEnvFile",
+      "type": "calls",
+      "label": "loadEnvFile()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/electron/src/loadEnvFile.ts:loadEnvFile",
+      "target": "function:apps/electron/src/loadEnvFile.ts:parseEnvLine",
+      "type": "calls",
+      "label": "parseEnvLine()",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "function:apps/electron/src/main.ts:readEnv",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "function:apps/electron/src/main.ts:createRuntime",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "function:apps/electron/src/main.ts:createWindow",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/electron/src/main.ts",
+      "target": "function:apps/electron/src/main.ts:getAgentErrorFromMessages",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/electron/tsconfig.json",
+      "target": "config:apps/electron/package.json",
+      "type": "depends_on",
+      "label": "same package",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/App.tsx",
+      "target": "function:apps/renderer/src/App.tsx:App",
+      "type": "contains",
+      "label": "exports default",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/ChatInput.tsx",
+      "target": "function:apps/renderer/src/components/chat/ChatInput.tsx:ChatInput",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/ChatPanel.tsx",
+      "target": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/MessageItem.tsx",
+      "target": "function:apps/renderer/src/components/chat/MessageItem.tsx:MessageItem",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/MessageList.tsx",
+      "target": "function:apps/renderer/src/components/chat/MessageList.tsx:MessageList",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:ToolCallCard",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusIcon",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusText",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/layout/AppLayout.tsx",
+      "target": "function:apps/renderer/src/components/layout/AppLayout.tsx:AppLayout",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/layout/Header.tsx",
+      "target": "function:apps/renderer/src/components/layout/Header.tsx:Header",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/layout/NavSidebar.tsx",
+      "target": "function:apps/renderer/src/components/layout/NavSidebar.tsx:NavSidebar",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/GeneralSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/GeneralSettings.tsx:GeneralSettings",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/McpSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:McpSettings",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/McpSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:addServer",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/McpSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:removeServer",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/McpSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:toggleServer",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/settings/McpSettings.tsx:McpSettings",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:addServer",
+      "type": "calls",
+      "label": "addServer()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/settings/McpSettings.tsx:McpSettings",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:removeServer",
+      "type": "calls",
+      "label": "removeServer()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/settings/McpSettings.tsx:McpSettings",
+      "target": "function:apps/renderer/src/components/settings/McpSettings.tsx:toggleServer",
+      "type": "calls",
+      "label": "toggleServer()",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/ModelSettings.tsx:ModelSettings",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/ModelSettings.tsx:addModel",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+      "target": "function:apps/renderer/src/components/settings/ModelSettings.tsx:removeModel",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/settings/ModelSettings.tsx:ModelSettings",
+      "target": "function:apps/renderer/src/components/settings/ModelSettings.tsx:addModel",
+      "type": "calls",
+      "label": "addModel()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/settings/ModelSettings.tsx:ModelSettings",
+      "target": "function:apps/renderer/src/components/settings/ModelSettings.tsx:removeModel",
+      "type": "calls",
+      "label": "removeModel()",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/DiffView.tsx",
+      "target": "function:apps/renderer/src/components/tools/DiffView.tsx:DiffView",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/FilePreview.tsx",
+      "target": "function:apps/renderer/src/components/tools/FilePreview.tsx:FilePreview",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolHistory.tsx",
+      "target": "function:apps/renderer/src/components/tools/ToolHistory.tsx:ToolHistory",
+      "type": "contains",
+      "label": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolHistory.tsx",
+      "target": "function:apps/renderer/src/components/tools/ToolHistory.tsx:getStatusIcon",
+      "type": "contains",
+      "label": "defines",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "file:apps/renderer/src/components/layout/Header.tsx",
+      "type": "imports",
+      "label": "imports Header",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "file:apps/renderer/src/components/chat/MessageList.tsx",
+      "type": "imports",
+      "label": "imports MessageList",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "file:apps/renderer/src/components/chat/ChatInput.tsx",
+      "type": "imports",
+      "label": "imports ChatInput",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/MessageItem.tsx:MessageItem",
+      "target": "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+      "type": "imports",
+      "label": "imports ToolCallCard",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/MessageList.tsx:MessageList",
+      "target": "file:apps/renderer/src/components/chat/MessageItem.tsx",
+      "type": "imports",
+      "label": "imports MessageItem",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/layout/AppLayout.tsx:AppLayout",
+      "target": "file:apps/renderer/src/components/layout/NavSidebar.tsx",
+      "type": "imports",
+      "label": "imports NavSidebar",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:ToolCallCard",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusIcon",
+      "type": "calls",
+      "label": "getStatusIcon()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:ToolCallCard",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:getStatusText",
+      "type": "calls",
+      "label": "getStatusText()",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/MessageItem.tsx:MessageItem",
+      "target": "function:apps/renderer/src/components/chat/ToolCallCard.tsx:ToolCallCard",
+      "type": "calls",
+      "label": "renders ToolCallCard",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/MessageList.tsx:MessageList",
+      "target": "function:apps/renderer/src/components/chat/MessageItem.tsx:MessageItem",
+      "type": "calls",
+      "label": "renders MessageItem",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "function:apps/renderer/src/components/layout/Header.tsx:Header",
+      "type": "calls",
+      "label": "renders Header",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "function:apps/renderer/src/components/chat/MessageList.tsx:MessageList",
+      "type": "calls",
+      "label": "renders MessageList",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/chat/ChatPanel.tsx:ChatPanel",
+      "target": "function:apps/renderer/src/components/chat/ChatInput.tsx:ChatInput",
+      "type": "calls",
+      "label": "renders ChatInput",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/layout/AppLayout.tsx:AppLayout",
+      "target": "function:apps/renderer/src/components/layout/NavSidebar.tsx:NavSidebar",
+      "type": "calls",
+      "label": "renders NavSidebar",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "target": "function:apps/renderer/src/components/ui/avatar.tsx:Avatar",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "target": "function:apps/renderer/src/components/ui/avatar.tsx:AvatarFallback",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/badge.tsx",
+      "target": "function:apps/renderer/src/components/ui/badge.tsx:Badge",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/button.tsx",
+      "target": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/input.tsx",
+      "target": "function:apps/renderer/src/components/ui/input.tsx:Input",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "target": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/textarea.tsx",
+      "target": "function:apps/renderer/src/components/ui/textarea.tsx:Textarea",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "function:apps/renderer/src/hooks/useAgent.ts:createId",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:extractStreamText",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:parseMessageContent",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:extractAssistantText",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/utils.ts",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "target": "function:apps/renderer/src/pages/ChatPage.tsx:ChatPage",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/chatStore.ts",
+      "target": "function:apps/renderer/src/stores/chatStore.ts:useChatStore",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/sessionStore.ts",
+      "target": "function:apps/renderer/src/stores/sessionStore.ts:useSessionStore",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/uiStore.ts",
+      "target": "function:apps/renderer/src/stores/uiStore.ts:useUIStore",
+      "type": "contains",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/stores/uiStore.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/components/ui/button.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/badge.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/button.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/input.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/textarea.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/stores/chatStore.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/stores/sessionStore.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/lib/agentMessage.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "target": "file:apps/renderer/src/stores/uiStore.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "file:apps/renderer/src/components/ui/button.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/router/index.tsx",
+      "target": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/router/index.tsx",
+      "target": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "type": "imports",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "target": "function:apps/renderer/src/stores/chatStore.ts:useChatStore",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "target": "function:apps/renderer/src/stores/sessionStore.ts:useSessionStore",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:extractStreamText",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "target": "function:apps/renderer/src/stores/uiStore.ts:useUIStore",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "target": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "target": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/pages/ChatPage.tsx:ChatPage",
+      "target": "function:apps/renderer/src/stores/uiStore.ts:useUIStore",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "target": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "target": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:parseMessageContent",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/lib/agentMessage.ts:extractAssistantText",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/avatar.tsx:Avatar",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/avatar.tsx:AvatarFallback",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/badge.tsx:Badge",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/input.tsx:Input",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "function:apps/renderer/src/components/ui/textarea.tsx:Textarea",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "calls",
+      "direction": "forward"
+    },
+    {
+      "source": "file:packages/agent-runtime/src/index.ts",
+      "target": "config:packages/agent-runtime/package.json",
+      "type": "documents",
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/spec-streaming.md",
+      "target": "document:docs/v0.md",
+      "type": "references",
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/spec-streaming.md",
+      "target": "file:apps/renderer/src/hooks/useAgent.ts",
+      "type": "documents",
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/spec-streaming.md",
+      "target": "file:apps/renderer/src/lib/agentMessage.ts",
+      "type": "documents",
+      "direction": "forward"
+    },
+    {
+      "source": "document:docs/spec-streaming.md",
+      "target": "file:apps/renderer/src/stores/chatStore.ts",
+      "type": "documents",
+      "direction": "forward"
+    },
+    {
+      "source": "config:apps/renderer/vite.config.ts",
+      "target": "file:apps/renderer/src/main.tsx",
+      "type": "documents",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/main.tsx",
+      "target": "file:apps/renderer/src/router/index.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/router/index.tsx",
+      "target": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/router/index.tsx",
+      "target": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "target": "file:apps/renderer/src/stores/uiStore.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "file:apps/renderer/src/components/ui/button.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/stores/uiStore.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/components/ui/button.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "file:apps/renderer/src/lib/utils.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/stores/chatStore.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/stores/sessionStore.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "file:apps/renderer/src/lib/agentMessage.ts",
+      "type": "depends_on",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:parseMessageContent",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:extractStreamText",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:analyzeAgentMessages",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/agentMessage.ts",
+      "target": "function:apps/renderer/src/lib/agentMessage.ts:extractAssistantText",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/lib/utils.ts",
+      "target": "function:apps/renderer/src/lib/utils.ts:cn",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/chatStore.ts",
+      "target": "function:apps/renderer/src/stores/chatStore.ts:useChatStore",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/sessionStore.ts",
+      "target": "function:apps/renderer/src/stores/sessionStore.ts:useSessionStore",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/stores/uiStore.ts",
+      "target": "function:apps/renderer/src/stores/uiStore.ts:useUIStore",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+      "target": "function:apps/renderer/src/components/tools/ToolPanel.tsx:ToolPanel",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "target": "function:apps/renderer/src/components/ui/avatar.tsx:Avatar",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/avatar.tsx",
+      "target": "function:apps/renderer/src/components/ui/avatar.tsx:AvatarFallback",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/badge.tsx",
+      "target": "function:apps/renderer/src/components/ui/badge.tsx:Badge",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/button.tsx",
+      "target": "function:apps/renderer/src/components/ui/button.tsx:Button",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/input.tsx",
+      "target": "function:apps/renderer/src/components/ui/input.tsx:Input",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/scroll-area.tsx",
+      "target": "function:apps/renderer/src/components/ui/scroll-area.tsx:ScrollArea",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/components/ui/textarea.tsx",
+      "target": "function:apps/renderer/src/components/ui/textarea.tsx:Textarea",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/hooks/useAgent.ts",
+      "target": "function:apps/renderer/src/hooks/useAgent.ts:useAgent",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/ChatPage.tsx",
+      "target": "function:apps/renderer/src/pages/ChatPage.tsx:ChatPage",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "source": "file:apps/renderer/src/pages/SettingsPage.tsx",
+      "target": "function:apps/renderer/src/pages/SettingsPage.tsx:SettingsPage",
+      "type": "exports",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:runtime→shared",
+      "source": "file:packages/agent-runtime/src/runtime.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Message, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:streaming→sdk",
+      "source": "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+      "target": "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+      "type": "imports",
+      "label": "imports types from @codeany/open-agent-sdk",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:types→shared",
+      "source": "file:packages/agent-runtime/src/types.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Session, Message, ToolCall, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:test→runtime",
+      "source": "file:packages/agent-runtime/tests/index.test.ts",
+      "target": "file:packages/agent-runtime/src/runtime.ts",
+      "type": "imports",
+      "label": "imports AgentRuntime from ../src",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→registry",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "re-exports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→code",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/code.ts",
+      "type": "imports",
+      "label": "re-exports code module",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→file",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/file.ts",
+      "type": "imports",
+      "label": "re-exports file module",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→shell",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/shell.ts",
+      "type": "imports",
+      "label": "re-exports shell module",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→mcp",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/mcp.ts",
+      "type": "imports",
+      "label": "re-exports mcp module",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/index→office",
+      "source": "file:packages/tools/src/index.ts",
+      "target": "file:packages/tools/src/office.ts",
+      "type": "imports",
+      "label": "re-exports office module",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:registry→shared",
+      "source": "file:packages/tools/src/registry.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:code→shared",
+      "source": "file:packages/tools/src/code.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:code→registry",
+      "source": "file:packages/tools/src/code.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "imports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:file→shared",
+      "source": "file:packages/tools/src/file.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:file→registry",
+      "source": "file:packages/tools/src/file.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "imports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:shell→shared",
+      "source": "file:packages/tools/src/shell.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:shell→registry",
+      "source": "file:packages/tools/src/shell.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "imports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:mcp→shared",
+      "source": "file:packages/tools/src/mcp.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:mcp→registry",
+      "source": "file:packages/tools/src/mcp.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "imports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:office→shared",
+      "source": "file:packages/tools/src/office.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Tool, ToolResult from shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:office→registry",
+      "source": "file:packages/tools/src/office.ts",
+      "target": "file:packages/tools/src/registry.ts",
+      "type": "imports",
+      "label": "imports toolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:tools/test→tools/index",
+      "source": "file:packages/tools/tests/index.test.ts",
+      "target": "file:packages/tools/src/index.ts",
+      "type": "imports",
+      "label": "imports toolRegistry from ../src",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:import:shared/test→shared/index",
+      "source": "file:packages/shared/tests/index.test.ts",
+      "target": "file:packages/shared/src/index.ts",
+      "type": "imports",
+      "label": "imports Session, Message, Tool from ../src",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:depends_on:tools→shared",
+      "source": "file:packages/tools/package.json",
+      "target": "file:packages/shared/package.json",
+      "type": "depends_on",
+      "label": "workspace dependency: @desktop-agent/shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:agent-runtime→runtime",
+      "source": "file:packages/agent-runtime/src/runtime.ts",
+      "target": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "type": "contains",
+      "label": "contains class AgentRuntime",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:agent-runtime→options",
+      "source": "file:packages/agent-runtime/src/runtime.ts",
+      "target": "file:interface:packages/agent-runtime/src/runtime.ts:RuntimeOptions",
+      "type": "contains",
+      "label": "contains interface RuntimeOptions",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:streaming→provider",
+      "source": "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+      "target": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "type": "contains",
+      "label": "contains class StreamingOpenAIProvider",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:registry→class",
+      "source": "file:packages/tools/src/registry.ts",
+      "target": "class:packages/tools/src/registry.ts:ToolRegistry",
+      "type": "contains",
+      "label": "contains class ToolRegistry",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:runtime→createAgent",
+      "source": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "target": "function:packages/agent-runtime/src/runtime.ts:createAgent",
+      "type": "contains",
+      "label": "contains method createAgent",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:runtime→sendMessage",
+      "source": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "target": "function:packages/agent-runtime/src/runtime.ts:sendMessage",
+      "type": "contains",
+      "label": "contains method sendMessage",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:runtime→prompt",
+      "source": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "target": "function:packages/agent-runtime/src/runtime.ts:prompt",
+      "type": "contains",
+      "label": "contains method prompt",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:runtime→executeTool",
+      "source": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "target": "function:packages/agent-runtime/src/runtime.ts:executeTool",
+      "type": "contains",
+      "label": "contains method executeTool",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:runtime→getMessages",
+      "source": "class:packages/agent-runtime/src/runtime.ts:AgentRuntime",
+      "target": "function:packages/agent-runtime/src/runtime.ts:getMessages",
+      "type": "contains",
+      "label": "contains method getMessages",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:provider→createMessage",
+      "source": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:createMessage",
+      "type": "contains",
+      "label": "contains method createMessage",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:provider→parseSSE",
+      "source": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:parseSSE",
+      "type": "contains",
+      "label": "contains method parseSSE",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:provider→convertMessages",
+      "source": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertMessages",
+      "type": "contains",
+      "label": "contains method convertMessages",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:provider→convertTools",
+      "source": "class:packages/agent-runtime/src/streaming-openai-provider.ts:StreamingOpenAIProvider",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertTools",
+      "type": "contains",
+      "label": "contains method convertTools",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:toolRegistry→register",
+      "source": "class:packages/tools/src/registry.ts:ToolRegistry",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "contains",
+      "label": "contains method register",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:contains:toolRegistry→execute",
+      "source": "class:packages/tools/src/registry.ts:ToolRegistry",
+      "target": "function:packages/tools/src/registry.ts:execute",
+      "type": "contains",
+      "label": "contains method execute",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:tested_by:runtime→runtime_test",
+      "source": "file:packages/agent-runtime/src/runtime.ts",
+      "target": "file:packages/agent-runtime/tests/index.test.ts",
+      "type": "tested_by",
+      "label": "tested by AgentRuntimeTests",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:tested_by:shared→shared_test",
+      "source": "file:packages/shared/src/index.ts",
+      "target": "file:packages/shared/tests/index.test.ts",
+      "type": "tested_by",
+      "label": "tested by SharedTypesTests",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:tested_by:registry→registry_test",
+      "source": "file:packages/tools/src/registry.ts",
+      "target": "file:packages/tools/tests/index.test.ts",
+      "type": "tested_by",
+      "label": "tested by ToolRegistryTests",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:executeTool→prompt",
+      "source": "function:packages/agent-runtime/src/runtime.ts:executeTool",
+      "target": "function:packages/agent-runtime/src/runtime.ts:prompt",
+      "type": "calls",
+      "label": "calls agent.prompt internally",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:createMessage→parseSSE",
+      "source": "function:packages/agent-runtime/src/streaming-openai-provider.ts:createMessage",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:parseSSE",
+      "type": "calls",
+      "label": "calls parseSSE to iterate stream chunks",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:createMessage→convertMessages",
+      "source": "function:packages/agent-runtime/src/streaming-openai-provider.ts:createMessage",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertMessages",
+      "type": "calls",
+      "label": "calls convertMessages for format conversion",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:createMessage→convertTools",
+      "source": "function:packages/agent-runtime/src/streaming-openai-provider.ts:createMessage",
+      "target": "function:packages/agent-runtime/src/streaming-openai-provider.ts:convertTools",
+      "type": "calls",
+      "label": "calls convertTools for tool format conversion",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:sendMessage→createAgent",
+      "source": "function:packages/agent-runtime/src/runtime.ts:sendMessage",
+      "target": "function:packages/agent-runtime/src/runtime.ts:createAgent",
+      "type": "calls",
+      "label": "calls createAgent if agent not found",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:code→register",
+      "source": "file:packages/tools/src/code.ts",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "calls",
+      "label": "calls toolRegistry.register at module load",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:file→register",
+      "source": "file:packages/tools/src/file.ts",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "calls",
+      "label": "calls toolRegistry.register at module load",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:shell→register",
+      "source": "file:packages/tools/src/shell.ts",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "calls",
+      "label": "calls toolRegistry.register at module load",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:mcp→register",
+      "source": "file:packages/tools/src/mcp.ts",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "calls",
+      "label": "calls toolRegistry.register at module load",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:calls:office→register",
+      "source": "file:packages/tools/src/office.ts",
+      "target": "function:packages/tools/src/registry.ts:register",
+      "type": "calls",
+      "label": "calls toolRegistry.register at module load",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:depends_on:tsconfig:agent-runtime→shared",
+      "source": "file:packages/agent-runtime/tsconfig.json",
+      "target": "file:packages/shared/tsconfig.json",
+      "type": "depends_on",
+      "label": "typescript reference: ../shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:depends_on:tsconfig:agent-runtime→tools",
+      "source": "file:packages/agent-runtime/tsconfig.json",
+      "target": "file:packages/tools/tsconfig.json",
+      "type": "depends_on",
+      "label": "typescript reference: ../tools",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:depends_on:tsconfig:tools→shared",
+      "source": "file:packages/tools/tsconfig.json",
+      "target": "file:packages/shared/tsconfig.json",
+      "type": "depends_on",
+      "label": "typescript reference: ../shared",
+      "direction": "forward"
+    },
+    {
+      "id": "edge:depends_on:workspace→root-config",
+      "source": "file:vitest.workspace.ts",
+      "target": "file:vitest.config.ts",
+      "type": "depends_on",
+      "label": "workspace references packages/*/vitest.config.ts",
+      "direction": "forward"
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:electron-main",
+      "name": "Electron 主进程",
+      "description": "Electron 主进程代码，负责窗口管理、IPC 通信、Agent 运行时初始化",
+      "nodeIds": [
+        "file:apps/electron/src/main.ts",
+        "file:apps/electron/src/preload.ts",
+        "file:apps/electron/src/loadEnvFile.ts",
+        "config:apps/electron/package.json",
+        "config:apps/electron/tsconfig.json",
+        "file:apps/electron/electron.vite.config.ts"
+      ]
+    },
+    {
+      "id": "layer:renderer-ui",
+      "name": "渲染器 UI 组件",
+      "description": "React 前端 UI 组件，包括聊天界面、设置面板、工具展示和通用 UI 原子组件",
+      "nodeIds": [
+        "file:apps/renderer/src/App.tsx",
+        "file:apps/renderer/src/main.tsx",
+        "file:apps/renderer/index.html",
+        "file:apps/renderer/src/components/chat/ChatInput.tsx",
+        "file:apps/renderer/src/components/chat/ChatPanel.tsx",
+        "file:apps/renderer/src/components/chat/MessageItem.tsx",
+        "file:apps/renderer/src/components/chat/MessageList.tsx",
+        "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+        "file:apps/renderer/src/components/layout/AppLayout.tsx",
+        "file:apps/renderer/src/components/layout/Header.tsx",
+        "file:apps/renderer/src/components/layout/NavSidebar.tsx",
+        "file:apps/renderer/src/components/settings/GeneralSettings.tsx",
+        "file:apps/renderer/src/components/settings/McpSettings.tsx",
+        "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+        "file:apps/renderer/src/components/tools/DiffView.tsx",
+        "file:apps/renderer/src/components/tools/FilePreview.tsx",
+        "file:apps/renderer/src/components/tools/ToolHistory.tsx",
+        "file:apps/renderer/src/components/tools/ToolPanel.tsx",
+        "file:apps/renderer/src/components/ui/avatar.tsx",
+        "file:apps/renderer/src/components/ui/badge.tsx",
+        "file:apps/renderer/src/components/ui/button.tsx",
+        "file:apps/renderer/src/components/ui/input.tsx",
+        "file:apps/renderer/src/components/ui/scroll-area.tsx",
+        "file:apps/renderer/src/components/ui/textarea.tsx",
+        "file:apps/renderer/src/pages/ChatPage.tsx",
+        "file:apps/renderer/src/pages/SettingsPage.tsx",
+        "file:apps/renderer/src/router/index.tsx",
+        "file:apps/renderer/src/styles/globals.css"
+      ]
+    },
+    {
+      "id": "layer:renderer-state",
+      "name": "状态管理与 hooks",
+      "description": "Zustand 状态管理 stores 和自定义 hooks，负责应用状态和 IPC 通信桥接",
+      "nodeIds": [
+        "file:apps/renderer/src/stores/chatStore.ts",
+        "file:apps/renderer/src/stores/sessionStore.ts",
+        "file:apps/renderer/src/stores/uiStore.ts",
+        "file:apps/renderer/src/hooks/useAgent.ts",
+        "file:apps/renderer/src/lib/agentMessage.ts",
+        "file:apps/renderer/src/lib/utils.ts"
+      ]
+    },
+    {
+      "id": "layer:agent-runtime",
+      "name": "Agent 运行时",
+      "description": "核心 agent 运行时包，管理 agent 生命周期、消息流和 OpenAI streaming provider",
+      "nodeIds": [
+        "file:packages/agent-runtime/src/index.ts",
+        "file:packages/agent-runtime/src/runtime.ts",
+        "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+        "file:packages/agent-runtime/src/types.ts",
+        "config:packages/agent-runtime/package.json",
+        "file:packages/agent-runtime/tests/index.test.ts"
+      ]
+    },
+    {
+      "id": "layer:tools",
+      "name": "工具集",
+      "description": "工具注册表和 5 个工具实现（代码、文件、Shell、MCP、Office），提供 agent 能力扩展",
+      "nodeIds": [
+        "file:packages/tools/src/index.ts",
+        "file:packages/tools/src/registry.ts",
+        "file:packages/tools/src/code.ts",
+        "file:packages/tools/src/file.ts",
+        "file:packages/tools/src/shell.ts",
+        "file:packages/tools/src/mcp.ts",
+        "file:packages/tools/src/office.ts",
+        "config:packages/tools/package.json",
+        "file:packages/tools/tests/index.test.ts"
+      ]
+    },
+    {
+      "id": "layer:shared",
+      "name": "共享类型",
+      "description": "跨包共享的类型定义和工具函数",
+      "nodeIds": [
+        "file:packages/shared/src/index.ts",
+        "config:packages/shared/package.json",
+        "file:packages/shared/tests/index.test.ts"
+      ]
+    },
+    {
+      "id": "layer:config",
+      "name": "项目配置",
+      "description": "根级 monorepo 配置、TypeScript 基础配置、构建工具配置",
+      "nodeIds": [
+        "config:package.json",
+        "config:pnpm-workspace.yaml",
+        "config:tsconfig.base.json",
+        "config:.npmrc",
+        "file:eslint.config.js",
+        "file:vitest.config.ts",
+        "file:vitest.workspace.ts",
+        "file:apps/renderer/vite.config.ts",
+        "file:apps/renderer/vitest.config.ts",
+        "file:apps/electron/vitest.config.ts",
+        "file:packages/agent-runtime/vitest.config.ts",
+        "file:packages/shared/vitest.config.ts",
+        "file:packages/tools/vitest.config.ts",
+        "config:apps/renderer/tsconfig.json",
+        "config:packages/agent-runtime/tsconfig.json",
+        "config:packages/shared/tsconfig.json",
+        "config:packages/tools/tsconfig.json"
+      ]
+    },
+    {
+      "id": "layer:docs",
+      "name": "文档",
+      "description": "项目文档，包括架构设计和产品规划",
+      "nodeIds": [
+        "file:docs/spec-streaming.md",
+        "file:docs/v0.md"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "项目概览",
+      "description": "这是一个基于 Electron 的 AI 桌面工作助手（Desktop Agent），采用 pnpm monorepo 架构。项目包含 Electron 主进程、React 渲染器前端、agent 运行时和工具集。",
+      "nodeIds": [
+        "config:package.json",
+        "config:pnpm-workspace.yaml"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Electron 主进程",
+      "description": "main.ts 是应用入口，创建 BrowserWindow、初始化 AgentRuntime、注册 5 个 IPC 处理器。preload.ts 通过 contextBridge 暴露安全的 electronAPI.agent 接口给渲染器。",
+      "nodeIds": [
+        "file:apps/electron/src/main.ts",
+        "file:apps/electron/src/preload.ts",
+        "file:apps/electron/src/loadEnvFile.ts"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "渲染器应用架构",
+      "description": "React 19 + Vite + Tailwind CSS 4 构建的前端。使用 Zustand 进行状态管理（chatStore、sessionStore、uiStore），通过 useAgent hook 桥接 Electron IPC 实现流式通信。",
+      "nodeIds": [
+        "file:apps/renderer/src/main.tsx",
+        "file:apps/renderer/src/App.tsx",
+        "file:apps/renderer/src/router/index.tsx"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "聊天界面",
+      "description": "核心用户交互界面。ChatPanel 包含 MessageList（消息展示）、ChatInput（输入框）、ToolCallCard（工具调用展示）。消息支持流式渲染和错误提示映射。",
+      "nodeIds": [
+        "file:apps/renderer/src/components/chat/ChatPanel.tsx",
+        "file:apps/renderer/src/components/chat/MessageList.tsx",
+        "file:apps/renderer/src/components/chat/ChatInput.tsx",
+        "file:apps/renderer/src/components/chat/ToolCallCard.tsx",
+        "file:apps/renderer/src/components/chat/MessageItem.tsx"
+      ]
+    },
+    {
+      "order": 5,
+      "title": "状态管理与通信",
+      "description": "useAgent hook 是渲染器与 Electron 主进程的桥梁，通过 window.electronAgent 调用 IPC 方法实现流式消息接收。agentMessage.ts 解析 SDK 消息格式并处理错误映射。",
+      "nodeIds": [
+        "file:apps/renderer/src/hooks/useAgent.ts",
+        "file:apps/renderer/src/lib/agentMessage.ts",
+        "file:apps/renderer/src/stores/chatStore.ts"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "设置面板",
+      "description": "三个设置页面：GeneralSettings（通用设置）、ModelSettings（模型配置）、McpSettings（MCP 服务器配置）。支持添加/删除/测试 MCP 服务器连接。",
+      "nodeIds": [
+        "file:apps/renderer/src/components/settings/GeneralSettings.tsx",
+        "file:apps/renderer/src/components/settings/ModelSettings.tsx",
+        "file:apps/renderer/src/components/settings/McpSettings.tsx"
+      ]
+    },
+    {
+      "order": 7,
+      "title": "Agent 运行时",
+      "description": "packages/agent-runtime 是核心包。AgentRuntime 管理 agent 生命周期，StreamingOpenAIProvider 处理 OpenAI SSE 流式响应和工具调用累积。依赖 @codeany/open-agent-sdk 外部 SDK。",
+      "nodeIds": [
+        "file:packages/agent-runtime/src/runtime.ts",
+        "file:packages/agent-runtime/src/streaming-openai-provider.ts",
+        "file:packages/agent-runtime/src/types.ts"
+      ]
+    },
+    {
+      "order": 8,
+      "title": "工具系统",
+      "description": "toolRegistry 单例管理 5 个工具实现：codeTool（代码执行）、fileTool（文件操作）、shellTool（Shell 命令）、mcpTool（MCP 协议）、officeTool（Office 文档）。工具在模块加载时自动注册。",
+      "nodeIds": [
+        "file:packages/tools/src/registry.ts",
+        "file:packages/tools/src/code.ts",
+        "file:packages/tools/src/file.ts",
+        "file:packages/tools/src/shell.ts",
+        "file:packages/tools/src/mcp.ts",
+        "file:packages/tools/src/office.ts"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "共享类型",
+      "description": "packages/shared 提供跨包共享的类型定义，被 tools 和 agent-runtime 包依赖。",
+      "nodeIds": [
+        "file:packages/shared/src/index.ts"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "架构设计文档",
+      "description": "spec-streaming.md 详细规划了流式架构（StreamBus、StreamAdapter、AgentStreamEvent 协议）。v0.md 定义了产品范围：Coding Agent、File Agent、Office Agents、MCP 支持。",
+      "nodeIds": [
+        "file:docs/spec-streaming.md",
+        "file:docs/v0.md"
+      ]
+    }
+  ]
+}

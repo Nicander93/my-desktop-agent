@@ -1,0 +1,12 @@
+# .understandignore -- patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore
+#
+# --- Detected directories (uncomment to exclude) ---
+
+# docs/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# *.test.*
+# *.spec.*
+# *.snap
