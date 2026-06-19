@@ -1,0 +1,26 @@
+{
+  "name": "desktop-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop Agent - AI工作台",
+  "scripts": {
+    "build:sdk": "pnpm --dir packages/agent-runtime/node_modules/@codeany/open-agent-sdk run build",
+    "build:packages": "pnpm run build:sdk && pnpm --filter @desktop-agent/shared build && pnpm --filter @desktop-agent/tools build && pnpm --filter @desktop-agent/agent-runtime build",
+    "postinstall": "pnpm run build:sdk",
+    "dev": "pnpm build:packages && concurrently \"pnpm --filter @desktop-agent/renderer dev\" \"pnpm --filter @desktop-agent/electron dev\"",
+    "build": "pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "devDependencies": {
+    "typescript-eslint": "^8.0.0",
+    "eslint": "^9.0.0",
+    "@vitest/ui": "^4.0.0",
+    "concurrently": "^9.0.0",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}

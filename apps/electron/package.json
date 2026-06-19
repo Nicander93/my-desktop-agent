@@ -1,0 +1,28 @@
+{
+  "name": "@desktop-agent/electron",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Electron主进程",
+  "main": "dist/main.js",
+  "scripts": {
+    "postinstall": "node ./node_modules/electron/install.js",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@desktop-agent/agent-runtime": "workspace:*",
+    "@desktop-agent/shared": "workspace:*",
+    "@desktop-agent/tools": "workspace:*",
+    "electron": "^42.0.0"
+  },
+  "devDependencies": {
+    "electron-vite": "6.0.0-beta.1",
+    "vitest": "^4.0.0"
+  },
+  "config": {
+    "electron_mirror": "https://npmmirror.com/mirrors/electron/"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "@desktop-agent/agent-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent核心运行时",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@codeany/open-agent-sdk": "github:Nicander93/open-agent-sdk-typescript#main",
+    "@desktop-agent/shared": "workspace:*",
+    "@desktop-agent/tools": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}
