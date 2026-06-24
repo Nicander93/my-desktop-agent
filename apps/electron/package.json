@@ -16,9 +16,12 @@
     "@desktop-agent/agent-runtime": "workspace:*",
     "@desktop-agent/shared": "workspace:*",
     "@desktop-agent/tools": "workspace:*",
-    "electron": "^42.0.0"
+    "electron": "^42.0.0",
+    "sql.js": "^1.14.1",
+    "uuid": "^14.0.1"
   },
   "devDependencies": {
+    "@types/uuid": "^11.0.0",
     "electron-vite": "6.0.0-beta.1",
     "vitest": "^4.0.0"
   },

@@ -31,11 +31,12 @@ describe('AgentRuntime', () => {
     expect(agent).toBe(mockAgent);
   });
 
-  it('should get an agent by session id', () => {
-    const runtime = new AgentRuntime();
-    runtime.createAgent('session-1');
-    const retrieved = runtime.getAgent('session-1');
+  it('should create an agent with session-specific cwd', () => {
+    const runtime = new AgentRuntime({ cwd: '/default' });
+    runtime.createAgent('session-1', { cwd: '/workspace/dbx' });
 
-    expect(retrieved).toBe(mockAgent);
+    expect(createAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: 'session-1', cwd: '/workspace/dbx' })
+    );
   });
 });

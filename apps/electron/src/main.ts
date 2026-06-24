@@ -2,6 +2,12 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { AgentRuntime, RuntimeOptions } from '@desktop-agent/agent-runtime';
 import { join } from 'path';
 import { loadProjectEnv } from './loadEnvFile';
+import { getDatabaseAsync, closeDatabase } from './db';
+import { registerWorkspaceHandlers } from './ipc/workspaceHandlers';
+import { registerConversationHandlers } from './ipc/conversationHandlers';
+import { registerDialogHandlers } from './ipc/dialogHandlers';
+import * as conversationService from './services/conversationService';
+import * as workspaceService from './services/workspaceService';
 
 loadProjectEnv();
 
@@ -29,7 +35,6 @@ function createRuntime(): void {
     model,
     apiType,
     baseURL,
-    cwd: join(__dirname, '../../..'),
     maxTurns: 10,
     permissionMode: 'bypassPermissions'
   };
@@ -61,6 +66,13 @@ function createWindow(): void {
   });
 }
 
+function resolveWorkspacePath(conversationId: string): string | undefined {
+  const conversation = conversationService.getConversation(conversationId);
+  if (!conversation) return undefined;
+  const workspace = workspaceService.getWorkspace(conversation.workspaceId);
+  return workspace?.path;
+}
+
 function getAgentErrorFromMessages(messages: any[]): string | undefined {
   const hasAssistant = messages.some((msg) => msg?.type === 'assistant');
   if (hasAssistant) return undefined;
@@ -83,9 +95,13 @@ function getAgentErrorFromMessages(messages: any[]): string | undefined {
   return `Agent 请求失败（${result.subtype || 'unknown'}）`;
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  await getDatabaseAsync();
   createRuntime();
   createWindow();
+  registerWorkspaceHandlers();
+  registerConversationHandlers();
+  registerDialogHandlers();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -96,19 +112,26 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', async () => {
   await runtime?.closeAll();
+  closeDatabase();
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 ipcMain.handle('agent:create-session', (_, sessionId: string) => {
-  runtime.createAgent(sessionId);
+  const workspacePath = resolveWorkspacePath(sessionId);
+  runtime.createAgent(sessionId, workspacePath ? { cwd: workspacePath } : undefined);
   return { success: true, sessionId };
 });
 
 ipcMain.handle('agent:send-message', async (_, sessionId: string, content: string) => {
   try {
-    const stream = await runtime.sendMessage(sessionId, content);
+    const workspacePath = resolveWorkspacePath(sessionId);
+    if (!workspacePath) {
+      return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
+    }
+
+    const stream = await runtime.sendMessage(sessionId, content, { cwd: workspacePath });
     const messages: any[] = [];
 
     for await (const msg of stream) {
@@ -135,7 +158,12 @@ ipcMain.handle('agent:send-message', async (_, sessionId: string, content: strin
 
 ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string) => {
   try {
-    const result = await runtime.prompt(sessionId, content);
+    const workspacePath = resolveWorkspacePath(sessionId);
+    if (!workspacePath) {
+      return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
+    }
+
+    const result = await runtime.prompt(sessionId, content, { cwd: workspacePath });
     return { success: true, content: result };
   } catch (error) {
     return {

@@ -11,6 +11,10 @@ export interface RuntimeOptions {
   permissionMode?: 'default' | 'acceptEdits' | 'dontAsk' | 'bypassPermissions' | 'plan';
 }
 
+export interface AgentSessionOptions {
+  cwd?: string;
+}
+
 export class AgentRuntime {
   private agents: Map<string, Agent> = new Map();
   private options: RuntimeOptions;
@@ -23,13 +27,13 @@ export class AgentRuntime {
     };
   }
 
-  createAgent(sessionId: string): Agent {
+  createAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Agent {
     const agentOptions: AgentOptions = {
       apiKey: this.options.apiKey,
       model: this.options.model,
       apiType: this.options.apiType,
       baseURL: this.options.baseURL,
-      cwd: this.options.cwd,
+      cwd: sessionOptions?.cwd ?? this.options.cwd,
       maxTurns: this.options.maxTurns,
       permissionMode: this.options.permissionMode,
       persistSession: true,
@@ -46,19 +50,19 @@ export class AgentRuntime {
     return this.agents.get(sessionId);
   }
 
-  async sendMessage(sessionId: string, content: string): Promise<AsyncGenerator<SDKMessage>> {
+  async sendMessage(sessionId: string, content: string, sessionOptions?: AgentSessionOptions): Promise<AsyncGenerator<SDKMessage>> {
     let agent = this.agents.get(sessionId);
     if (!agent) {
-      agent = this.createAgent(sessionId);
+      agent = this.createAgent(sessionId, sessionOptions);
     }
 
     return agent.query(content);
   }
 
-  async prompt(sessionId: string, content: string): Promise<string> {
+  async prompt(sessionId: string, content: string, sessionOptions?: AgentSessionOptions): Promise<string> {
     let agent = this.agents.get(sessionId);
     if (!agent) {
-      agent = this.createAgent(sessionId);
+      agent = this.createAgent(sessionId, sessionOptions);
     }
 
     const result = await agent.prompt(content);

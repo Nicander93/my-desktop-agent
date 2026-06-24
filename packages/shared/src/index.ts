@@ -1,4 +1,6 @@
 // 共享类型定义
+export type { Workspace, WorkspaceSettings } from './types/workspace.js';
+export type { Conversation, Message as ConversationMessage } from './types/conversation.js';
 export interface Tool {
   name: string;
   description: string;
