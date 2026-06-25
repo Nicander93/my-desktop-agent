@@ -1,3 +1,7 @@
+/**
+ * 渲染进程 electronAPI 类型声明
+ * 与 apps/electron/src/preload.ts 暴露的 API 一一对应
+ */
 declare global {
   interface Window {
     electronAPI?: {
@@ -36,6 +40,12 @@ declare global {
       dialog: {
         selectDirectory: (options?: { title?: string; defaultPath?: string }) => Promise<{ success: boolean; path?: string; canceled?: boolean }>;
         confirmPathAccess: (options: { workspacePath: string; targetPath: string }) => Promise<{ success: boolean; response?: number; alwaysAllow?: boolean }>;
+      };
+      workspaceFs: {
+        stat: (workspaceId: string, path: string) => Promise<{ success: boolean; stat?: import('@desktop-agent/shared').FileStat; error?: string }>;
+        read: (workspaceId: string, path: string) => Promise<{ success: boolean; file?: import('@desktop-agent/shared').ReadFileResult; error?: string }>;
+        write: (workspaceId: string, path: string, content: string) => Promise<{ success: boolean; error?: string }>;
+        readDir: (workspaceId: string, dirPath: string) => Promise<{ success: boolean; entries?: import('@desktop-agent/shared').FileEntry[]; error?: string }>;
       };
     };
   }

@@ -1,64 +1,45 @@
+/**
+ * Agent 通信 Hook
+ *
+ * 桥接 chatStore 与主进程 AgentRuntime：
+ * - 校验工作区和对话是否已选
+ * - 发送消息并处理流式响应
+ * - 同步持久化到 SQLite
+ */
 import { useCallback, useEffect, useRef } from 'react';
 import { useChatStore, Message } from '@/stores/chatStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { analyzeAgentMessages, extractStreamText } from '@/lib/agentMessage';
-
-declare global {
-  interface Window {
-    electronAPI?: {
-      agent: {
-        createSession: (sessionId: string) => Promise<{ success: boolean; sessionId: string }>;
-        sendMessage: (sessionId: string, content: string) => Promise<{ success: boolean; messages?: unknown[]; error?: string }>;
-        prompt: (sessionId: string, content: string) => Promise<{ success: boolean; content?: string; error?: string }>;
-        getMessages: (sessionId: string) => Promise<{ success: boolean; messages?: unknown[] }>;
-        closeSession: (sessionId: string) => Promise<{ success: boolean }>;
-        onStreamMessage: (callback: (data: { sessionId: string; message: unknown }) => void) => (() => void) | void;
-      };
-      workspace: {
-        create: (name: string, description?: string) => Promise<{ success: boolean; workspace?: any; error?: string }>;
-        createFromPath: (name: string, path: string, description?: string) => Promise<{ success: boolean; workspace?: any; error?: string }>;
-        getAll: () => Promise<{ success: boolean; workspaces?: any[]; error?: string }>;
-        get: (id: string) => Promise<{ success: boolean; workspace?: any; error?: string }>;
-        update: (id: string, updates: any) => Promise<{ success: boolean; workspace?: any; error?: string }>;
-        delete: (id: string) => Promise<{ success: boolean }>;
-        touch: (id: string) => Promise<{ success: boolean }>;
-        getSettings: (workspaceId: string) => Promise<{ success: boolean; settings?: any }>;
-        updateSettings: (workspaceId: string, settings: any) => Promise<{ success: boolean }>;
-      };
-      conversation: {
-        create: (workspaceId: string, title?: string, model?: string) => Promise<{ success: boolean; conversation?: any; error?: string }>;
-        getAll: (workspaceId: string, includeArchived?: boolean) => Promise<{ success: boolean; conversations?: any[]; error?: string }>;
-        get: (id: string) => Promise<{ success: boolean; conversation?: any; error?: string }>;
-        update: (id: string, updates: any) => Promise<{ success: boolean; conversation?: any; error?: string }>;
-        delete: (id: string) => Promise<{ success: boolean }>;
-      };
-      message: {
-        create: (conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>) => Promise<{ success: boolean; message?: any }>;
-        getByConversation: (conversationId: string, limit?: number, offset?: number) => Promise<{ success: boolean; messages?: any[] }>;
-        update: (id: string, updates: any) => Promise<{ success: boolean; message?: any }>;
-        deleteByConversation: (conversationId: string) => Promise<{ success: boolean }>;
-      };
-      dialog: {
-        selectDirectory: (options?: { title?: string; defaultPath?: string }) => Promise<{ success: boolean; path?: string; canceled?: boolean }>;
-        confirmPathAccess: (options: { workspacePath: string; targetPath: string }) => Promise<{ success: boolean; response?: number; alwaysAllow?: boolean }>;
-      };
-    };
-  }
-}
+import { analyzeAgentMessages, extractStreamText, parseStreamToolUpdate } from '@/lib/agentMessage';
 
 function createId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
 export function useAgent() {
-  const { addMessage, updateMessage, persistMessage, persistMessageUpdate, setProcessing } = useChatStore();
-  const { currentSessionId } = useSessionStore();
-  const { currentWorkspaceId, workspaces } = useWorkspaceStore();
+  const { addMessage, updateMessage, persistMessage, setProcessing } = useChatStore();
 
+  const saveAssistantMessage = async (
+    conversationId: string,
+    content: string,
+    toolCalls?: Message['toolCalls'],
+  ) => {
+    await persistMessage({
+      id: createId(),
+      conversationId,
+      role: 'assistant',
+      content,
+      timestamp: Date.now(),
+      toolCalls,
+    });
+  };
+
+  /** 当前正在流式输出的 session，用于过滤 stream 事件 */
   const activeSessionRef = useRef<string | null>(null);
+  /** 当前流式 assistant 消息的 id */
   const streamingMessageIdRef = useRef<string | null>(null);
 
+  /** 订阅主进程 agent:stream-message，增量更新 assistant 内容 */
   useEffect(() => {
     if (!window.electronAPI?.agent) return;
 
@@ -68,9 +49,25 @@ export function useAgent() {
       if (!messageId) return;
 
       const current = useChatStore.getState().messages.find((m) => m.id === messageId);
-      const nextContent = extractStreamText(data.message, current?.content || '');
+      if (!current) return;
+
+      const nextContent = extractStreamText(data.message, current.content || '');
+      const toolUpdate = parseStreamToolUpdate(data.message, current.toolCalls || []);
+      const updates: Partial<Message> = {};
+
       if (nextContent !== null) {
-        updateMessage(messageId, { content: nextContent, isStreaming: true });
+        updates.content = nextContent;
+      }
+
+      if (toolUpdate) {
+        updates.toolCalls = toolUpdate.toolCalls;
+        updates.isStreaming = toolUpdate.isStreaming;
+      } else if (nextContent !== null) {
+        updates.isStreaming = true;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateMessage(messageId, updates);
       }
     };
 
@@ -125,7 +122,9 @@ export function useAgent() {
         const result = await window.electronAPI.agent.sendMessage(sessionId, content);
 
         if (!result.success) {
-          updateMessage(assistantId, { content: `请求失败：${result.error || '未知错误'}`, isStreaming: false });
+          const errContent = `请求失败：${result.error || '未知错误'}`;
+          updateMessage(assistantId, { content: errContent, isStreaming: false });
+          await saveAssistantMessage(sessionId, errContent);
           return;
         }
 
@@ -134,35 +133,37 @@ export function useAgent() {
           ? analyzeAgentMessages(result.messages)
           : { text: '', error: undefined };
 
+        // 优先用流式累积的内容，否则用最终解析结果
         if (current?.content) {
           updateMessage(assistantId, { isStreaming: false });
-          persistMessageUpdate(assistantId, { content: current.content });
+          await saveAssistantMessage(sessionId, current.content, current.toolCalls);
         } else if (assistantText) {
           updateMessage(assistantId, { content: assistantText, isStreaming: false });
-          persistMessageUpdate(assistantId, { content: assistantText });
+          await saveAssistantMessage(sessionId, assistantText);
         } else if (agentError) {
           updateMessage(assistantId, { content: agentError, isStreaming: false });
-          persistMessageUpdate(assistantId, { content: agentError });
+          await saveAssistantMessage(sessionId, agentError);
         } else {
-          updateMessage(assistantId, { content: '模型未返回有效内容，请检查 API 配置或稍后重试。', isStreaming: false });
-          persistMessageUpdate(assistantId, { content: '模型未返回有效内容，请检查 API 配置或稍后重试。' });
+          const emptyReply = '模型未返回有效内容，请检查 API 配置或稍后重试。';
+          updateMessage(assistantId, { content: emptyReply, isStreaming: false });
+          await saveAssistantMessage(sessionId, emptyReply);
         }
       } else {
         await new Promise((resolve) => setTimeout(resolve, 1000));
         const fallback = `收到你的消息：${content}\n\n这是模拟响应，后续会接入真实的 Agent Runtime。`;
         updateMessage(assistantId, { content: fallback, isStreaming: false });
-        persistMessageUpdate(assistantId, { content: fallback });
+        await saveAssistantMessage(sessionId, fallback);
       }
     } catch (error) {
       console.error('Failed to send message:', error);
       const errMsg = `发送消息失败：${error instanceof Error ? error.message : 'Unknown error'}`;
       updateMessage(assistantId, { content: errMsg, isStreaming: false });
-      persistMessageUpdate(assistantId, { content: errMsg });
+      await saveAssistantMessage(sessionId, errMsg);
     } finally {
       streamingMessageIdRef.current = null;
       setProcessing(false);
     }
-  }, [addMessage, updateMessage, persistMessage, persistMessageUpdate, setProcessing]);
+  }, [addMessage, updateMessage, persistMessage, setProcessing]);
 
   const closeSession = useCallback(async () => {
     const sessionId = useSessionStore.getState().currentSessionId;

@@ -1,3 +1,8 @@
+/**
+ * 对话（Session）状态管理
+ *
+ * Session 对应主进程 Conversation，id 同时作为 Agent sessionId
+ */
 import { create } from 'zustand';
 
 export interface Session {
@@ -64,6 +69,10 @@ export const useSessionStore = create<SessionState>((set) => ({
     }
   },
 
+  /**
+   * 创建对话并在主进程预建 Agent session
+   * Agent 会绑定工作区 cwd 和 workspaceId
+   */
   createSession: async (workspaceId, title, model) => {
     try {
       const result = await window.electronAPI?.conversation.create(workspaceId, title, model);
@@ -74,6 +83,7 @@ export const useSessionStore = create<SessionState>((set) => ({
           createdAt: result.conversation.createdAt, updatedAt: result.conversation.updatedAt
         };
         set((state) => ({ sessions: [session, ...state.sessions], currentSessionId: session.id }));
+        await window.electronAPI?.agent.createSession(session.id);
         return session;
       }
       return null;
@@ -83,10 +93,12 @@ export const useSessionStore = create<SessionState>((set) => ({
     }
   },
 
+  /** 删除对话并关闭对应 Agent session */
   deleteSession: async (id) => {
     try {
       const result = await window.electronAPI?.conversation.delete(id);
       if (result?.success) {
+        await window.electronAPI?.agent.closeSession(id);
         set((state) => ({
           sessions: state.sessions.filter(s => s.id !== id),
           currentSessionId: state.currentSessionId === id ? null : state.currentSessionId

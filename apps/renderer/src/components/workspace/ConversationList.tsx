@@ -1,31 +1,53 @@
+/**
+ * 工作区下的对话列表
+ *
+ * 按 updatedAt 显示相对时间，支持选择和删除对话。
+ */
 import { useEffect } from 'react';
-import { MessageSquarePlus, MessageSquare, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useChatStore } from '@/stores/chatStore';
-import { Button } from '@/components/ui/button';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useGoToChat } from '@/hooks/useGoToChat';
 import { cn } from '@/lib/utils';
 
 interface ConversationListProps {
   workspaceId: string;
 }
 
+function formatCompactTime(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return 'now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w`;
+  const months = Math.floor(days / 30);
+  return `${months}mo`;
+}
+
 export function ConversationList({ workspaceId }: ConversationListProps) {
-  const { sessions, currentSessionId, loadSessions, createSession, deleteSession, setCurrentSession } = useSessionStore();
-  const { loadMessages, clearMessages } = useChatStore();
+  const { sessions, currentSessionId, loadSessions, deleteSession, setCurrentSession } = useSessionStore();
+  const { loadMessages, clearMessages, setCurrentConversation } = useChatStore();
+  const { currentWorkspaceId, selectWorkspace } = useWorkspaceStore();
+  const goToChat = useGoToChat();
 
   useEffect(() => {
     loadSessions(workspaceId);
   }, [workspaceId, loadSessions]);
 
-  const handleCreateConversation = async () => {
-    const session = await createSession(workspaceId);
-    if (session) {
+  const handleSelectConversation = async (sessionId: string) => {
+    goToChat();
+    if (currentWorkspaceId !== workspaceId) {
+      selectWorkspace(workspaceId);
       clearMessages();
     }
-  };
-
-  const handleSelectConversation = async (sessionId: string) => {
     setCurrentSession(sessionId);
+    setCurrentConversation(sessionId);
     await loadMessages(sessionId);
   };
 
@@ -35,46 +57,40 @@ export function ConversationList({ workspaceId }: ConversationListProps) {
       await deleteSession(sessionId);
       if (currentSessionId === sessionId) {
         clearMessages();
+        setCurrentConversation(null);
       }
     }
   };
 
-  return (
-    <div className="space-y-1 py-2">
-      <div className="flex items-center justify-between px-3 mb-2">
-        <p className="text-xs font-medium text-gray-400">对话</p>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCreateConversation}>
-          <MessageSquarePlus size={14} />
-        </Button>
-      </div>
+  if (sessions.length === 0) {
+    return null;
+  }
 
-      {sessions.length === 0 ? (
-        <p className="px-3 text-sm text-gray-400">暂无对话</p>
-      ) : (
-        <div className="space-y-0.5">
-          {sessions.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => handleSelectConversation(session.id)}
-              className={cn(
-                'w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-left transition-colors group',
-                currentSessionId === session.id
-                  ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
-                  : 'text-gray-600 hover:bg-gray-100'
-              )}
-            >
-              <MessageSquare size={14} className="flex-shrink-0" />
-              <span className="flex-1 truncate">{session.title}</span>
-              <button
-                onClick={(e) => handleDelete(e, session.id)}
-                className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
-              >
-                <Trash2 size={12} />
-              </button>
-            </button>
-          ))}
-        </div>
-      )}
+  return (
+    <div className="space-y-0.5 py-1">
+      {sessions.map((session) => (
+        <button
+          key={session.id}
+          onClick={() => handleSelectConversation(session.id)}
+          className={cn(
+            'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-left transition-colors group',
+            currentSessionId === session.id
+              ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
+              : 'text-gray-600 hover:bg-gray-100'
+          )}
+        >
+          <span className="flex-1 truncate">{session.title}</span>
+          <span className="text-xs text-gray-400 flex-shrink-0">
+            {formatCompactTime(session.updatedAt)}
+          </span>
+          <button
+            onClick={(e) => handleDelete(e, session.id)}
+            className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-200 rounded flex-shrink-0"
+          >
+            <Trash2 size={12} />
+          </button>
+        </button>
+      ))}
     </div>
   );
 }

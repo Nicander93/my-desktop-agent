@@ -31,12 +31,20 @@ describe('AgentRuntime', () => {
     expect(agent).toBe(mockAgent);
   });
 
-  it('should create an agent with session-specific cwd', () => {
-    const runtime = new AgentRuntime({ cwd: '/default' });
-    runtime.createAgent('session-1', { cwd: '/workspace/dbx' });
+  it('should create an agent with session-specific cwd and workspaceId', () => {
+    const runtime = new AgentRuntime({ cwd: '/default', permissionMode: 'default' });
+    const checker = vi.fn(async () => ({ allowed: true }));
+    runtime.setPathAccessChecker(checker);
+    runtime.createAgent('session-1', { cwd: '/workspace/dbx', workspaceId: 'ws-1' });
 
     expect(createAgent).toHaveBeenCalledWith(
-      expect.objectContaining({ sessionId: 'session-1', cwd: '/workspace/dbx' })
+      expect.objectContaining({
+        sessionId: 'session-1',
+        cwd: '/workspace/dbx',
+        permissionMode: 'default',
+        canUseTool: expect.any(Function)
+      })
     );
+    expect(runtime.getSessionWorkspaceId('session-1')).toBe('ws-1');
   });
 });

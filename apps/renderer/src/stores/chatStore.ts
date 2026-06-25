@@ -1,3 +1,8 @@
+/**
+ * 聊天消息状态管理
+ *
+ * 内存中维护当前对话的消息列表，通过 IPC 同步到 SQLite
+ */
 import { create } from 'zustand';
 
 export interface Message {
@@ -37,6 +42,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   isProcessing: false,
   currentConversationId: null,
 
+  /** 从 SQLite 加载对话历史 */
   loadMessages: async (conversationId) => {
     try {
       const result = await window.electronAPI?.message.getByConversation(conversationId);
@@ -52,8 +58,10 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  /** 仅更新内存，不持久化（流式过程中使用） */
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
 
+  /** 写入 SQLite */
   persistMessage: async (message) => {
     try {
       await window.electronAPI?.message.create(
@@ -69,6 +77,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     messages: state.messages.map(m => m.id === id ? { ...m, ...updates } : m)
   })),
 
+  /** 流式结束后持久化 assistant 最终内容 */
   persistMessageUpdate: async (id, updates) => {
     try {
       const dbUpdates: any = {};

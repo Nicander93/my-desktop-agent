@@ -1,6 +1,15 @@
-import { useState } from 'react';
-import { Folder, ChevronRight, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+/**
+ * 单个工作区项
+ *
+ * 支持展开/收起、重命名、删除。
+ * 展开且激活时显示 ConversationList。
+ */
+import { useEffect, useState } from 'react';
+import { Folder, ChevronRight, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
 import { Workspace, useWorkspaceStore } from '@/stores/workspaceStore';
+import { useSessionStore } from '@/stores/sessionStore';
+import { useChatStore } from '@/stores/chatStore';
+import { useGoToChat } from '@/hooks/useGoToChat';
 import { ConversationList } from './ConversationList';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -8,18 +17,45 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 interface WorkspaceItemProps {
   workspace: Workspace;
   isActive: boolean;
-  onClick: () => void;
 }
 
-export function WorkspaceItem({ workspace, isActive, onClick }: WorkspaceItemProps) {
+export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
   const [expanded, setExpanded] = useState(isActive);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(workspace.name);
-  const { updateWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const { updateWorkspace, deleteWorkspace, selectWorkspace } = useWorkspaceStore();
+  const { createSession, setCurrentSession } = useSessionStore();
+  const { clearMessages, setCurrentConversation } = useChatStore();
+  const goToChat = useGoToChat();
+
+  useEffect(() => {
+    if (isActive) setExpanded(true);
+  }, [isActive]);
+
+  const handleToggleExpand = () => {
+    setExpanded((prev) => !prev);
+  };
 
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpanded(!expanded);
+    handleToggleExpand();
+  };
+
+  const handleCreateConversation = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    goToChat();
+    setExpanded(true);
+    if (!isActive) {
+      selectWorkspace(workspace.id);
+      setCurrentSession(null);
+      clearMessages();
+      setCurrentConversation(null);
+    }
+    const session = await createSession(workspace.id);
+    if (session) {
+      clearMessages();
+      setCurrentConversation(session.id);
+    }
   };
 
   const handleRename = async () => {
@@ -42,7 +78,7 @@ export function WorkspaceItem({ workspace, isActive, onClick }: WorkspaceItemPro
           'group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors',
           isActive ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' : 'text-gray-600 hover:bg-gray-100'
         )}
-        onClick={onClick}
+        onClick={handleToggleExpand}
       >
         <button onClick={handleExpand} className="p-0.5 hover:bg-gray-200 rounded">
           <ChevronRight size={14} className={cn('transition-transform', expanded && 'rotate-90')} />
@@ -63,6 +99,14 @@ export function WorkspaceItem({ workspace, isActive, onClick }: WorkspaceItemPro
           <span className="flex-1 truncate">{workspace.name}</span>
         )}
 
+        <button
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+          onClick={handleCreateConversation}
+          title="新建对话"
+        >
+          <Plus size={14} />
+        </button>
+
         <DropdownMenu>
           <DropdownMenuTrigger>
             <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded" onClick={(e) => e.stopPropagation()}>
@@ -80,7 +124,7 @@ export function WorkspaceItem({ workspace, isActive, onClick }: WorkspaceItemPro
         </DropdownMenu>
       </div>
 
-      {expanded && isActive && (
+      {expanded && (
         <div className="ml-4">
           <ConversationList workspaceId={workspace.id} />
         </div>

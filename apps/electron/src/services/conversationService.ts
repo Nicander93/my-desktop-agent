@@ -1,3 +1,8 @@
+/**
+ * 对话（Conversation）数据服务
+ *
+ * 对话归属工作区，id 同时作为 Agent sessionId 使用
+ */
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -28,6 +33,7 @@ function queryOne<T>(sql: string, params: any[] = []): T | undefined {
   return results[0];
 }
 
+/** 在指定工作区下创建对话 */
 export function createConversation(workspaceId: string, title?: string, model?: string): Conversation {
   const db = getDatabase();
   const id = uuidv4();
@@ -48,6 +54,7 @@ export function getConversation(id: string): Conversation | undefined {
   return queryOne<any>('SELECT * FROM conversations WHERE id = ?', [id]);
 }
 
+/** 获取工作区下的对话列表，默认排除已归档 */
 export function getConversationsByWorkspace(workspaceId: string, includeArchived = false): Conversation[] {
   const query = includeArchived
     ? 'SELECT * FROM conversations WHERE workspaceId = ? ORDER BY updatedAt DESC'

@@ -1,7 +1,14 @@
+/**
+ * 工作区相关 IPC Handler
+ *
+ * 通道前缀 workspace:*，转发到 workspaceService
+ */
 import { ipcMain, dialog, BrowserWindow } from 'electron';
 import * as workspaceService from '../services/workspaceService';
 
+/** 注册所有 workspace:* IPC 通道 */
 export function registerWorkspaceHandlers(): void {
+  /** 创建工作区：弹窗选目录后写入数据库 */
   ipcMain.handle('workspace:create', async (event, name: string, description?: string) => {
     const window = BrowserWindow.fromWebContents(event.sender);
     if (!window) return { success: false, error: 'Window not found' };
@@ -25,6 +32,7 @@ export function registerWorkspaceHandlers(): void {
     return { success: true, workspace };
   });
 
+  /** 已知路径直接创建，供 CreateWorkspaceDialog 使用 */
   ipcMain.handle('workspace:create-from-path', (_, name: string, path: string, description?: string) => {
     const existing = workspaceService.getWorkspaceByPath(path);
     if (existing) {
@@ -56,6 +64,7 @@ export function registerWorkspaceHandlers(): void {
     return { success };
   });
 
+  /** 更新最近访问时间 */
   ipcMain.handle('workspace:touch', (_, id: string) => {
     workspaceService.touchWorkspace(id);
     return { success: true };

@@ -1,3 +1,8 @@
+/**
+ * 工作区状态管理
+ *
+ * 对应主进程 workspaceService，管理当前选中的工作区
+ */
 import { create } from 'zustand';
 
 export interface Workspace {
@@ -73,6 +78,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     }
   },
 
+  /** 选中工作区并更新最近访问时间 */
   selectWorkspace: (id) => {
     set({ currentWorkspaceId: id });
     if (id) { window.electronAPI?.workspace.touch(id); }

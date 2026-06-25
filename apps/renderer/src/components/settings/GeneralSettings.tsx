@@ -1,7 +1,15 @@
+/**
+ * 通用设置页
+ *
+ * 工作目录只读展示，数据来自 workspaceStore 当前选中项
+ */
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 export function GeneralSettings() {
+  const { currentWorkspaceId, workspaces } = useWorkspaceStore();
+  const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
+
   return (
     <div className="max-w-2xl">
       <h2 className="text-lg font-semibold text-gray-800 mb-6">通用设置</h2>
@@ -30,16 +38,16 @@ export function GeneralSettings() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            工作目录
+            当前工作区目录
           </label>
-          <div className="flex gap-2">
-            <Input
-              defaultValue="/Users/username/projects"
-              readOnly
-              className="flex-1"
-            />
-            <Button variant="outline">浏览</Button>
-          </div>
+          <Input
+            value={currentWorkspace?.path ?? '未选择工作区'}
+            readOnly
+            className="flex-1"
+          />
+          {currentWorkspace && (
+            <p className="text-xs text-gray-400 mt-1">工作区：{currentWorkspace.name}</p>
+          )}
         </div>
       </div>
     </div>

@@ -1,3 +1,14 @@
+/**
+ * Preload 脚本：通过 contextBridge 暴露安全的 IPC API 给渲染进程
+ *
+ * 命名空间：
+ * - agent: Agent session 生命周期与消息
+ * - workspace: 工作区 CRUD
+ * - conversation: 对话 CRUD
+ * - message: 消息 CRUD
+ * - dialog: 系统对话框（选目录、路径确认）
+ * - workspaceFs: 工作区文件读写
+ */
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -12,6 +23,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('agent:get-messages', sessionId),
     closeSession: (sessionId: string) =>
       ipcRenderer.invoke('agent:close-session', sessionId),
+    /** 订阅 Agent 流式输出，返回取消订阅函数 */
     onStreamMessage: (callback: (data: { sessionId: string; message: any }) => void) => {
       const listener = (_: any, data: { sessionId: string; message: any }) => callback(data);
       ipcRenderer.on('agent:stream-message', listener);
@@ -69,5 +81,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('dialog:select-directory', options),
     confirmPathAccess: (options: { workspacePath: string; targetPath: string }) =>
       ipcRenderer.invoke('dialog:confirm-path-access', options)
+  },
+
+  workspaceFs: {
+    stat: (workspaceId: string, path: string) =>
+      ipcRenderer.invoke('workspace-fs:stat', workspaceId, path),
+    read: (workspaceId: string, path: string) =>
+      ipcRenderer.invoke('workspace-fs:read', workspaceId, path),
+    write: (workspaceId: string, path: string, content: string) =>
+      ipcRenderer.invoke('workspace-fs:write', workspaceId, path, content),
+    readDir: (workspaceId: string, dirPath: string) =>
+      ipcRenderer.invoke('workspace-fs:read-dir', workspaceId, dirPath),
   }
 });

@@ -1,6 +1,8 @@
 import { Copy, Pencil } from 'lucide-react';
 import { Message } from '@/stores/chatStore';
-import { ToolCallCard } from './ToolCallCard';
+import { MarkdownContent } from './MarkdownContent';
+import { ActivityStatus } from './ActivityStatus';
+import { getToolActivityLabel, summarizeCompletedTools } from '@/lib/toolActivityLabel';
 
 interface MessageItemProps {
   message: Message;
@@ -42,21 +44,28 @@ export function MessageItem({ message }: MessageItemProps) {
     );
   }
 
+  const toolCalls = message.toolCalls || [];
+  const runningTools = toolCalls.filter((t) => t.status === 'running' || t.status === 'pending');
+  const completedTools = toolCalls.filter((t) => t.status === 'completed');
+  const showTextCursor = !!message.isStreaming && runningTools.length === 0;
+
   return (
     <div className="py-2">
-      <div className="text-[15px] leading-7 text-gray-800 whitespace-pre-wrap">
-        {message.content}
-        {message.isStreaming && (
-          <span className="inline-block w-2 h-4 ml-0.5 bg-gray-400 animate-pulse align-middle" />
-        )}
-      </div>
+      <MarkdownContent content={message.content} isStreaming={showTextCursor} />
 
-      {message.toolCalls && message.toolCalls.length > 0 && (
-        <div className="mt-4 space-y-2">
-          {message.toolCalls.map((toolCall) => (
-            <ToolCallCard key={toolCall.id} toolCall={toolCall} />
-          ))}
-        </div>
+      {runningTools.map((toolCall) => (
+        <ActivityStatus
+          key={toolCall.id}
+          status="running"
+          label={getToolActivityLabel(toolCall.toolName, toolCall.input)}
+        />
+      ))}
+
+      {completedTools.length > 0 && runningTools.length === 0 && (
+        <ActivityStatus
+          status="completed"
+          label={summarizeCompletedTools(completedTools)}
+        />
       )}
     </div>
   );

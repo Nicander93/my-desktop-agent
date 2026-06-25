@@ -1,3 +1,8 @@
+/**
+ * 消息数据服务
+ *
+ * 消息归属对话，toolCalls 和 metadata 以 JSON 字符串存储
+ */
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -28,6 +33,7 @@ function queryOne<T>(sql: string, params: any[] = []): T | undefined {
   return results[0];
 }
 
+/** 创建消息并持久化 */
 export function createMessage(
   conversationId: string,
   role: Message['role'],
@@ -50,6 +56,7 @@ export function createMessage(
   return { id, conversationId, role, content, toolCalls: toolCalls || [], metadata: metadata || {}, createdAt: now };
 }
 
+/** 按时间正序获取对话消息，支持分页 */
 export function getMessagesByConversation(conversationId: string, limit?: number, offset?: number): Message[] {
   let query = 'SELECT * FROM messages WHERE conversationId = ? ORDER BY createdAt ASC';
   const params: unknown[] = [conversationId];
@@ -68,6 +75,7 @@ export function getMessagesByConversation(conversationId: string, limit?: number
   }));
 }
 
+/** 更新消息内容或 toolCalls，常用于流式结束后持久化 assistant 回复 */
 export function updateMessage(id: string, updates: Partial<Pick<Message, 'content' | 'toolCalls' | 'metadata'>>): Message | null {
   const db = getDatabase();
   const fields: string[] = [];

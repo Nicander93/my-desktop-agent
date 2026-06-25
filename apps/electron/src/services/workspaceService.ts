@@ -1,6 +1,13 @@
+/**
+ * 工作区数据服务
+ *
+ * 负责 workspaces 和 workspace_settings 表的 CRUD，
+ * 以及路径是否在工作区内的判定逻辑
+ */
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 
+/** 工作区实体，path 为本地目录绝对路径 */
 export interface Workspace {
   id: string;
   name: string;
@@ -13,6 +20,7 @@ export interface Workspace {
   lastAccessedAt: number;
 }
 
+/** 工作区路径限制配置 */
 export interface WorkspaceSettings {
   workspaceId: string;
   allowedPaths: string[];
@@ -36,6 +44,7 @@ function queryOne<T>(sql: string, params: any[] = []): T | undefined {
   return results[0];
 }
 
+/** 创建工作区，同时初始化默认 settings（restrictedMode=1） */
 export function createWorkspace(name: string, path: string, description?: string): Workspace {
   const db = getDatabase();
   const id = uuidv4();
@@ -69,6 +78,7 @@ export function getWorkspaceByPath(path: string): Workspace | undefined {
   return queryOne<Workspace>('SELECT * FROM workspaces WHERE path = ?', [path]);
 }
 
+/** 按最近访问时间倒序 */
 export function getAllWorkspaces(): Workspace[] {
   return queryAll<Workspace>('SELECT * FROM workspaces ORDER BY lastAccessedAt DESC');
 }
@@ -96,6 +106,7 @@ export function updateWorkspace(id: string, updates: Partial<Pick<Workspace, 'na
   return getWorkspace(id) || null;
 }
 
+/** 删除工作区，级联删除 conversations / messages / settings */
 export function deleteWorkspace(id: string): boolean {
   const db = getDatabase();
   db.run('DELETE FROM workspaces WHERE id = ?', [id]);
@@ -103,6 +114,7 @@ export function deleteWorkspace(id: string): boolean {
   return true;
 }
 
+/** 更新 lastAccessedAt，用于侧边栏排序 */
 export function touchWorkspace(id: string): void {
   const db = getDatabase();
   db.run('UPDATE workspaces SET lastAccessedAt = ? WHERE id = ?', [Date.now(), id]);
@@ -138,6 +150,10 @@ export function updateWorkspaceSettings(workspaceId: string, settings: Partial<P
   saveDatabase();
 }
 
+/**
+ * 判断目标路径是否在工作区或额外允许路径内
+ * 支持目录前缀匹配（含 / 和 \）
+ */
 export function isPathInWorkspace(workspacePath: string, targetPath: string, allowedPaths: string[] = []): boolean {
   const normalizedWorkspace = workspacePath.replace(/[\/\\]$/, '');
   const normalizedTarget = targetPath.replace(/[\/\\]$/, '');

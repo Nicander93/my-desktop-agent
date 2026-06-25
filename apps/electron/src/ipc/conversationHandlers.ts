@@ -1,7 +1,14 @@
+/**
+ * 对话与消息 IPC Handler
+ *
+ * 通道前缀 conversation:* 和 message:*
+ * 删除对话时会级联删除关联消息
+ */
 import { ipcMain } from 'electron';
 import * as conversationService from '../services/conversationService';
 import * as messageService from '../services/messageService';
 
+/** 注册 conversation:* 和 message:* IPC 通道 */
 export function registerConversationHandlers(): void {
   ipcMain.handle('conversation:create', (_, workspaceId: string, title?: string, model?: string) => {
     const conversation = conversationService.createConversation(workspaceId, title, model);
@@ -25,6 +32,7 @@ export function registerConversationHandlers(): void {
     return { success: true, conversation };
   });
 
+  /** 先删消息再删对话 */
   ipcMain.handle('conversation:delete', (_, id: string) => {
     messageService.deleteMessagesByConversation(id);
     const success = conversationService.deleteConversation(id);

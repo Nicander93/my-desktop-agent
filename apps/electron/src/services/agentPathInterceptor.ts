@@ -1,21 +1,29 @@
+/**
+ * Agent 路径拦截器
+ *
+ * 在工具执行前检查路径是否在工作区允许范围内
+ */
 import { AgentRuntime } from '@desktop-agent/agent-runtime';
-import { checkPathAccess, grantAlwaysAllow } from './pathGuard';
 import { BrowserWindow } from 'electron';
+import { checkPathAccess } from './pathGuard';
 
+/**
+ * 为 AgentRuntime 注册路径访问检查器
+ * @param getWindow 延迟获取主窗口，用于弹出确认对话框
+ */
 export function setupPathInterceptor(
   runtime: AgentRuntime,
   getWindow: () => BrowserWindow | null
 ): void {
-  const originalCreateAgent = runtime.createAgent.bind(runtime);
-
-  runtime.createAgent = function interceptedCreateAgent(sessionId: string) {
-    const agent = originalCreateAgent(sessionId);
-
-    const originalQuery = agent.query.bind(agent);
-    agent.query = async function* interceptedQuery(input: string) {
-      yield* originalQuery(input);
-    };
-
-    return agent;
-  };
+  runtime.setPathAccessChecker(async (request) => {
+    const result = await checkPathAccess(
+      {
+        workspaceId: request.workspaceId,
+        targetPath: request.targetPath,
+        toolName: request.toolName
+      },
+      getWindow()
+    );
+    return { allowed: result.allowed };
+  });
 }

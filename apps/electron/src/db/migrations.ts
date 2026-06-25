@@ -1,3 +1,8 @@
+/**
+ * 数据库版本化迁移
+ *
+ * 通过 _migrations 表记录已执行版本，新增迁移只需追加 version 递增的条目
+ */
 import { Database as SqlJsDatabase } from 'sql.js';
 
 interface Migration {
@@ -5,6 +10,7 @@ interface Migration {
   up: string;
 }
 
+/** 迁移脚本列表，version 必须递增 */
 const migrations: Migration[] = [
   {
     version: 1,
@@ -57,6 +63,7 @@ const migrations: Migration[] = [
   }
 ];
 
+/** 执行尚未应用的迁移 */
 export function runMigrations(db: SqlJsDatabase): void {
   db.run(`
     CREATE TABLE IF NOT EXISTS _migrations (

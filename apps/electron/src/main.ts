@@ -1,3 +1,11 @@
+/**
+ * Electron 主进程入口
+ *
+ * 职责：
+ * - 初始化 SQLite、AgentRuntime、BrowserWindow
+ * - 注册 workspace / conversation / dialog IPC
+ * - 桥接 Agent 与对话（conversationId = sessionId）
+ */
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { AgentRuntime, RuntimeOptions } from '@desktop-agent/agent-runtime';
 import { join } from 'path';
@@ -6,18 +14,27 @@ import { getDatabaseAsync, closeDatabase } from './db';
 import { registerWorkspaceHandlers } from './ipc/workspaceHandlers';
 import { registerConversationHandlers } from './ipc/conversationHandlers';
 import { registerDialogHandlers } from './ipc/dialogHandlers';
+import { registerFileHandlers } from './ipc/fileHandlers';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
+import { setupPathInterceptor } from './services/agentPathInterceptor';
 
 loadProjectEnv();
 
+/** 全局 Agent 运行时实例，按 sessionId 管理多个 Agent */
 let runtime: AgentRuntime;
+/** 主窗口引用，用于流式推送和路径访问弹窗 */
 let mainWindow: BrowserWindow | null = null;
 
+/** 读取环境变量，兼容 electron-vite 的 MAIN_VITE_ 前缀 */
 function readEnv(name: string): string | undefined {
   return process.env[name] || process.env[`MAIN_VITE_${name}`];
 }
 
+/**
+ * 创建 AgentRuntime 并注入路径拦截器
+ * permissionMode 设为 default，工具执行前会走路径检查
+ */
 function createRuntime(): void {
   const apiKey = readEnv('CODEANY_API_KEY');
   const model = readEnv('CODEANY_MODEL') || 'deepseek-v4-flash';
@@ -36,12 +53,15 @@ function createRuntime(): void {
     apiType,
     baseURL,
     maxTurns: 10,
-    permissionMode: 'bypassPermissions'
+    permissionMode: 'default'
   };
 
   runtime = new AgentRuntime(options);
+  // 延迟获取 mainWindow，避免创建顺序问题
+  setupPathInterceptor(runtime, () => mainWindow);
 }
 
+/** 创建主窗口，开发模式加载 Vite dev server */
 function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -66,13 +86,22 @@ function createWindow(): void {
   });
 }
 
-function resolveWorkspacePath(conversationId: string): string | undefined {
+/**
+ * 根据对话 ID 解析 Agent 执行上下文
+ * conversationId 与 Agent sessionId 一一对应
+ */
+function resolveWorkspaceContext(conversationId: string): { cwd: string; workspaceId: string } | undefined {
   const conversation = conversationService.getConversation(conversationId);
   if (!conversation) return undefined;
   const workspace = workspaceService.getWorkspace(conversation.workspaceId);
-  return workspace?.path;
+  if (!workspace) return undefined;
+  return { cwd: workspace.path, workspaceId: workspace.id };
 }
 
+/**
+ * 从 SDK 流式消息中提取用户可读的错误信息
+ * 无 assistant 消息时视为失败
+ */
 function getAgentErrorFromMessages(messages: any[]): string | undefined {
   const hasAssistant = messages.some((msg) => msg?.type === 'assistant');
   if (hasAssistant) return undefined;
@@ -102,6 +131,7 @@ app.whenReady().then(async () => {
   registerWorkspaceHandlers();
   registerConversationHandlers();
   registerDialogHandlers();
+  registerFileHandlers(() => mainWindow);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -118,24 +148,33 @@ app.on('window-all-closed', async () => {
   }
 });
 
+/** 预创建 Agent session，绑定工作区 cwd 和 workspaceId */
 ipcMain.handle('agent:create-session', (_, sessionId: string) => {
-  const workspacePath = resolveWorkspacePath(sessionId);
-  runtime.createAgent(sessionId, workspacePath ? { cwd: workspacePath } : undefined);
+  const context = resolveWorkspaceContext(sessionId);
+  if (!context) {
+    return { success: false, error: '找不到对话所属工作区' };
+  }
+  runtime.createAgent(sessionId, { cwd: context.cwd, workspaceId: context.workspaceId });
   return { success: true, sessionId };
 });
 
+/** 发送消息并流式推送 agent:stream-message 到渲染进程 */
 ipcMain.handle('agent:send-message', async (_, sessionId: string, content: string) => {
   try {
-    const workspacePath = resolveWorkspacePath(sessionId);
-    if (!workspacePath) {
+    const context = resolveWorkspaceContext(sessionId);
+    if (!context) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const stream = await runtime.sendMessage(sessionId, content, { cwd: workspacePath });
+    const stream = await runtime.sendMessage(sessionId, content, {
+      cwd: context.cwd,
+      workspaceId: context.workspaceId
+    });
     const messages: any[] = [];
 
     for await (const msg of stream) {
       messages.push(msg);
+      // 实时推送到渲染进程，供 useAgent 更新 UI
       mainWindow?.webContents.send('agent:stream-message', {
         sessionId,
         message: msg
@@ -156,14 +195,18 @@ ipcMain.handle('agent:send-message', async (_, sessionId: string, content: strin
   }
 });
 
+/** 非流式单次 prompt，同样绑定工作区上下文 */
 ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string) => {
   try {
-    const workspacePath = resolveWorkspacePath(sessionId);
-    if (!workspacePath) {
+    const context = resolveWorkspaceContext(sessionId);
+    if (!context) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const result = await runtime.prompt(sessionId, content, { cwd: workspacePath });
+    const result = await runtime.prompt(sessionId, content, {
+      cwd: context.cwd,
+      workspaceId: context.workspaceId
+    });
     return { success: true, content: result };
   } catch (error) {
     return {

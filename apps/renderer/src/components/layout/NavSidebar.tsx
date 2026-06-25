@@ -1,3 +1,8 @@
+/**
+ * 左侧导航栏
+ *
+ * 包含新对话入口、工作区列表（WorkspaceList）和设置链接
+ */
 import { NavLink } from 'react-router-dom';
 import { MessageSquarePlus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
@@ -10,19 +15,23 @@ import { WorkspaceList } from '@/components/workspace/WorkspaceList';
 import { cn } from '@/lib/utils';
 
 export function NavSidebar() {
-  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { sidebarCollapsed, sidebarWidth, toggleSidebar } = useUIStore();
   const { currentWorkspaceId } = useWorkspaceStore();
   const { currentSessionId } = useSessionStore();
 
   return (
-    <aside className={cn(
-      'h-full bg-[var(--color-sidebar-bg)] border-r border-[var(--color-sidebar-border)] flex flex-col transition-all duration-300',
-      sidebarCollapsed ? 'w-16' : 'w-60'
-    )}>
+    <aside
+      className={cn(
+        'h-full shrink-0 bg-[var(--color-sidebar-bg)] flex flex-col',
+        sidebarCollapsed && 'w-16'
+      )}
+      style={sidebarCollapsed ? undefined : { width: sidebarWidth }}
+    >
       <ScrollArea className="flex-1">
         <nav className="p-3 space-y-1">
           <NavLink
             to="/"
+            end
             className={({ isActive }) => cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200',
               isActive

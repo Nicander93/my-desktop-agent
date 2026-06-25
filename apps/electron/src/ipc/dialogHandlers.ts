@@ -1,5 +1,12 @@
+/**
+ * 系统对话框 IPC Handler
+ *
+ * 提供目录选择和路径访问确认，复用 pathGuard 的弹窗逻辑
+ */
 import { ipcMain, dialog, BrowserWindow } from 'electron';
+import { showPathAccessDialog } from '../services/pathGuard';
 
+/** 注册 dialog:* IPC 通道 */
 export function registerDialogHandlers(): void {
   ipcMain.handle('dialog:select-directory', async (event, options?: { title?: string; defaultPath?: string }) => {
     const window = BrowserWindow.fromWebContents(event.sender);
@@ -17,24 +24,16 @@ export function registerDialogHandlers(): void {
     return { success: true, path: result.filePaths[0] };
   });
 
-  ipcMain.handle('dialog:confirm-path-access', async (event, options: { workspacePath: string; targetPath: string }) => {
+  ipcMain.handle('dialog:confirm-path-access', async (event, options: { workspacePath: string; targetPath: string; toolName?: string }) => {
     const window = BrowserWindow.fromWebContents(event.sender);
-    if (!window) return { success: false, response: 1 };
+    if (!window) return { success: false, response: 2 };
 
-    const result = await dialog.showMessageBox(window, {
-      type: 'warning',
-      title: '路径访问请求',
-      message: 'Agent 尝试访问工作区外的文件',
-      detail: `目标路径：${options.targetPath}\n\n是否允许本次访问？`,
-      buttons: ['允许本次', '始终允许', '拒绝'],
-      defaultId: 2,
-      cancelId: 2
-    });
+    const result = await showPathAccessDialog(window, options);
 
     return {
       success: true,
-      response: result.response,
-      alwaysAllow: result.response === 1
+      response: result.allowed ? (result.alwaysAllow ? 1 : 0) : 2,
+      alwaysAllow: result.alwaysAllow
     };
   });
 }

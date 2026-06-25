@@ -1,3 +1,8 @@
+/**
+ * 创建工作区弹窗
+ *
+ * 选择本地目录后调用 workspace:create-from-path 写入数据库。
+ */
 import { useState } from 'react';
 import { FolderPlus, Folder } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -17,6 +22,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
   const [isCreating, setIsCreating] = useState(false);
   const { createWorkspaceFromPath } = useWorkspaceStore();
 
+  /** 选目录后自动用文件夹名填充工作区名称 */
   const handleSelectDirectory = async () => {
     const result = await window.electronAPI?.dialog.selectDirectory({ title: '选择工作目录' });
     if (result?.success && result.path) {

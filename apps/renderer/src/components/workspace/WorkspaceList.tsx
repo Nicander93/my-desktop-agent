@@ -1,8 +1,15 @@
+/**
+ * 侧边栏工作区列表
+ *
+ * 展示所有工作区，支持折叠模式下的图标视图。
+ * 切换工作区时会清空当前对话和消息状态。
+ */
 import { useEffect, useState } from 'react';
 import { FolderPlus, Folder } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useChatStore } from '@/stores/chatStore';
+import { useGoToChat } from '@/hooks/useGoToChat';
 import { WorkspaceItem } from './WorkspaceItem';
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog';
 import { Button } from '@/components/ui/button';
@@ -15,13 +22,16 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
   const { workspaces, currentWorkspaceId, selectWorkspace, loadWorkspaces, isLoading } = useWorkspaceStore();
   const { setCurrentSession } = useSessionStore();
   const { clearMessages, setCurrentConversation } = useChatStore();
+  const goToChat = useGoToChat();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadWorkspaces();
   }, [loadWorkspaces]);
 
+  /** 切换工作区：重置对话和聊天状态 */
   const handleSelectWorkspace = (id: string) => {
+    goToChat();
     selectWorkspace(id);
     setCurrentSession(null);
     clearMessages();
@@ -70,7 +80,6 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
               key={workspace.id}
               workspace={workspace}
               isActive={currentWorkspaceId === workspace.id}
-              onClick={() => handleSelectWorkspace(workspace.id)}
             />
           ))}
         </div>
