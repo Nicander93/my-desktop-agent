@@ -2,8 +2,8 @@ import { create } from 'zustand';
 
 const SIDEBAR_MIN_WIDTH = 180;
 const SIDEBAR_MAX_WIDTH = 480;
-const TOOL_PANEL_MIN_WIDTH = 240;
-const TOOL_PANEL_MAX_WIDTH = 600;
+const TOOL_PANEL_MIN_WIDTH = 400;
+const TOOL_PANEL_MAX_WIDTH = 900;
 
 interface UIState {
   sidebarCollapsed: boolean;
@@ -22,7 +22,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
   sidebarWidth: 240,
   toolPanelVisible: true,
-  toolPanelWidth: 320,
+  toolPanelWidth: 560,
   toolPanelTab: 'explorer',
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   adjustSidebarWidth: (delta) => set((state) => ({

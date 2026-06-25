@@ -3,12 +3,10 @@
  *
  * 包含新对话入口、工作区列表（WorkspaceList）和设置链接
  */
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { MessageSquarePlus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
-import { useChatStore } from '@/stores/chatStore';
-import { useSessionStore } from '@/stores/sessionStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useNewConversation } from '@/hooks/useNewConversation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { WorkspaceList } from '@/components/workspace/WorkspaceList';
@@ -16,8 +14,9 @@ import { cn } from '@/lib/utils';
 
 export function NavSidebar() {
   const { sidebarCollapsed, sidebarWidth, toggleSidebar } = useUIStore();
-  const { currentWorkspaceId } = useWorkspaceStore();
-  const { currentSessionId } = useSessionStore();
+  const startNewConversation = useNewConversation();
+  const { pathname } = useLocation();
+  const isChatActive = pathname === '/';
 
   return (
     <aside
@@ -29,12 +28,12 @@ export function NavSidebar() {
     >
       <ScrollArea className="flex-1">
         <nav className="p-3 space-y-1">
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200',
-              isActive
+          <button
+            type="button"
+            onClick={() => void startNewConversation()}
+            className={cn(
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200',
+              isChatActive
                 ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
                 : 'text-gray-600 hover:bg-gray-100',
               sidebarCollapsed && 'justify-center'
@@ -42,7 +41,7 @@ export function NavSidebar() {
           >
             <MessageSquarePlus size={20} />
             {!sidebarCollapsed && <span>新对话</span>}
-          </NavLink>
+          </button>
 
           {!sidebarCollapsed && <WorkspaceList collapsed={false} />}
         </nav>

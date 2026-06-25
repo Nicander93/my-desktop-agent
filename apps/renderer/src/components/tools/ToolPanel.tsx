@@ -54,12 +54,20 @@ export function ToolPanel() {
         </Button>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 min-h-0 overflow-hidden">
         {toolPanelTab === 'explorer' && <FileExplorer />}
         {toolPanelTab === 'preview' && <FilePreview />}
-        {toolPanelTab === 'history' && <ToolHistory />}
-        {toolPanelTab === 'diff' && <DiffView />}
-      </ScrollArea>
+        {toolPanelTab === 'history' && (
+          <ScrollArea className="h-full">
+            <ToolHistory />
+          </ScrollArea>
+        )}
+        {toolPanelTab === 'diff' && (
+          <ScrollArea className="h-full">
+            <DiffView />
+          </ScrollArea>
+        )}
+      </div>
     </aside>
   );
 }

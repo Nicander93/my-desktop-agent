@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
-import { resolveEditorFileType } from '../src/lib/fileTypeUtils';
+import { resolveEditorFileType, getLanguageFromPath } from '../src/lib/fileTypeUtils';
 
 describe('fileTypeUtils', () => {
   it('resolves text from utf8 encoding', () => {
@@ -28,5 +28,11 @@ describe('fileTypeUtils', () => {
 
   it('resolves image', () => {
     expect(resolveEditorFileType('/a/p.png', 'image/png', 'base64')).toBe('image');
+  });
+
+  it('maps file extension to monaco language', () => {
+    expect(getLanguageFromPath('/a/b.ts')).toBe('typescript');
+    expect(getLanguageFromPath('/a/c.yaml')).toBe('yaml');
+    expect(getLanguageFromPath('/a/d.unknown')).toBe('plaintext');
   });
 });

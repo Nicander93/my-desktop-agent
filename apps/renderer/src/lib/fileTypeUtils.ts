@@ -25,3 +25,54 @@ export function resolveEditorFileType(
   if (ext === 'pdf') return 'pdf';
   return 'binary';
 }
+
+const EXT_TO_MONACO_LANG: Record<string, string> = {
+  ts: 'typescript',
+  tsx: 'typescript',
+  js: 'javascript',
+  jsx: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  json: 'json',
+  md: 'markdown',
+  css: 'css',
+  scss: 'scss',
+  less: 'less',
+  html: 'html',
+  htm: 'html',
+  xml: 'xml',
+  svg: 'xml',
+  yaml: 'yaml',
+  yml: 'yaml',
+  sql: 'sql',
+  sh: 'shell',
+  bash: 'shell',
+  ps1: 'powershell',
+  bat: 'bat',
+  py: 'python',
+  rs: 'rust',
+  go: 'go',
+  java: 'java',
+  kt: 'kotlin',
+  c: 'c',
+  cpp: 'cpp',
+  h: 'c',
+  hpp: 'cpp',
+  cs: 'csharp',
+  rb: 'ruby',
+  php: 'php',
+  swift: 'swift',
+  vue: 'html',
+  toml: 'ini',
+  ini: 'ini',
+  env: 'ini',
+  gitignore: 'plaintext',
+  dockerignore: 'plaintext',
+  editorconfig: 'ini',
+};
+
+export function getLanguageFromPath(path: string): string {
+  const ext = getExtFromPath(path);
+  if (!ext) return 'plaintext';
+  return EXT_TO_MONACO_LANG[ext] ?? 'plaintext';
+}

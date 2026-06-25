@@ -7,9 +7,7 @@
 import { useEffect, useState } from 'react';
 import { Folder, ChevronRight, MoreHorizontal, Pencil, Trash2, Plus } from 'lucide-react';
 import { Workspace, useWorkspaceStore } from '@/stores/workspaceStore';
-import { useSessionStore } from '@/stores/sessionStore';
-import { useChatStore } from '@/stores/chatStore';
-import { useGoToChat } from '@/hooks/useGoToChat';
+import { useNewConversation } from '@/hooks/useNewConversation';
 import { ConversationList } from './ConversationList';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -23,10 +21,8 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
   const [expanded, setExpanded] = useState(isActive);
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(workspace.name);
-  const { updateWorkspace, deleteWorkspace, selectWorkspace } = useWorkspaceStore();
-  const { createSession, setCurrentSession } = useSessionStore();
-  const { clearMessages, setCurrentConversation } = useChatStore();
-  const goToChat = useGoToChat();
+  const { updateWorkspace, deleteWorkspace } = useWorkspaceStore();
+  const startNewConversation = useNewConversation();
 
   useEffect(() => {
     if (isActive) setExpanded(true);
@@ -43,19 +39,8 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
 
   const handleCreateConversation = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    goToChat();
     setExpanded(true);
-    if (!isActive) {
-      selectWorkspace(workspace.id);
-      setCurrentSession(null);
-      clearMessages();
-      setCurrentConversation(null);
-    }
-    const session = await createSession(workspace.id);
-    if (session) {
-      clearMessages();
-      setCurrentConversation(session.id);
-    }
+    await startNewConversation(workspace.id);
   };
 
   const handleRename = async () => {
@@ -96,7 +81,13 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
             onClick={(e) => e.stopPropagation()}
           />
         ) : (
-          <span className="flex-1 truncate">{workspace.name}</span>
+          <span
+            className="flex-1 truncate"
+            onDoubleClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+            title="双击重命名"
+          >
+            {workspace.name}
+          </span>
         )}
 
         <button

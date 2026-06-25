@@ -10,6 +10,7 @@ import { Header } from '../layout/Header';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { useAgent } from '@/hooks/useAgent';
+import { useNewConversation } from '@/hooks/useNewConversation';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { FolderOpen, MessageSquarePlus } from 'lucide-react';
@@ -19,6 +20,7 @@ export function ChatPanel() {
   const { sendMessage } = useAgent();
   const { currentWorkspaceId, workspaces } = useWorkspaceStore();
   const { currentSessionId } = useSessionStore();
+  const startNewConversation = useNewConversation();
 
   const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
 
@@ -48,8 +50,9 @@ export function ChatPanel() {
             <MessageSquarePlus size={48} className="mx-auto" />
             <div>
               <p className="text-lg font-medium text-gray-500">创建新对话</p>
-              <p className="text-sm mt-1">在左侧侧边栏的工作区中点击 + 创建对话</p>
+              <p className="text-sm mt-1">点击按钮或左侧「新对话」开始聊天</p>
             </div>
+            <Button onClick={() => startNewConversation()}>新对话</Button>
           </div>
         </div>
       </div>

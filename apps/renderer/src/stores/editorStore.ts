@@ -52,7 +52,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
 
       const fileType = resolveEditorFileType(path, result.file.mimeType, result.file.encoding);
-      useUIStore.getState().setToolPanelTab('preview');
+      useUIStore.getState().setToolPanelTab('explorer');
       useFileExplorerStore.getState().selectPath(path);
 
       set({

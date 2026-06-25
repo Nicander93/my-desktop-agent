@@ -41,7 +41,13 @@ export const useSessionStore = create<SessionState>((set) => ({
           id: c.id, workspaceId: c.workspaceId, title: c.title,
           model: c.model, createdAt: c.createdAt, updatedAt: c.updatedAt
         }));
-        set({ sessions, isLoading: false });
+        set((state) => ({
+          sessions: [
+            ...state.sessions.filter((s) => s.workspaceId !== workspaceId),
+            ...sessions,
+          ],
+          isLoading: false,
+        }));
       } else {
         set({ isLoading: false });
       }
