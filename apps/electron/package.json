@@ -17,6 +17,7 @@
     "@desktop-agent/shared": "workspace:*",
     "@desktop-agent/tools": "workspace:*",
     "electron": "^42.0.0",
+    "ignore": "^7.0.5",
     "sql.js": "^1.14.1",
     "uuid": "^14.0.1"
   },

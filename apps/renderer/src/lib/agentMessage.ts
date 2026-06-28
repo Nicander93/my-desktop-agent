@@ -5,22 +5,133 @@ export interface StreamToolUpdate {
   isStreaming: boolean;
 }
 
-export function extractStreamText(message: unknown, currentContent = ''): string | null {
+export interface StreamTextUpdate {
+  content?: string;
+  thinking?: string;
+}
+
+function appendText(existing: string | undefined, chunk: string, multiline = false): string {
+  if (!chunk) return existing || '';
+  if (!existing) return chunk;
+  return multiline ? `${existing}\n\n${chunk}` : existing + chunk;
+}
+
+/** 合并流式 thinking 与 assistant 终态，避免重复 append */
+export function reconcileStreamThinking(current: string | undefined, incoming: string): string {
+  const cur = (current ?? '').trim();
+  const next = incoming.trim();
+  if (!next) return current ?? '';
+  if (!cur) return incoming;
+  if (next === cur) return current!;
+  if (cur.includes(next) && next.length <= cur.length) return current!;
+  if (next.startsWith(cur)) return incoming;
+  return appendText(current, incoming, true);
+}
+
+export function parseAssistantSegments(
+  content: unknown,
+  hasToolHistory: boolean,
+): { thinking: string; response: string } {
+  if (typeof content === 'string') {
+    return { thinking: '', response: content };
+  }
+
+  if (!Array.isArray(content)) {
+    return { thinking: '', response: '' };
+  }
+
+  const hasToolUse = content.some(
+    (block) => block != null && typeof block === 'object' && (block as { type?: string }).type === 'tool_use',
+  );
+
+  const thinkingParts: string[] = [];
+  const responseParts: string[] = [];
+
+  for (const block of content) {
+    if (!block || typeof block !== 'object') continue;
+
+    if ((block as { type?: string }).type === 'thinking' && 'thinking' in block) {
+      const t = (block as { thinking: string }).thinking;
+      if (t) thinkingParts.push(t);
+    } else if ((block as { type?: string }).type === 'text' && 'text' in block) {
+      const text = (block as { text: string }).text;
+      if (!text) continue;
+      if (hasToolUse) {
+        thinkingParts.push(text);
+      } else if (hasToolHistory) {
+        responseParts.push(text);
+      } else {
+        responseParts.push(text);
+      }
+    }
+  }
+
+  return {
+    thinking: thinkingParts.join('\n\n'),
+    response: responseParts.join('\n\n'),
+  };
+}
+
+export function getStreamPhase(toolCalls: ToolCall[]): 'thinking' | 'responding' {
+  if (toolCalls.length === 0) return 'responding';
+  const hasActive = toolCalls.some((t) => t.status === 'running' || t.status === 'pending');
+  if (hasActive) return 'thinking';
+  return 'responding';
+}
+
+/** 是否展示 Thought 区块：有与正文不同的思考内容 */
+export function shouldShowThought(message: {
+  thinking?: string;
+  content?: string;
+}): boolean {
+  const thinking = message.thinking?.trim();
+  if (!thinking) return false;
+  const content = message.content?.trim();
+  if (content && thinking === content) return false;
+  return true;
+}
+
+export function extractStreamTextUpdate(
+  message: unknown,
+  current: { content: string; thinking?: string; toolCalls?: ToolCall[] },
+): StreamTextUpdate | null {
   if (!message || typeof message !== 'object') return null;
 
   const record = message as Record<string, unknown>;
+  const toolCalls = current.toolCalls || [];
 
   if (record.type === 'partial_message') {
-    const partial = record.partial as { type?: string; text?: string } | undefined;
-    if (partial?.type === 'text' && partial.text) {
-      return currentContent + partial.text;
+    const partial = record.partial as {
+      type?: string;
+      text?: string;
+      thinking?: string;
+    } | undefined;
+
+    if (partial?.type === 'thinking' && partial.thinking) {
+      return { thinking: appendText(current.thinking, partial.thinking) };
     }
+
+    if (partial?.type === 'text' && partial.text) {
+      const hasActiveTools = toolCalls.some((t) => t.status === 'running' || t.status === 'pending');
+      if (hasActiveTools) return null;
+      return { content: appendText(current.content, partial.text) };
+    }
+    return null;
   }
 
   if (record.type === 'assistant') {
     const msg = record.message as { content?: unknown } | undefined;
-    const parsed = parseMessageContent(msg?.content);
-    if (parsed) return parsed;
+    const { thinking, response } = parseAssistantSegments(msg?.content, toolCalls.length > 0);
+    const update: StreamTextUpdate = {};
+
+    if (thinking) {
+      update.thinking = reconcileStreamThinking(current.thinking, thinking);
+    }
+    if (response) {
+      update.content = response;
+    }
+
+    return Object.keys(update).length > 0 ? update : null;
   }
 
   return null;
@@ -35,6 +146,13 @@ export function parseMessageContent(content: unknown): string {
       .join('');
   }
   return '';
+}
+
+/** @deprecated use extractStreamTextUpdate */
+export function extractStreamText(message: unknown, currentContent = ''): string | null {
+  const update = extractStreamTextUpdate(message, { content: currentContent, toolCalls: [] });
+  if (!update?.content) return null;
+  return update.content;
 }
 
 const RESULT_ERROR_HINT: Record<string, string> = {

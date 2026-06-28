@@ -1,14 +1,38 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { MessageItem } from './MessageItem';
 
+const STICKY_THRESHOLD = 80;
+
 export function MessageList() {
   const { messages, isProcessing } = useChatStore();
+  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(0);
+  const stickToBottomRef = useRef(true);
+
+  const scrollKey = useMemo(
+    () => messages
+      .map((m) => `${m.id}|${m.role}|${m.content?.length ?? 0}|${m.isStreaming ? 1 : 0}`)
+      .join('\n'),
+    [messages],
+  );
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    stickToBottomRef.current = distanceFromBottom <= STICKY_THRESHOLD;
+  };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isProcessing]);
+    const isNewMessage = messages.length > prevLengthRef.current;
+    prevLengthRef.current = messages.length;
+
+    if (isNewMessage || stickToBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: isNewMessage ? 'smooth' : 'auto' });
+    }
+  }, [scrollKey, isProcessing, messages.length]);
 
   if (messages.length === 0) {
     return (
@@ -22,7 +46,7 @@ export function MessageList() {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
       <div className="max-w-3xl mx-auto px-6 py-6 space-y-8">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />

@@ -8,6 +8,7 @@
  */
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { AgentRuntime, RuntimeOptions } from '@desktop-agent/agent-runtime';
+import type { AgentSendMessageOptions } from '@desktop-agent/shared';
 import { join } from 'path';
 import { loadProjectEnv } from './loadEnvFile';
 import { getDatabaseAsync, closeDatabase } from './db';
@@ -15,6 +16,7 @@ import { registerWorkspaceHandlers } from './ipc/workspaceHandlers';
 import { registerConversationHandlers } from './ipc/conversationHandlers';
 import { registerDialogHandlers } from './ipc/dialogHandlers';
 import { registerFileHandlers } from './ipc/fileHandlers';
+import { registerMcpHandlers, getEnabledMcpServersForWorkspace } from './ipc/mcpHandlers';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
 import { setupPathInterceptor } from './services/agentPathInterceptor';
@@ -31,6 +33,25 @@ function readEnv(name: string): string | undefined {
   return process.env[name] || process.env[`MAIN_VITE_${name}`];
 }
 
+function parseThinkingConfig(): RuntimeOptions['thinking'] {
+  const mode = (readEnv('CODEANY_THINKING') || 'enabled').toLowerCase();
+  if (mode === 'disabled' || mode === 'off' || mode === 'false') {
+    return { type: 'disabled' };
+  }
+
+  const budgetRaw = readEnv('CODEANY_THINKING_BUDGET');
+  const budgetTokens = budgetRaw ? Number(budgetRaw) : 8000;
+
+  if (mode === 'adaptive') {
+    return Number.isFinite(budgetTokens) ? { type: 'adaptive', budgetTokens } : { type: 'adaptive' };
+  }
+
+  return {
+    type: 'enabled',
+    budgetTokens: Number.isFinite(budgetTokens) ? budgetTokens : 8000,
+  };
+}
+
 /**
  * 创建 AgentRuntime 并注入路径拦截器
  * permissionMode 设为 default，工具执行前会走路径检查
@@ -40,11 +61,14 @@ function createRuntime(): void {
   const model = readEnv('CODEANY_MODEL') || 'deepseek-v4-flash';
   const apiType = (readEnv('CODEANY_API_TYPE') as RuntimeOptions['apiType']) || 'openai-completions';
   const baseURL = readEnv('CODEANY_BASE_URL') || 'https://api.deepseek.com';
+  const thinking = parseThinkingConfig();
 
   if (!apiKey) {
     console.warn('[desktop-agent] CODEANY_API_KEY 未设置，请在项目根目录 .env 中配置');
   } else {
-    console.info(`[desktop-agent] Agent 已配置: model=${model}, baseURL=${baseURL}`);
+    console.info(
+      `[desktop-agent] Agent 已配置: model=${model}, baseURL=${baseURL}, thinking=${thinking?.type}`,
+    );
   }
 
   const options: RuntimeOptions = {
@@ -53,7 +77,8 @@ function createRuntime(): void {
     apiType,
     baseURL,
     maxTurns: 10,
-    permissionMode: 'default'
+    permissionMode: 'default',
+    thinking,
   };
 
   runtime = new AgentRuntime(options);
@@ -132,6 +157,7 @@ app.whenReady().then(async () => {
   registerConversationHandlers();
   registerDialogHandlers();
   registerFileHandlers(() => mainWindow);
+  registerMcpHandlers();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -148,27 +174,37 @@ app.on('window-all-closed', async () => {
   }
 });
 
+function buildAgentSessionOptions(conversationId: string) {
+  const context = resolveWorkspaceContext(conversationId);
+  if (!context) return undefined;
+  return {
+    cwd: context.cwd,
+    workspaceId: context.workspaceId,
+    mcpServers: getEnabledMcpServersForWorkspace(context.cwd),
+  };
+}
+
 /** 预创建 Agent session，绑定工作区 cwd 和 workspaceId */
 ipcMain.handle('agent:create-session', (_, sessionId: string) => {
-  const context = resolveWorkspaceContext(sessionId);
-  if (!context) {
+  const sessionOptions = buildAgentSessionOptions(sessionId);
+  if (!sessionOptions) {
     return { success: false, error: '找不到对话所属工作区' };
   }
-  runtime.createAgent(sessionId, { cwd: context.cwd, workspaceId: context.workspaceId });
+  runtime.createAgent(sessionId, sessionOptions);
   return { success: true, sessionId };
 });
 
 /** 发送消息并流式推送 agent:stream-message 到渲染进程 */
-ipcMain.handle('agent:send-message', async (_, sessionId: string, content: string) => {
+ipcMain.handle('agent:send-message', async (_, sessionId: string, content: string, options?: AgentSendMessageOptions) => {
   try {
-    const context = resolveWorkspaceContext(sessionId);
-    if (!context) {
+    const sessionOptions = buildAgentSessionOptions(sessionId);
+    if (!sessionOptions) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const stream = await runtime.sendMessage(sessionId, content, {
-      cwd: context.cwd,
-      workspaceId: context.workspaceId
+    const stream = await runtime.sendMessage(sessionId, content, sessionOptions, {
+      mcpMentions: options?.mcpMentions,
+      fileRefs: options?.fileRefs,
     });
     const messages: any[] = [];
 
@@ -196,16 +232,16 @@ ipcMain.handle('agent:send-message', async (_, sessionId: string, content: strin
 });
 
 /** 非流式单次 prompt，同样绑定工作区上下文 */
-ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string) => {
+ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string, options?: AgentSendMessageOptions) => {
   try {
-    const context = resolveWorkspaceContext(sessionId);
-    if (!context) {
+    const sessionOptions = buildAgentSessionOptions(sessionId);
+    if (!sessionOptions) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const result = await runtime.prompt(sessionId, content, {
-      cwd: context.cwd,
-      workspaceId: context.workspaceId
+    const result = await runtime.prompt(sessionId, content, sessionOptions, {
+      mcpMentions: options?.mcpMentions,
+      fileRefs: options?.fileRefs,
     });
     return { success: true, content: result };
   } catch (error) {
@@ -219,6 +255,30 @@ ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string) => 
 ipcMain.handle('agent:get-messages', (_, sessionId: string) => {
   const messages = runtime.getMessages(sessionId);
   return { success: true, messages };
+});
+
+ipcMain.handle('agent:get-trace-run', async (_, sessionId: string, runId: string) => {
+  try {
+    const traceRun = await runtime.getTraceRun(sessionId, runId);
+    return { success: true, traceRun };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+});
+
+ipcMain.handle('agent:get-latest-trace-run', async (_, sessionId: string) => {
+  try {
+    const traceRun = await runtime.getLatestTraceRun(sessionId);
+    return { success: true, traceRun };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
 });
 
 ipcMain.handle('agent:close-session', async (_, sessionId: string) => {

@@ -6,8 +6,10 @@
 import { existsSync, readFileSync, writeFileSync, statSync, readdirSync } from 'fs';
 import { extname, basename, dirname, join } from 'path';
 import type { BrowserWindow } from 'electron';
-import type { FileEntry, FileStat, ReadFileResult } from '@desktop-agent/shared';
+import type { FileEntry, FileStat, ReadFileResult, FileSearchResult } from '@desktop-agent/shared';
 import { checkPathAccess } from './pathGuard';
+import { searchFiles as searchWorkspaceFiles } from './fileSearch';
+import * as workspaceService from './workspaceService';
 
 const TEXT_EXTENSIONS = new Set([
   '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
@@ -218,6 +220,20 @@ export async function readDir(
   });
 
   return result;
+}
+
+export async function searchFiles(
+  workspaceId: string,
+  query: string,
+  window: BrowserWindow | null,
+): Promise<FileSearchResult[]> {
+  const workspace = workspaceService.getWorkspace(workspaceId);
+  if (!workspace) {
+    throw new Error('工作区不存在');
+  }
+
+  await assertAccess(workspaceId, workspace.path, window);
+  return searchWorkspaceFiles(workspace.path, query);
 }
 
 export { isTextFile, getExt, getMimeType };

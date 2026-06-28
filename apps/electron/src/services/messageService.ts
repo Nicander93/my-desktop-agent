@@ -39,21 +39,22 @@ export function createMessage(
   role: Message['role'],
   content: string,
   toolCalls?: unknown[],
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  id?: string,
 ): Message {
   const db = getDatabase();
-  const id = uuidv4();
+  const messageId = id || uuidv4();
   const now = Date.now();
 
   db.run(
     `INSERT INTO messages (id, conversationId, role, content, toolCalls, metadata, createdAt)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, conversationId, role, content, JSON.stringify(toolCalls || []), JSON.stringify(metadata || {}), now]
+    [messageId, conversationId, role, content, JSON.stringify(toolCalls || []), JSON.stringify(metadata || {}), now]
   );
 
   saveDatabase();
 
-  return { id, conversationId, role, content, toolCalls: toolCalls || [], metadata: metadata || {}, createdAt: now };
+  return { id: messageId, conversationId, role, content, toolCalls: toolCalls || [], metadata: metadata || {}, createdAt: now };
 }
 
 /** 按时间正序获取对话消息，支持分页 */

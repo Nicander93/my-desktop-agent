@@ -4,6 +4,7 @@
  * 内存中维护当前对话的消息列表，通过 IPC 同步到 SQLite
  */
 import { create } from 'zustand';
+import type { AgentTrace, MessagePart } from '@desktop-agent/shared';
 
 export interface Message {
   id: string;
@@ -12,7 +13,11 @@ export interface Message {
   content: string;
   timestamp: number;
   isStreaming?: boolean;
+  thinking?: string;
+  thinkingDurationMs?: number;
   toolCalls?: ToolCall[];
+  trace?: AgentTrace;
+  parts?: MessagePart[];
 }
 
 export interface ToolCall {
@@ -31,7 +36,14 @@ interface ChatState {
   addMessage: (message: Message) => void;
   persistMessage: (message: Message) => Promise<void>;
   updateMessage: (id: string, updates: Partial<Message>) => void;
-  persistMessageUpdate: (id: string, updates: { content?: string; toolCalls?: ToolCall[] }) => Promise<void>;
+  persistMessageUpdate: (id: string, updates: {
+    content?: string;
+    toolCalls?: ToolCall[];
+    thinking?: string;
+    thinkingDurationMs?: number;
+    trace?: AgentTrace;
+    parts?: MessagePart[];
+  }) => Promise<void>;
   clearMessages: () => void;
   setProcessing: (processing: boolean) => void;
   setCurrentConversation: (conversationId: string | null) => void;
@@ -48,8 +60,16 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const result = await window.electronAPI?.message.getByConversation(conversationId);
       if (result?.success && result.messages) {
         const messages = result.messages.map((m: any) => ({
-          id: m.id, conversationId: m.conversationId, role: m.role,
-          content: m.content, timestamp: m.createdAt, toolCalls: m.toolCalls || []
+          id: m.id,
+          conversationId: m.conversationId,
+          role: m.role,
+          content: m.content,
+          timestamp: m.createdAt,
+          toolCalls: m.toolCalls || [],
+          thinking: m.metadata?.thinking as string | undefined,
+          thinkingDurationMs: m.metadata?.thinkingDurationMs as number | undefined,
+          trace: m.metadata?.trace as AgentTrace | undefined,
+          parts: m.metadata?.parts as MessagePart[] | undefined,
         }));
         set({ messages, currentConversationId: conversationId });
       }
@@ -65,8 +85,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
   persistMessage: async (message) => {
     try {
       await window.electronAPI?.message.create(
-        message.conversationId, message.role, message.content,
-        message.toolCalls, { isStreaming: message.isStreaming }
+        message.conversationId,
+        message.role,
+        message.content,
+        message.toolCalls,
+        {
+          isStreaming: message.isStreaming,
+          thinking: message.thinking,
+          thinkingDurationMs: message.thinkingDurationMs,
+          trace: message.trace,
+          parts: message.parts,
+        },
+        message.id,
       );
     } catch (error) {
       console.error('Failed to persist message:', error);
@@ -80,9 +110,18 @@ export const useChatStore = create<ChatState>((set, get) => ({
   /** 流式结束后持久化 assistant 最终内容 */
   persistMessageUpdate: async (id, updates) => {
     try {
-      const dbUpdates: any = {};
+      const dbUpdates: Record<string, unknown> = {};
       if (updates.content !== undefined) dbUpdates.content = updates.content;
       if (updates.toolCalls !== undefined) dbUpdates.toolCalls = updates.toolCalls;
+      if (updates.thinking !== undefined || updates.thinkingDurationMs !== undefined || updates.trace !== undefined || updates.parts !== undefined) {
+        const msg = get().messages.find((m) => m.id === id);
+        dbUpdates.metadata = {
+          thinking: updates.thinking ?? msg?.thinking,
+          thinkingDurationMs: updates.thinkingDurationMs ?? msg?.thinkingDurationMs,
+          trace: updates.trace ?? msg?.trace,
+          parts: updates.parts ?? msg?.parts,
+        };
+      }
       await window.electronAPI?.message.update(id, dbUpdates);
     } catch (error) {
       console.error('Failed to persist message update:', error);

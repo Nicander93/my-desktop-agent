@@ -39,9 +39,9 @@ export function registerConversationHandlers(): void {
     return { success };
   });
 
-  ipcMain.handle('message:create', (_, conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>) => {
+  ipcMain.handle('message:create', (_, conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>, id?: string) => {
     const message = messageService.createMessage(
-      conversationId, role as messageService.Message['role'], content, toolCalls, metadata
+      conversationId, role as messageService.Message['role'], content, toolCalls, metadata, id
     );
     return { success: true, message };
   });

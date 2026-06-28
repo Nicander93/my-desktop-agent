@@ -15,12 +15,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   agent: {
     createSession: (sessionId: string) =>
       ipcRenderer.invoke('agent:create-session', sessionId),
-    sendMessage: (sessionId: string, content: string) =>
-      ipcRenderer.invoke('agent:send-message', sessionId, content),
-    prompt: (sessionId: string, content: string) =>
-      ipcRenderer.invoke('agent:prompt', sessionId, content),
+        sendMessage: (sessionId: string, content: string, options?: import('@desktop-agent/shared').AgentSendMessageOptions) =>
+          ipcRenderer.invoke('agent:send-message', sessionId, content, options),
+        prompt: (sessionId: string, content: string, options?: import('@desktop-agent/shared').AgentSendMessageOptions) =>
+          ipcRenderer.invoke('agent:prompt', sessionId, content, options),
     getMessages: (sessionId: string) =>
       ipcRenderer.invoke('agent:get-messages', sessionId),
+    getTraceRun: (sessionId: string, runId: string) =>
+      ipcRenderer.invoke('agent:get-trace-run', sessionId, runId),
+    getLatestTraceRun: (sessionId: string) =>
+      ipcRenderer.invoke('agent:get-latest-trace-run', sessionId),
     closeSession: (sessionId: string) =>
       ipcRenderer.invoke('agent:close-session', sessionId),
     /** 订阅 Agent 流式输出，返回取消订阅函数 */
@@ -66,8 +70,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   message: {
-    create: (conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>) =>
-      ipcRenderer.invoke('message:create', conversationId, role, content, toolCalls, metadata),
+    create: (conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>, id?: string) =>
+      ipcRenderer.invoke('message:create', conversationId, role, content, toolCalls, metadata, id),
     getByConversation: (conversationId: string, limit?: number, offset?: number) =>
       ipcRenderer.invoke('message:get-by-conversation', conversationId, limit, offset),
     update: (id: string, updates: { content?: string; toolCalls?: unknown[]; metadata?: Record<string, unknown> }) =>
@@ -92,5 +96,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('workspace-fs:write', workspaceId, path, content),
     readDir: (workspaceId: string, dirPath: string) =>
       ipcRenderer.invoke('workspace-fs:read-dir', workspaceId, dirPath),
+    search: (workspaceId: string, query: string) =>
+      ipcRenderer.invoke('workspace-fs:search', workspaceId, query),
+  },
+
+  mcp: {
+    getAll: () => ipcRenderer.invoke('mcp:get-all'),
+    getCatalog: () => ipcRenderer.invoke('mcp:get-catalog'),
+    getMentionable: () => ipcRenderer.invoke('mcp:get-mentionable'),
+    create: (input: unknown) => ipcRenderer.invoke('mcp:create', input),
+    update: (id: string, updates: unknown) => ipcRenderer.invoke('mcp:update', id, updates),
+    delete: (id: string) => ipcRenderer.invoke('mcp:delete', id),
+    installCatalog: (catalogId: string, secrets?: Record<string, string>) =>
+      ipcRenderer.invoke('mcp:install-catalog', catalogId, secrets),
+    importJson: (raw: string) => ipcRenderer.invoke('mcp:import-json', raw),
+    testConnection: (id: string, conversationId?: string) =>
+      ipcRenderer.invoke('mcp:test-connection', id, conversationId),
   }
 });

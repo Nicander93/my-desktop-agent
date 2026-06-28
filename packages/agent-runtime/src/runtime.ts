@@ -4,8 +4,8 @@
  * 基于 @codeany/open-agent-sdk，支持多 session 管理。
  * 每个 session 可绑定独立 cwd 和 workspaceId，用于工作区隔离。
  */
-import { createAgent, Agent, AgentOptions, SDKMessage } from '@codeany/open-agent-sdk';
-import { Message, ToolResult } from '@desktop-agent/shared';
+import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace } from '@codeany/open-agent-sdk';
+import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
 
 /** 全局 Runtime 配置，来自环境变量 */
@@ -17,6 +17,10 @@ export interface RuntimeOptions {
   cwd?: string;
   maxTurns?: number;
   permissionMode?: 'default' | 'acceptEdits' | 'dontAsk' | 'bypassPermissions' | 'plan';
+  thinking?: {
+    type: 'adaptive' | 'enabled' | 'disabled';
+    budgetTokens?: number;
+  };
 }
 
 /** 创建单个 Agent session 时的上下文 */
@@ -25,6 +29,14 @@ export interface AgentSessionOptions {
   cwd?: string;
   /** 工作区 ID，用于路径访问检查 */
   workspaceId?: string;
+  /** 已启用的 MCP Server 配置 */
+  mcpServers?: Record<string, unknown>;
+}
+
+/** 单轮对话的可选参数 */
+export interface AgentQueryOptions {
+  mcpMentions?: string[];
+  fileRefs?: string[];
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -69,9 +81,18 @@ export class AgentRuntime {
 
   /**
    * 创建 Agent 实例并缓存
-   * 若启用路径检查，会通过 SDK canUseTool 拦截工具调用
+   * 若已有实例但未启用 trace，会先关闭并重建
    */
   createAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Agent {
+    const existing = this.agents.get(sessionId);
+    if (existing && this.agentHasTrace(existing)) {
+      return existing;
+    }
+    if (existing) {
+      void existing.close();
+      this.agents.delete(sessionId);
+    }
+
     if (sessionOptions?.workspaceId) {
       this.sessionWorkspaceMap.set(sessionId, sessionOptions.workspaceId);
     }
@@ -89,7 +110,13 @@ export class AgentRuntime {
       canUseTool,
       persistSession: true,
       sessionId,
-      stream: true
+      resume: sessionId,
+      stream: true,
+      trace: { enabled: true, persist: true },
+      ...(this.options.thinking ? { thinking: this.options.thinking } : {}),
+      ...(sessionOptions?.mcpServers && Object.keys(sessionOptions.mcpServers).length > 0
+        ? { mcpServers: sessionOptions.mcpServers as AgentOptions['mcpServers'] }
+        : {}),
     };
 
     const agent = createAgent(agentOptions);
@@ -101,23 +128,27 @@ export class AgentRuntime {
     return this.agents.get(sessionId);
   }
 
-  /** 流式发送消息，首次调用时懒创建 Agent */
-  async sendMessage(sessionId: string, content: string, sessionOptions?: AgentSessionOptions): Promise<AsyncGenerator<SDKMessage>> {
-    let agent = this.agents.get(sessionId);
-    if (!agent) {
-      agent = this.createAgent(sessionId, sessionOptions);
-    }
-
-    return agent.query(content);
+  /** 流式发送消息，确保 Agent 已启用 trace */
+  async sendMessage(
+    sessionId: string,
+    content: string,
+    sessionOptions?: AgentSessionOptions,
+    queryOptions?: AgentQueryOptions,
+  ): Promise<AsyncGenerator<SDKMessage>> {
+    const agent = await this.ensureAgent(sessionId, sessionOptions);
+    const overrides = this.buildQueryOverrides(queryOptions);
+    return agent.query(content, overrides);
   }
 
-  async prompt(sessionId: string, content: string, sessionOptions?: AgentSessionOptions): Promise<string> {
-    let agent = this.agents.get(sessionId);
-    if (!agent) {
-      agent = this.createAgent(sessionId, sessionOptions);
-    }
-
-    const result = await agent.prompt(content);
+  async prompt(
+    sessionId: string,
+    content: string,
+    sessionOptions?: AgentSessionOptions,
+    queryOptions?: AgentQueryOptions,
+  ): Promise<string> {
+    const agent = await this.ensureAgent(sessionId, sessionOptions);
+    const overrides = this.buildQueryOverrides(queryOptions);
+    const result = await agent.prompt(content, overrides);
     return result.text;
   }
 
@@ -199,6 +230,33 @@ export class AgentRuntime {
     this.sessionWorkspaceMap.clear();
   }
 
+  /** 从 SDK 持久化的 trace.jsonl 加载单次 run 的完整 trace */
+  async getTraceRun(sessionId: string, runId: string): Promise<TraceRun | null> {
+    return replayRunTrace(sessionId, runId);
+  }
+
+  /** 加载 session 最近一次 run 的 trace */
+  async getLatestTraceRun(sessionId: string): Promise<TraceRun | null> {
+    const runs = await replaySessionTrace(sessionId);
+    return runs.length > 0 ? runs[runs.length - 1]! : null;
+  }
+
+  private agentHasTrace(agent: Agent): boolean {
+    return typeof agent.getTraceRecorder === 'function' && agent.getTraceRecorder() != null;
+  }
+
+  private async ensureAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Promise<Agent> {
+    const existing = this.agents.get(sessionId);
+    if (existing && this.agentHasTrace(existing)) {
+      return existing;
+    }
+    if (existing) {
+      await existing.close();
+      this.agents.delete(sessionId);
+    }
+    return this.createAgent(sessionId, sessionOptions);
+  }
+
   /** 构建 SDK canUseTool 回调，在每次工具调用前检查路径 */
   private buildCanUseTool(sessionId: string, workspaceId?: string) {
     if (!this.shouldCheckPaths() || !workspaceId || !this.pathAccessChecker) {
@@ -220,6 +278,15 @@ export class AgentRuntime {
       }
       return { behavior: 'allow' as const };
     };
+  }
+
+  private buildQueryOverrides(queryOptions?: AgentQueryOptions): Partial<AgentOptions> | undefined {
+    const parts = [
+      buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
+      buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
+    ].filter(Boolean);
+    if (parts.length === 0) return undefined;
+    return { appendSystemPrompt: parts.join('\n\n') };
   }
 
   /** executeTool 使用的路径检查，逻辑与 canUseTool 一致 */

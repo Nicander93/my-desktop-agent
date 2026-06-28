@@ -22,3 +22,11 @@ export interface ReadFileResult {
   mimeType: string;
   size: number;
 }
+
+/** @ 引用搜索候选项 */
+export interface FileSearchResult {
+  name: string;
+  path: string;
+  relativePath: string;
+  isDirectory: boolean;
+}

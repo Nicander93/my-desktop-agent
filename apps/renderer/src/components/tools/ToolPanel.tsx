@@ -1,4 +1,4 @@
-import { X, FileText, History, GitCompare, FolderTree } from 'lucide-react';
+import { X, FileText, History, GitCompare, FolderTree, Wrench } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,8 +7,10 @@ import { FileExplorer } from './FileExplorer';
 import { FilePreview } from './FilePreview';
 import { ToolHistory } from './ToolHistory';
 import { DiffView } from './DiffView';
+import { TracePanel } from './TracePanel';
 
 const tabs = [
+  { id: 'trace' as const, label: 'Trace', icon: Wrench },
   { id: 'explorer' as const, label: '目录', icon: FolderTree },
   { id: 'preview' as const, label: '预览', icon: FileText },
   { id: 'history' as const, label: '历史', icon: History },
@@ -55,6 +57,7 @@ export function ToolPanel() {
       </div>
 
       <div className="flex-1 min-h-0 overflow-hidden">
+        {toolPanelTab === 'trace' && <TracePanel />}
         {toolPanelTab === 'explorer' && <FileExplorer />}
         {toolPanelTab === 'preview' && <FilePreview />}
         {toolPanelTab === 'history' && (

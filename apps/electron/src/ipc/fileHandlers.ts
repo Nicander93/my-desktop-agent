@@ -59,4 +59,17 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
       };
     }
   });
+
+  ipcMain.handle('workspace-fs:search', async (event, workspaceId: string, query: string) => {
+    try {
+      const window = BrowserWindow.fromWebContents(event.sender) ?? getWindow();
+      const results = await fileService.searchFiles(workspaceId, query, window);
+      return { success: true, results };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
 }

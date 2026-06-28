@@ -60,6 +60,29 @@ const migrations: Migration[] = [
         FOREIGN KEY (workspaceId) REFERENCES workspaces(id) ON DELETE CASCADE
       );
     `
+  },
+  {
+    version: 2,
+    up: `
+      CREATE TABLE IF NOT EXISTS mcp_servers (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        displayName TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        source TEXT NOT NULL CHECK(source IN ('catalog', 'custom')),
+        catalogId TEXT,
+        transport TEXT NOT NULL CHECK(transport IN ('stdio', 'sse', 'http')),
+        command TEXT,
+        args TEXT DEFAULT '[]',
+        url TEXT,
+        env TEXT DEFAULT '{}',
+        enabled INTEGER DEFAULT 1,
+        sortOrder INTEGER DEFAULT 0,
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(enabled);
+    `
   }
 ];
 

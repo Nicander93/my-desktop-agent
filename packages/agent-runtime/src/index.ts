@@ -1,7 +1,9 @@
 // Agent Runtime - 基于 @codeany/open-agent-sdk
 export { AgentRuntime } from './runtime.js';
 export { extractPathsFromToolInput } from './pathUtils.js';
-export type { RuntimeOptions, AgentSessionOptions, PathAccessChecker, PathAccessCheckRequest } from './runtime.js';
+export { buildSessionMcpServers, preinstallMcpDependencies, setupMcpServer, testMcpConnection } from './mcp.js';
+export type { McpConnectionTestOptions } from './mcp.js';
+export type { RuntimeOptions, AgentSessionOptions, AgentQueryOptions, PathAccessChecker, PathAccessCheckRequest } from './runtime.js';
 
 // 重新导出 SDK 类型
 export type { Agent, AgentOptions, SDKMessage } from '@codeany/open-agent-sdk';

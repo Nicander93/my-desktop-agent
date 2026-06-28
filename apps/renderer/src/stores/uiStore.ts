@@ -10,12 +10,13 @@ interface UIState {
   sidebarWidth: number;
   toolPanelVisible: boolean;
   toolPanelWidth: number;
-  toolPanelTab: 'explorer' | 'preview' | 'history' | 'diff';
+  toolPanelTab: 'explorer' | 'preview' | 'history' | 'diff' | 'trace';
   toggleSidebar: () => void;
   adjustSidebarWidth: (delta: number) => void;
   toggleToolPanel: () => void;
   adjustToolPanelWidth: (delta: number) => void;
-  setToolPanelTab: (tab: 'explorer' | 'preview' | 'history' | 'diff') => void;
+  setToolPanelTab: (tab: 'explorer' | 'preview' | 'history' | 'diff' | 'trace') => void;
+  openTracePanel: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -23,7 +24,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarWidth: 240,
   toolPanelVisible: true,
   toolPanelWidth: 560,
-  toolPanelTab: 'explorer',
+  toolPanelTab: 'trace',
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   adjustSidebarWidth: (delta) => set((state) => ({
     sidebarWidth: Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, state.sidebarWidth + delta)),
@@ -33,4 +34,5 @@ export const useUIStore = create<UIState>((set) => ({
     toolPanelWidth: Math.min(TOOL_PANEL_MAX_WIDTH, Math.max(TOOL_PANEL_MIN_WIDTH, state.toolPanelWidth - delta)),
   })),
   setToolPanelTab: (tab) => set({ toolPanelTab: tab }),
+  openTracePanel: () => set({ toolPanelVisible: true, toolPanelTab: 'trace' }),
 }));
