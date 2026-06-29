@@ -31,12 +31,15 @@ export interface AgentSessionOptions {
   workspaceId?: string;
   /** 已启用的 MCP Server 配置 */
   mcpServers?: Record<string, unknown>;
+  /** 已启用 Skills 注入的 system prompt */
+  enabledSkillsPrompt?: string;
 }
 
 /** 单轮对话的可选参数 */
 export interface AgentQueryOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
+  skillMentionPrompt?: string;
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -136,7 +139,7 @@ export class AgentRuntime {
     queryOptions?: AgentQueryOptions,
   ): Promise<AsyncGenerator<SDKMessage>> {
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(queryOptions);
+    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
     return agent.query(content, overrides);
   }
 
@@ -147,7 +150,7 @@ export class AgentRuntime {
     queryOptions?: AgentQueryOptions,
   ): Promise<string> {
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(queryOptions);
+    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
     const result = await agent.prompt(content, overrides);
     return result.text;
   }
@@ -280,8 +283,13 @@ export class AgentRuntime {
     };
   }
 
-  private buildQueryOverrides(queryOptions?: AgentQueryOptions): Partial<AgentOptions> | undefined {
+  private buildQueryOverrides(
+    sessionOptions?: AgentSessionOptions,
+    queryOptions?: AgentQueryOptions,
+  ): Partial<AgentOptions> | undefined {
     const parts = [
+      sessionOptions?.enabledSkillsPrompt,
+      queryOptions?.skillMentionPrompt,
       buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);

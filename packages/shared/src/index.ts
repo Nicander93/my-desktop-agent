@@ -26,6 +26,23 @@ export {
 export { parseMcpMentions, buildMcpMentionPrompt } from './mcp/mentions.js';
 export { parseFileMentions, buildFileMentionPrompt } from './files/mentions.js';
 export type {
+  SkillSource,
+  SkillCatalogCategory,
+  SkillRecord,
+  SkillCatalogEntry,
+  SkillInput,
+  ParsedSkillMarkdown,
+} from './types/skill.js';
+export { SKILL_CATALOG, getSkillCatalogEntry } from './skills/catalog.js';
+export {
+  parseSkillMarkdown,
+  getSkillPromptBody,
+  buildEnabledSkillsPrompt,
+  buildSkillMentionPrompt,
+  type SkillPromptSection,
+} from './skills/resolve.js';
+export { parseSkillMentions } from './skills/mentions.js';
+export type {
   TraceSpan,
   TraceSpanType,
   TraceTurn,

@@ -6,10 +6,12 @@ import { cn } from '@/lib/utils';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ModelSettings } from '@/components/settings/ModelSettings';
 import { McpSettings } from '@/components/settings/McpSettings';
+import { SkillSettings } from '@/components/settings/SkillSettings';
 
 const settingsTabs = [
   { id: 'general', label: '通用' },
   { id: 'model', label: '模型配置' },
+  { id: 'skills', label: 'Skills' },
   { id: 'mcp', label: 'MCP' },
 ];
 
@@ -42,6 +44,7 @@ export function SettingsPage() {
         <ScrollArea className="flex-1 min-h-0 p-6">
           {activeTab === 'general' && <GeneralSettings />}
           {activeTab === 'model' && <ModelSettings />}
+          {activeTab === 'skills' && <SkillSettings />}
           {activeTab === 'mcp' && <McpSettings />}
         </ScrollArea>
       </div>

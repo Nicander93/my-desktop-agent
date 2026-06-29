@@ -83,6 +83,26 @@ const migrations: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(enabled);
     `
+  },
+  {
+    version: 3,
+    up: `
+      CREATE TABLE IF NOT EXISTS skills (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        displayName TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        source TEXT NOT NULL CHECK(source IN ('catalog', 'url', 'local')),
+        catalogId TEXT,
+        sourcePath TEXT NOT NULL,
+        contentCache TEXT NOT NULL DEFAULT '',
+        enabled INTEGER DEFAULT 1,
+        sortOrder INTEGER DEFAULT 0,
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_skills_enabled ON skills(enabled);
+    `
   }
 ];
 

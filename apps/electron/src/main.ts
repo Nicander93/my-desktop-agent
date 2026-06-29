@@ -17,6 +17,8 @@ import { registerConversationHandlers } from './ipc/conversationHandlers';
 import { registerDialogHandlers } from './ipc/dialogHandlers';
 import { registerFileHandlers } from './ipc/fileHandlers';
 import { registerMcpHandlers, getEnabledMcpServersForWorkspace } from './ipc/mcpHandlers';
+import { registerSkillHandlers, getEnabledSkillsPrompt, getSkillMentionPrompt, getEnabledSkillNames } from './ipc/skillHandlers';
+import { parseSkillMentions } from '@desktop-agent/shared';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
 import { setupPathInterceptor } from './services/agentPathInterceptor';
@@ -158,6 +160,7 @@ app.whenReady().then(async () => {
   registerDialogHandlers();
   registerFileHandlers(() => mainWindow);
   registerMcpHandlers();
+  registerSkillHandlers();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -181,6 +184,20 @@ function buildAgentSessionOptions(conversationId: string) {
     cwd: context.cwd,
     workspaceId: context.workspaceId,
     mcpServers: getEnabledMcpServersForWorkspace(context.cwd),
+    enabledSkillsPrompt: getEnabledSkillsPrompt(),
+  };
+}
+
+function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
+  const skillMentions = options?.skillMentions ?? parseSkillMentions(content);
+  const enabledNames = new Set(getEnabledSkillNames());
+  const extraSkillMentions = skillMentions.filter((name) => !enabledNames.has(name));
+  return {
+    mcpMentions: options?.mcpMentions,
+    fileRefs: options?.fileRefs,
+    skillMentionPrompt: extraSkillMentions.length > 0
+      ? getSkillMentionPrompt(extraSkillMentions)
+      : undefined,
   };
 }
 
@@ -202,10 +219,7 @@ ipcMain.handle('agent:send-message', async (_, sessionId: string, content: strin
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const stream = await runtime.sendMessage(sessionId, content, sessionOptions, {
-      mcpMentions: options?.mcpMentions,
-      fileRefs: options?.fileRefs,
-    });
+    const stream = await runtime.sendMessage(sessionId, content, sessionOptions, buildAgentQueryOptions(content, options));
     const messages: any[] = [];
 
     for await (const msg of stream) {
@@ -239,10 +253,7 @@ ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string, opt
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
     }
 
-    const result = await runtime.prompt(sessionId, content, sessionOptions, {
-      mcpMentions: options?.mcpMentions,
-      fileRefs: options?.fileRefs,
-    });
+    const result = await runtime.prompt(sessionId, content, sessionOptions, buildAgentQueryOptions(content, options));
     return { success: true, content: result };
   } catch (error) {
     return {

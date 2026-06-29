@@ -16,7 +16,7 @@ import {
   shouldShowThought,
 } from '@/lib/agentMessage';
 import { applyStreamEvent } from '@/lib/messageParts';
-import { parseMcpMentions, parseFileMentions, appendTraceSpan, isTraceMessage, collectTraceFromMessages, mergeAgentTrace, traceRunToAgentTrace } from '@desktop-agent/shared';
+import { parseMcpMentions, parseFileMentions, parseSkillMentions, appendTraceSpan, isTraceMessage, collectTraceFromMessages, mergeAgentTrace, traceRunToAgentTrace } from '@desktop-agent/shared';
 
 function createId(): string {
   return Math.random().toString(36).substring(2, 15);
@@ -197,12 +197,14 @@ export function useAgent() {
 
     const mcpMentions = parseMcpMentions(content);
     const fileRefs = parseFileMentions(content);
+    const skillMentions = parseSkillMentions(content);
 
     try {
       if (window.electronAPI?.agent) {
         const result = await window.electronAPI.agent.sendMessage(sessionId, content, {
           mcpMentions,
           fileRefs,
+          skillMentions,
         });
 
         streamingMessageIdRef.current = null;
