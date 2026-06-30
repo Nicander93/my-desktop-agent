@@ -2,15 +2,42 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { ArrowUp } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
 import { useMcpStore } from '@/stores/mcpStore';
+import { useSkillStore } from '@/stores/skillStore';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { FileMentionPicker } from './FileMentionPicker';
 import { useFileMentionSearch } from '@/hooks/useFileMentionSearch';
 
-type MentionKind = 'file' | 'mcp' | null;
+type MentionKind = 'file' | 'mcp' | 'skill' | null;
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+}
+
+function pickLatestMention(
+  beforeCursor: string,
+): { kind: MentionKind; query: string } {
+  const fileMatch = beforeCursor.match(/@([^\s@]*)$/);
+  const mcpMatch = beforeCursor.match(/\$([a-zA-Z][a-zA-Z0-9_-]*)$/);
+  const skillMatch = beforeCursor.match(/(?:^|\s)\/([a-zA-Z][a-zA-Z0-9_]*)$/);
+
+  const candidates: Array<{ kind: MentionKind; query: string; index: number }> = [];
+  if (fileMatch) {
+    candidates.push({ kind: 'file', query: fileMatch[1], index: fileMatch.index ?? 0 });
+  }
+  if (mcpMatch) {
+    candidates.push({ kind: 'mcp', query: mcpMatch[1], index: mcpMatch.index ?? 0 });
+  }
+  if (skillMatch) {
+    candidates.push({ kind: 'skill', query: skillMatch[1], index: skillMatch.index ?? 0 });
+  }
+
+  if (candidates.length === 0) {
+    return { kind: null, query: '' };
+  }
+
+  candidates.sort((a, b) => b.index - a.index);
+  return { kind: candidates[0].kind, query: candidates[0].query };
 }
 
 export function ChatInput({ onSend }: ChatInputProps) {
@@ -20,15 +47,17 @@ export function ChatInput({ onSend }: ChatInputProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { isProcessing } = useChatStore();
-  const { mentionable, loadMentionable } = useMcpStore();
+  const { mentionable: mcpMentionable, loadMentionable: loadMcpMentionable } = useMcpStore();
+  const { mentionable: skillMentionable, loadMentionable: loadSkillMentionable } = useSkillStore();
   const { results: fileResults, loading: fileLoading } = useFileMentionSearch(
     mentionQuery,
     mentionKind === 'file',
   );
 
   useEffect(() => {
-    loadMentionable();
-  }, [loadMentionable]);
+    loadMcpMentionable();
+    loadSkillMentionable();
+  }, [loadMcpMentionable, loadSkillMentionable]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -39,39 +68,33 @@ export function ChatInput({ onSend }: ChatInputProps) {
 
   const filteredMcp = useMemo(() => {
     const query = mentionQuery.toLowerCase();
-    return mentionable.filter((item) =>
+    return mcpMentionable.filter((item) =>
       item.name.toLowerCase().includes(query) ||
       item.displayName.toLowerCase().includes(query),
     );
-  }, [mentionable, mentionQuery]);
+  }, [mcpMentionable, mentionQuery]);
 
-  const activeListLength = mentionKind === 'file' ? fileResults.length : filteredMcp.length;
+  const filteredSkills = useMemo(() => {
+    const query = mentionQuery.toLowerCase();
+    return skillMentionable.filter((item) =>
+      item.name.toLowerCase().includes(query) ||
+      item.displayName.toLowerCase().includes(query),
+    );
+  }, [skillMentionable, mentionQuery]);
+
+  const activeListLength = mentionKind === 'file'
+    ? fileResults.length
+    : mentionKind === 'mcp'
+      ? filteredMcp.length
+      : mentionKind === 'skill'
+        ? filteredSkills.length
+        : 0;
 
   const updateMentionState = (value: string, cursor: number) => {
     const beforeCursor = value.slice(0, cursor);
-    const fileMatch = beforeCursor.match(/@([^\s@]*)$/);
-    const mcpMatch = beforeCursor.match(/\$([a-zA-Z][a-zA-Z0-9_-]*)$/);
-
-    if (fileMatch && mcpMatch) {
-      const fileStart = fileMatch.index ?? 0;
-      const mcpStart = mcpMatch.index ?? 0;
-      if (fileStart > mcpStart) {
-        setMentionKind('file');
-        setMentionQuery(fileMatch[1]);
-      } else {
-        setMentionKind('mcp');
-        setMentionQuery(mcpMatch[1]);
-      }
-    } else if (fileMatch) {
-      setMentionKind('file');
-      setMentionQuery(fileMatch[1]);
-    } else if (mcpMatch) {
-      setMentionKind('mcp');
-      setMentionQuery(mcpMatch[1]);
-    } else {
-      setMentionKind(null);
-      setMentionQuery('');
-    }
+    const picked = pickLatestMention(beforeCursor);
+    setMentionKind(picked.kind);
+    setMentionQuery(picked.query);
     setSelectedIndex(0);
   };
 
@@ -96,6 +119,23 @@ export function ChatInput({ onSend }: ChatInputProps) {
     const beforeCursor = input.slice(0, cursor);
     const afterCursor = input.slice(cursor);
     const replaced = beforeCursor.replace(/\$[a-zA-Z][a-zA-Z0-9_-]*$/, `$${name} `);
+    const next = `${replaced}${afterCursor}`;
+    setInput(next);
+    setMentionKind(null);
+    setMentionQuery('');
+    requestAnimationFrame(() => textarea.focus());
+  };
+
+  const insertSkillMention = (name: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const cursor = textarea.selectionStart;
+    const beforeCursor = input.slice(0, cursor);
+    const afterCursor = input.slice(cursor);
+    const replaced = beforeCursor.replace(
+      /(?:^|\s)\/[a-zA-Z][a-zA-Z0-9_-]*$/,
+      (match) => `${match.startsWith(' ') ? ' ' : ''}/${name} `,
+    );
     const next = `${replaced}${afterCursor}`;
     setInput(next);
     setMentionKind(null);
@@ -131,8 +171,10 @@ export function ChatInput({ onSend }: ChatInputProps) {
         e.preventDefault();
         if (mentionKind === 'file') {
           insertFileMention(fileResults[selectedIndex].relativePath);
-        } else {
+        } else if (mentionKind === 'mcp') {
           insertMcpMention(filteredMcp[selectedIndex].name);
+        } else {
+          insertSkillMention(filteredSkills[selectedIndex].name);
         }
         return;
       }
@@ -182,6 +224,28 @@ export function ChatInput({ onSend }: ChatInputProps) {
           </div>
         )}
 
+        {mentionKind === 'skill' && filteredSkills.length > 0 && (
+          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+            {filteredSkills.map((item, index) => (
+              <button
+                key={item.name}
+                type="button"
+                className={cn(
+                  'w-full px-4 py-2 text-left hover:bg-gray-50',
+                  index === selectedIndex && 'bg-gray-50',
+                )}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  insertSkillMention(item.name);
+                }}
+              >
+                <div className="text-sm font-medium">/{item.name}</div>
+                <div className="text-xs text-gray-500">{item.displayName}</div>
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="flex items-end gap-2 overflow-hidden bg-[#f3f4f6] rounded-3xl border border-gray-200/80 px-4 py-3 focus-within:border-gray-300 focus-within:bg-white transition-colors">
           <textarea
             ref={textareaRef}
@@ -192,7 +256,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
             }}
             onClick={(e) => updateMentionState(input, e.currentTarget.selectionStart)}
             onKeyDown={handleKeyDown}
-            placeholder="发送消息，@ 引用文件，$ 选择 MCP"
+            placeholder="发送消息，@ 引用文件，$ 选择 MCP，/ 选择 Skill"
             rows={1}
             disabled={isProcessing}
             spellCheck={false}

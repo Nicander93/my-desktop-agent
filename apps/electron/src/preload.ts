@@ -112,5 +112,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     importJson: (raw: string) => ipcRenderer.invoke('mcp:import-json', raw),
     testConnection: (id: string, conversationId?: string) =>
       ipcRenderer.invoke('mcp:test-connection', id, conversationId),
+  },
+
+  skill: {
+    getAll: () => ipcRenderer.invoke('skill:get-all'),
+    getCatalog: () => ipcRenderer.invoke('skill:get-catalog'),
+    getMentionable: () => ipcRenderer.invoke('skill:get-mentionable'),
+    create: (input: unknown) => ipcRenderer.invoke('skill:create', input),
+    update: (id: string, updates: unknown) => ipcRenderer.invoke('skill:update', id, updates),
+    delete: (id: string) => ipcRenderer.invoke('skill:delete', id),
+    installCatalog: (catalogId: string) => ipcRenderer.invoke('skill:install-catalog', catalogId),
+    importUrl: (name: string, url: string) => ipcRenderer.invoke('skill:import-url', name, url),
+    importLocal: (name: string, localPath: string) => ipcRenderer.invoke('skill:import-local', name, localPath),
+    refresh: (id: string) => ipcRenderer.invoke('skill:refresh', id),
   }
 });

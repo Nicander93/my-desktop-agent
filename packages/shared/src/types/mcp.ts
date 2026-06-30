@@ -70,4 +70,5 @@ export interface McpToolInfo {
 export interface AgentSendMessageOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
+  skillMentions?: string[];
 }

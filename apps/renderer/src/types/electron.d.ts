@@ -61,6 +61,18 @@ declare global {
         importJson: (raw: string) => Promise<{ success: boolean; servers?: import('@desktop-agent/shared').McpServerRecord[]; warning?: string; error?: string }>;
         testConnection: (id: string, conversationId?: string) => Promise<{ success: boolean; tools?: import('@desktop-agent/shared').McpToolInfo[]; error?: string }>;
       };
+      skill: {
+        getAll: () => Promise<{ success: boolean; skills?: import('@desktop-agent/shared').SkillRecord[]; error?: string }>;
+        getCatalog: () => Promise<{ success: boolean; catalog?: Array<import('@desktop-agent/shared').SkillCatalogEntry & { installed: boolean }>; error?: string }>;
+        getMentionable: () => Promise<{ success: boolean; skills?: Array<{ name: string; displayName: string }>; error?: string }>;
+        create: (input: import('@desktop-agent/shared').SkillInput) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+        update: (id: string, updates: Partial<import('@desktop-agent/shared').SkillInput> & { enabled?: boolean }) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+        delete: (id: string) => Promise<{ success: boolean; error?: string }>;
+        installCatalog: (catalogId: string) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+        importUrl: (name: string, url: string) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+        importLocal: (name: string, localPath: string) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+        refresh: (id: string) => Promise<{ success: boolean; skill?: import('@desktop-agent/shared').SkillRecord; error?: string }>;
+      };
     };
   }
 }
