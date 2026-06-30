@@ -101,7 +101,7 @@ export function SkillSettings() {
         <div>
           <h2 className="text-lg font-semibold text-gray-800">Skills</h2>
           <p className="text-sm text-gray-500 mt-1">
-            启用的 Skill 会注入 Agent 系统提示；对话中可用 /name 按需指定 Skill。
+            启用的 Skill 会注册到 Agent，模型通过 Skill 工具按需加载完整指引；对话中 /name 可指定优先使用的 Skill。
           </p>
         </div>
       </div>

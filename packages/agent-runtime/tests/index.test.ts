@@ -9,7 +9,9 @@ const mockAgent = {
 };
 
 vi.mock('@codeany/open-agent-sdk', () => ({
-  createAgent: vi.fn(() => mockAgent)
+  createAgent: vi.fn(() => mockAgent),
+  registerSkill: vi.fn(),
+  unregisterSkill: vi.fn(),
 }));
 
 import { createAgent } from '@codeany/open-agent-sdk';

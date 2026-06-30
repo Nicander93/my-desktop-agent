@@ -107,6 +107,10 @@ export function MessageItem({ message }: MessageItemProps) {
         }
 
         if (part.type === 'text') {
+          const prev = parts[index - 1];
+          if (prev?.type === 'thinking' && prev.text.trim() === part.text.trim()) {
+            return null;
+          }
           return (
             <div key={part.id} className="mb-3 last:mb-0">
               <MarkdownContent

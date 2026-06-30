@@ -36,6 +36,15 @@ export interface SkillPromptSection {
   body: string;
 }
 
+export function buildSkillMentionHint(names: string[]): string {
+  if (names.length === 0) return '';
+
+  return [
+    '用户在本轮消息中通过 / 指定了以下 Skill，请优先使用 Skill 工具调用（按需加载完整指引，不要猜测）：',
+    ...names.map((name) => `- ${name}`),
+  ].join('\n');
+}
+
 export function buildEnabledSkillsPrompt(sections: SkillPromptSection[]): string {
   if (sections.length === 0) return '';
 

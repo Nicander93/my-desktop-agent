@@ -2,15 +2,13 @@ import { readFileSync, existsSync } from 'fs';
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  buildEnabledSkillsPrompt,
-  buildSkillMentionPrompt,
   getSkillCatalogEntry,
-  getSkillPromptBody,
   parseSkillMarkdown,
   SKILL_CATALOG,
   type SkillCatalogEntry,
   type SkillInput,
   type SkillRecord,
+  type RuntimeSkillDefinition,
 } from '@desktop-agent/shared';
 
 function queryAll<T>(sql: string, params: unknown[] = []): T[] {
@@ -289,25 +287,12 @@ export function getCatalog(): Array<SkillCatalogEntry & { installed: boolean }> 
   }));
 }
 
-export function getEnabledSkillsPrompt(): string {
-  return buildEnabledSkillsPrompt(
-    getEnabledSkills().map((skill) => ({
-      name: skill.name,
-      displayName: skill.displayName,
-      body: getSkillPromptBody(skill.contentCache),
-    })),
-  );
-}
-
-export function getSkillMentionPrompt(names: string[]): string {
-  const sections = names
-    .map((name) => getSkillByName(name))
-    .filter((skill): skill is SkillRecord => Boolean(skill))
-    .map((skill) => ({
-      name: skill.name,
-      displayName: skill.displayName,
-      body: getSkillPromptBody(skill.contentCache),
-    }));
-
-  return buildSkillMentionPrompt(sections);
+export function getRuntimeSkillDefinitions(): RuntimeSkillDefinition[] {
+  return getAllSkills().map((skill) => ({
+    name: skill.name,
+    displayName: skill.displayName,
+    description: skill.description,
+    contentCache: skill.contentCache,
+    enabled: skill.enabled,
+  }));
 }

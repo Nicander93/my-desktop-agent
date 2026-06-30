@@ -2,6 +2,7 @@
 export { AgentRuntime } from './runtime.js';
 export { extractPathsFromToolInput } from './pathUtils.js';
 export { buildSessionMcpServers, preinstallMcpDependencies, setupMcpServer, testMcpConnection } from './mcp.js';
+export { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
 export type { McpConnectionTestOptions } from './mcp.js';
 export type { RuntimeOptions, AgentSessionOptions, AgentQueryOptions, PathAccessChecker, PathAccessCheckRequest } from './runtime.js';
 

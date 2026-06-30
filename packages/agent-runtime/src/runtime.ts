@@ -5,8 +5,9 @@
  * 每个 session 可绑定独立 cwd 和 workspaceId，用于工作区隔离。
  */
 import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace } from '@codeany/open-agent-sdk';
-import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, TraceRun } from '@desktop-agent/shared';
+import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
+import { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
 
 /** 全局 Runtime 配置，来自环境变量 */
 export interface RuntimeOptions {
@@ -31,15 +32,15 @@ export interface AgentSessionOptions {
   workspaceId?: string;
   /** 已启用的 MCP Server 配置 */
   mcpServers?: Record<string, unknown>;
-  /** 已启用 Skills 注入的 system prompt */
-  enabledSkillsPrompt?: string;
+  /** 已安装 Skills，用于注册到 SDK */
+  skills?: RuntimeSkillDefinition[];
 }
 
 /** 单轮对话的可选参数 */
 export interface AgentQueryOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
-  skillMentionPrompt?: string;
+  skillMentions?: string[];
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -102,6 +103,8 @@ export class AgentRuntime {
 
     const canUseTool = this.buildCanUseTool(sessionId, sessionOptions?.workspaceId);
 
+    syncRuntimeSkills(sessionOptions?.skills ?? []);
+
     const agentOptions: AgentOptions = {
       apiKey: this.options.apiKey,
       model: this.options.model,
@@ -138,8 +141,12 @@ export class AgentRuntime {
     sessionOptions?: AgentSessionOptions,
     queryOptions?: AgentQueryOptions,
   ): Promise<AsyncGenerator<SDKMessage>> {
+    syncRuntimeSkills(
+      sessionOptions?.skills ?? [],
+      queryOptions?.skillMentions ?? [],
+    );
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
+    const overrides = this.buildQueryOverrides(queryOptions);
     return agent.query(content, overrides);
   }
 
@@ -149,8 +156,12 @@ export class AgentRuntime {
     sessionOptions?: AgentSessionOptions,
     queryOptions?: AgentQueryOptions,
   ): Promise<string> {
+    syncRuntimeSkills(
+      sessionOptions?.skills ?? [],
+      queryOptions?.skillMentions ?? [],
+    );
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
+    const overrides = this.buildQueryOverrides(queryOptions);
     const result = await agent.prompt(content, overrides);
     return result.text;
   }
@@ -231,6 +242,7 @@ export class AgentRuntime {
     }
     this.agents.clear();
     this.sessionWorkspaceMap.clear();
+    clearRuntimeSkills();
   }
 
   /** 从 SDK 持久化的 trace.jsonl 加载单次 run 的完整 trace */
@@ -284,12 +296,10 @@ export class AgentRuntime {
   }
 
   private buildQueryOverrides(
-    sessionOptions?: AgentSessionOptions,
     queryOptions?: AgentQueryOptions,
   ): Partial<AgentOptions> | undefined {
     const parts = [
-      sessionOptions?.enabledSkillsPrompt,
-      queryOptions?.skillMentionPrompt,
+      buildSkillMentionHint(queryOptions?.skillMentions ?? []),
       buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);

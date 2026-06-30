@@ -17,7 +17,8 @@ import { registerConversationHandlers } from './ipc/conversationHandlers';
 import { registerDialogHandlers } from './ipc/dialogHandlers';
 import { registerFileHandlers } from './ipc/fileHandlers';
 import { registerMcpHandlers, getEnabledMcpServersForWorkspace } from './ipc/mcpHandlers';
-import { registerSkillHandlers, getEnabledSkillsPrompt, getSkillMentionPrompt, getEnabledSkillNames } from './ipc/skillHandlers';
+import { registerSkillHandlers } from './ipc/skillHandlers';
+import { getRuntimeSkillDefinitions } from './services/skillService';
 import { parseSkillMentions } from '@desktop-agent/shared';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
@@ -184,20 +185,15 @@ function buildAgentSessionOptions(conversationId: string) {
     cwd: context.cwd,
     workspaceId: context.workspaceId,
     mcpServers: getEnabledMcpServersForWorkspace(context.cwd),
-    enabledSkillsPrompt: getEnabledSkillsPrompt(),
+    skills: getRuntimeSkillDefinitions(),
   };
 }
 
 function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
-  const skillMentions = options?.skillMentions ?? parseSkillMentions(content);
-  const enabledNames = new Set(getEnabledSkillNames());
-  const extraSkillMentions = skillMentions.filter((name) => !enabledNames.has(name));
   return {
     mcpMentions: options?.mcpMentions,
     fileRefs: options?.fileRefs,
-    skillMentionPrompt: extraSkillMentions.length > 0
-      ? getSkillMentionPrompt(extraSkillMentions)
-      : undefined,
+    skillMentions: options?.skillMentions ?? parseSkillMentions(content),
   };
 }
 

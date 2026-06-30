@@ -55,16 +55,41 @@ function appendThinkingPart(parts: MessagePart[], chunk: string, reconcile = fal
     const text = reconcile ? reconcileStreamThinking(last.text, chunk) : appendText(last.text, chunk);
     return [...parts.slice(0, -1), { ...last, text }];
   }
+  if (last?.type === 'text') {
+    const prev = parts[parts.length - 2];
+    if (prev?.type === 'thinking') {
+      const text = reconcile ? reconcileStreamThinking(prev.text, chunk) : appendText(prev.text, chunk);
+      return [...parts.slice(0, -2), { ...prev, text }, last];
+    }
+    return [
+      ...parts.slice(0, -1),
+      { type: 'thinking', id: createPartId(), text: chunk },
+      last,
+    ];
+  }
   return [...parts, { type: 'thinking', id: createPartId(), text: chunk }];
+}
+
+function isSameVisibleText(a: string, b: string): boolean {
+  return a.trim() === b.trim();
 }
 
 function appendTextPart(parts: MessagePart[], chunk: string): MessagePart[] {
   if (!chunk) return parts;
   const last = parts[parts.length - 1];
+  if (last?.type === 'thinking') {
+    if (isSameVisibleText(last.text, chunk)) return parts;
+    const trimmedChunk = chunk.trim();
+    if (trimmedChunk && last.text.includes(trimmedChunk) && trimmedChunk.length < last.text.trim().length) {
+      return parts;
+    }
+    return [...parts, { type: 'text', id: createPartId(), text: chunk }];
+  }
   if (last?.type === 'tool_group') {
     return [...parts, { type: 'text', id: createPartId(), text: chunk }];
   }
   if (last?.type === 'text') {
+    if (isSameVisibleText(last.text, chunk)) return parts;
     return [...parts.slice(0, -1), { ...last, text: appendText(last.text, chunk) }];
   }
   return [...parts, { type: 'text', id: createPartId(), text: chunk }];
@@ -73,7 +98,11 @@ function appendTextPart(parts: MessagePart[], chunk: string): MessagePart[] {
 function setTextPart(parts: MessagePart[], text: string): MessagePart[] {
   if (!text) return parts;
   const last = parts[parts.length - 1];
+  if (last?.type === 'thinking' && isSameVisibleText(last.text, text)) {
+    return [...parts.slice(0, -1), { type: 'text', id: createPartId(), text }];
+  }
   if (last?.type === 'text') {
+    if (isSameVisibleText(last.text, text)) return parts;
     return [...parts.slice(0, -1), { ...last, text }];
   }
   if (last?.type === 'tool_group') {
@@ -92,6 +121,19 @@ function addToolToParts(parts: MessagePart[], toolId: string, toolCalls: ToolCal
     return next;
   }
   return [...parts, { type: 'tool_group', id: createPartId(), toolCallIds: [toolId] }];
+}
+
+function stripTrailingResponseParts(parts: MessagePart[]): MessagePart[] {
+  let end = parts.length;
+  while (end > 0) {
+    const part = parts[end - 1];
+    if (part.type === 'thinking' || part.type === 'text') {
+      end -= 1;
+      continue;
+    }
+    break;
+  }
+  return parts.slice(0, end);
 }
 
 function applyAssistantBlocks(content: unknown, state: MessagePartState): MessagePartState {
@@ -126,6 +168,61 @@ function applyAssistantBlocks(content: unknown, state: MessagePartState): Messag
   }
 
   return { ...state, parts, toolCalls };
+}
+
+export function normalizeMessageParts(parts: MessagePart[], isStreaming = false): MessagePart[] {
+  const result: MessagePart[] = [];
+
+  for (const part of parts) {
+    if (part.type === 'text') {
+      const prev = result[result.length - 1];
+      if (prev?.type === 'thinking' && isSameVisibleText(prev.text, part.text)) {
+        result[result.length - 1] = { type: 'text', id: part.id, text: part.text };
+        continue;
+      }
+      const lastText = [...result].reverse().find((p) => p.type === 'text') as
+        | Extract<MessagePart, { type: 'text' }>
+        | undefined;
+      if (lastText && isSameVisibleText(lastText.text, part.text)) {
+        continue;
+      }
+    }
+
+    if (part.type === 'thinking') {
+      const prev = result[result.length - 1];
+      if (prev?.type === 'thinking' && isSameVisibleText(prev.text, part.text)) {
+        continue;
+      }
+      if (prev?.type === 'text' && isSameVisibleText(prev.text, part.text)) {
+        continue;
+      }
+    }
+
+    result.push(part);
+  }
+
+  const normalized: MessagePart[] = [];
+  for (let i = 0; i < result.length; i++) {
+    const part = result[i];
+    if (part.type === 'thinking') {
+      const next = result[i + 1];
+      if (next?.type === 'text') {
+        normalized.push(part);
+        continue;
+      }
+      if (next?.type === 'tool_group') {
+        normalized.push({ type: 'text', id: part.id, text: part.text });
+        continue;
+      }
+      if (!next && !isStreaming) {
+        normalized.push({ type: 'text', id: part.id, text: part.text });
+        continue;
+      }
+    }
+    normalized.push(part);
+  }
+
+  return normalized;
 }
 
 export function deriveContentFromParts(parts: MessagePart[]): string {
@@ -218,6 +315,7 @@ export function applyStreamEvent(message: unknown, state: MessagePartState): Mes
     }
   } else if (record.type === 'assistant') {
     const msg = record.message as { content?: unknown } | undefined;
+    parts = stripTrailingResponseParts(parts);
     const next = applyAssistantBlocks(msg?.content, { parts, toolCalls, isStreaming });
     parts = next.parts;
     toolCalls = next.toolCalls;
@@ -239,5 +337,9 @@ export function applyStreamEvent(message: unknown, state: MessagePartState): Mes
     }
   }
 
-  return syncDerivedFields({ parts, toolCalls, isStreaming });
+  return syncDerivedFields({
+    parts: normalizeMessageParts(parts, isStreaming),
+    toolCalls,
+    isStreaming,
+  });
 }
