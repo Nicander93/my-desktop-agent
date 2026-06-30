@@ -83,7 +83,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     set({ currentWorkspaceId: id });
     if (id) { window.electronAPI?.workspace.touch(id); }
   },
-
+  
   updateWorkspace: async (id, updates) => {
     try {
       const result = await window.electronAPI?.workspace.update(id, updates);

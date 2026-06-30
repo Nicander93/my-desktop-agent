@@ -1,7 +1,6 @@
 /**
  * 工作区相关 IPC Handler
  *
- * 通道前缀 workspace:*，转发到 workspaceService
  */
 import { ipcMain, dialog, BrowserWindow } from 'electron';
 import * as workspaceService from '../services/workspaceService';

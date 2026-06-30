@@ -32,7 +32,10 @@ export type {
   SkillCatalogEntry,
   SkillInput,
   ParsedSkillMarkdown,
+<<<<<<< HEAD
   RuntimeSkillDefinition,
+=======
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
 } from './types/skill.js';
 export { SKILL_CATALOG, getSkillCatalogEntry } from './skills/catalog.js';
 export {
@@ -40,7 +43,10 @@ export {
   getSkillPromptBody,
   buildEnabledSkillsPrompt,
   buildSkillMentionPrompt,
+<<<<<<< HEAD
   buildSkillMentionHint,
+=======
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
   type SkillPromptSection,
 } from './skills/resolve.js';
 export { parseSkillMentions } from './skills/mentions.js';

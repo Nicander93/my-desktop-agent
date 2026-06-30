@@ -36,6 +36,7 @@ export interface SkillPromptSection {
   body: string;
 }
 
+<<<<<<< HEAD
 export function buildSkillMentionHint(names: string[]): string {
   if (names.length === 0) return '';
 
@@ -45,6 +46,8 @@ export function buildSkillMentionHint(names: string[]): string {
   ].join('\n');
 }
 
+=======
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
 export function buildEnabledSkillsPrompt(sections: SkillPromptSection[]): string {
   if (sections.length === 0) return '';
 

@@ -32,15 +32,24 @@ export interface AgentSessionOptions {
   workspaceId?: string;
   /** 已启用的 MCP Server 配置 */
   mcpServers?: Record<string, unknown>;
+<<<<<<< HEAD
   /** 已安装 Skills，用于注册到 SDK */
   skills?: RuntimeSkillDefinition[];
+=======
+  /** 已启用 Skills 注入的 system prompt */
+  enabledSkillsPrompt?: string;
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
 }
 
 /** 单轮对话的可选参数 */
 export interface AgentQueryOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
+<<<<<<< HEAD
   skillMentions?: string[];
+=======
+  skillMentionPrompt?: string;
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -146,7 +155,7 @@ export class AgentRuntime {
       queryOptions?.skillMentions ?? [],
     );
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(queryOptions);
+    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
     return agent.query(content, overrides);
   }
 
@@ -161,7 +170,7 @@ export class AgentRuntime {
       queryOptions?.skillMentions ?? [],
     );
     const agent = await this.ensureAgent(sessionId, sessionOptions);
-    const overrides = this.buildQueryOverrides(queryOptions);
+    const overrides = this.buildQueryOverrides(sessionOptions, queryOptions);
     const result = await agent.prompt(content, overrides);
     return result.text;
   }
@@ -296,10 +305,19 @@ export class AgentRuntime {
   }
 
   private buildQueryOverrides(
+<<<<<<< HEAD
     queryOptions?: AgentQueryOptions,
   ): Partial<AgentOptions> | undefined {
     const parts = [
       buildSkillMentionHint(queryOptions?.skillMentions ?? []),
+=======
+    sessionOptions?: AgentSessionOptions,
+    queryOptions?: AgentQueryOptions,
+  ): Partial<AgentOptions> | undefined {
+    const parts = [
+      sessionOptions?.enabledSkillsPrompt,
+      queryOptions?.skillMentionPrompt,
+>>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
       buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);

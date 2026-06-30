@@ -14,7 +14,9 @@ let db: SqlJsDatabase | null = null;
 let dbPath: string = '';
 let initPromise: Promise<SqlJsDatabase> | null = null;
 
-/** 初始化数据库：加载已有文件或创建新库，执行迁移 */
+/** 
+ * 初始化数据库：加载已有文件或创建新库，执行迁移
+*/
 async function initDatabase(): Promise<SqlJsDatabase> {
   const SQL = await initSqlJs();
   const userDataPath = app.getPath('userData');
