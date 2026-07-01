@@ -1,6 +1,7 @@
 import type { MessagePart } from '@desktop-agent/shared';
 import type { ToolCall } from '@/stores/chatStore';
 import { reconcileStreamThinking } from '@/lib/agentMessage';
+import { applyStreamToolResult } from '@/lib/toolCallSync';
 
 export interface MessagePartState {
   parts: MessagePart[];
@@ -25,10 +26,18 @@ function upsertToolCall(toolCalls: ToolCall[], entry: ToolCall): ToolCall[] {
   const idx = toolCalls.findIndex((t) => t.id === entry.id);
   if (idx >= 0) {
     const next = [...toolCalls];
-    next[idx] = { ...next[idx], ...entry };
+    const merged = { ...next[idx], ...entry };
+    if (merged.startedAt == null && (merged.status === 'running' || merged.status === 'pending')) {
+      merged.startedAt = Date.now();
+    }
+    next[idx] = merged;
     return next;
   }
-  return [...toolCalls, entry];
+  const created = { ...entry };
+  if (created.startedAt == null && (created.status === 'running' || created.status === 'pending')) {
+    created.startedAt = Date.now();
+  }
+  return [...toolCalls, created];
 }
 
 function hasActiveTools(toolCalls: ToolCall[]): boolean {
@@ -323,16 +332,11 @@ export function applyStreamEvent(message: unknown, state: MessagePartState): Mes
   } else if (record.type === 'tool_result') {
     const result = record.result as { tool_use_id?: string; tool_name?: string; output?: string } | undefined;
     if (result?.tool_use_id) {
-      toolCalls = toolCalls.map((tc) =>
-        tc.id === result.tool_use_id
-          ? {
-              ...tc,
-              toolName: result.tool_name || tc.toolName,
-              status: 'completed' as const,
-              output: { success: true, data: result.output },
-            }
-          : tc,
-      );
+      toolCalls = applyStreamToolResult(toolCalls, {
+        tool_use_id: result.tool_use_id,
+        tool_name: result.tool_name,
+        output: result.output,
+      });
       isStreaming = !hasActiveTools(toolCalls);
     }
   }

@@ -5,6 +5,7 @@
  */
 import { create } from 'zustand';
 import type { AgentTrace, MessagePart } from '@desktop-agent/shared';
+import { syncToolCallsFromTrace } from '@/lib/toolCallSync';
 
 export interface Message {
   id: string;
@@ -26,6 +27,8 @@ export interface ToolCall {
   input: unknown;
   output?: { success: boolean; data?: unknown; error?: string };
   status: 'pending' | 'running' | 'completed' | 'error';
+  startedAt?: number;
+  durationMs?: number;
 }
 
 interface ChatState {
@@ -59,18 +62,24 @@ export const useChatStore = create<ChatState>((set, get) => ({
     try {
       const result = await window.electronAPI?.message.getByConversation(conversationId);
       if (result?.success && result.messages) {
-        const messages = result.messages.map((m: any) => ({
-          id: m.id,
-          conversationId: m.conversationId,
-          role: m.role,
-          content: m.content,
-          timestamp: m.createdAt,
-          toolCalls: m.toolCalls || [],
-          thinking: m.metadata?.thinking as string | undefined,
-          thinkingDurationMs: m.metadata?.thinkingDurationMs as number | undefined,
-          trace: m.metadata?.trace as AgentTrace | undefined,
-          parts: m.metadata?.parts as MessagePart[] | undefined,
-        }));
+        const messages = result.messages.map((m: any) => {
+          const trace = m.metadata?.trace as AgentTrace | undefined;
+          const toolCalls = (m.toolCalls || []) as ToolCall[];
+          return {
+            id: m.id,
+            conversationId: m.conversationId,
+            role: m.role,
+            content: m.content,
+            timestamp: m.createdAt,
+            toolCalls: trace?.spans?.length
+              ? syncToolCallsFromTrace(toolCalls, trace.spans)
+              : toolCalls,
+            thinking: m.metadata?.thinking as string | undefined,
+            thinkingDurationMs: m.metadata?.thinkingDurationMs as number | undefined,
+            trace,
+            parts: m.metadata?.parts as MessagePart[] | undefined,
+          };
+        });
         set({ messages, currentConversationId: conversationId });
       }
     } catch (error) {

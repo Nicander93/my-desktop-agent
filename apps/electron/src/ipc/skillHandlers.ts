@@ -92,18 +92,7 @@ export function registerSkillHandlers(): void {
     }
   });
 }
-<<<<<<< HEAD
-=======
 
-export function getEnabledSkillsPrompt(): string {
-  return skillService.getEnabledSkillsPrompt();
+export function getRuntimeSkillDefinitions() {
+  return skillService.getRuntimeSkillDefinitions();
 }
-
-export function getSkillMentionPrompt(names: string[]): string {
-  return skillService.getSkillMentionPrompt(names);
-}
-
-export function getEnabledSkillNames(): string[] {
-  return skillService.getEnabledSkills().map((skill) => skill.name);
-}
->>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570

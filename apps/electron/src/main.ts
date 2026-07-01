@@ -17,12 +17,7 @@ import { registerConversationHandlers } from './ipc/conversationHandlers';
 import { registerDialogHandlers } from './ipc/dialogHandlers';
 import { registerFileHandlers } from './ipc/fileHandlers';
 import { registerMcpHandlers, getEnabledMcpServersForWorkspace } from './ipc/mcpHandlers';
-<<<<<<< HEAD
-import { registerSkillHandlers } from './ipc/skillHandlers';
-import { getRuntimeSkillDefinitions } from './services/skillService';
-=======
-import { registerSkillHandlers, getEnabledSkillsPrompt, getSkillMentionPrompt, getEnabledSkillNames } from './ipc/skillHandlers';
->>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
+import { registerSkillHandlers, getRuntimeSkillDefinitions } from './ipc/skillHandlers';
 import { parseSkillMentions } from '@desktop-agent/shared';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
@@ -69,12 +64,15 @@ function createRuntime(): void {
   const apiType = (readEnv('CODEANY_API_TYPE') as RuntimeOptions['apiType']) || 'openai-completions';
   const baseURL = readEnv('CODEANY_BASE_URL') || 'https://api.deepseek.com';
   const thinking = parseThinkingConfig();
+  const maxTurnsRaw = readEnv('CODEANY_MAX_TURNS');
+  const maxTurns = maxTurnsRaw ? Number(maxTurnsRaw) : 50;
+  const resolvedMaxTurns = Number.isFinite(maxTurns) && maxTurns > 0 ? maxTurns : 50;
 
   if (!apiKey) {
     console.warn('[desktop-agent] CODEANY_API_KEY 未设置，请在项目根目录 .env 中配置');
   } else {
     console.info(
-      `[desktop-agent] Agent 已配置: model=${model}, baseURL=${baseURL}, thinking=${thinking?.type}`,
+      `[desktop-agent] Agent 已配置: model=${model}, baseURL=${baseURL}, thinking=${thinking?.type}, maxTurns=${resolvedMaxTurns}`,
     );
   }
 
@@ -83,7 +81,7 @@ function createRuntime(): void {
     model,
     apiType,
     baseURL,
-    maxTurns: 10,
+    maxTurns: resolvedMaxTurns,
     permissionMode: 'default',
     thinking,
   };
@@ -189,31 +187,15 @@ function buildAgentSessionOptions(conversationId: string) {
     cwd: context.cwd,
     workspaceId: context.workspaceId,
     mcpServers: getEnabledMcpServersForWorkspace(context.cwd),
-<<<<<<< HEAD
     skills: getRuntimeSkillDefinitions(),
-=======
-    enabledSkillsPrompt: getEnabledSkillsPrompt(),
->>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
   };
 }
 
 function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
-<<<<<<< HEAD
   return {
     mcpMentions: options?.mcpMentions,
     fileRefs: options?.fileRefs,
     skillMentions: options?.skillMentions ?? parseSkillMentions(content),
-=======
-  const skillMentions = options?.skillMentions ?? parseSkillMentions(content);
-  const enabledNames = new Set(getEnabledSkillNames());
-  const extraSkillMentions = skillMentions.filter((name) => !enabledNames.has(name));
-  return {
-    mcpMentions: options?.mcpMentions,
-    fileRefs: options?.fileRefs,
-    skillMentionPrompt: extraSkillMentions.length > 0
-      ? getSkillMentionPrompt(extraSkillMentions)
-      : undefined,
->>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
   };
 }
 

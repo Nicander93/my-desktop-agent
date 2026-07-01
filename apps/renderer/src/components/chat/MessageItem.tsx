@@ -101,6 +101,7 @@ export function MessageItem({ message }: MessageItemProps) {
             <ToolActivityLog
               key={part.id}
               toolCalls={groupTools}
+              traceSpans={message.trace?.spans}
               isStreaming={isLast && !!message.isStreaming}
             />
           );

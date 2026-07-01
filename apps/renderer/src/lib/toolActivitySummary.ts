@@ -1,7 +1,67 @@
 import type { ToolCall } from '@/stores/chatStore';
+import { formatTraceDuration } from '@/lib/traceUtils';
 
 const EXPLORE_TOOLS = new Set(['Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch']);
 const EDIT_TOOLS = new Set(['Write', 'Edit']);
+
+function isActiveStatus(status: ToolCall['status']): boolean {
+  return status === 'running' || status === 'pending';
+}
+
+export function sumCompletedToolDurationMs(toolCalls: ToolCall[]): number {
+  return toolCalls.reduce((acc, tc) => acc + (tc.durationMs ?? 0), 0);
+}
+
+export function getActiveTool(toolCalls: ToolCall[]): ToolCall | undefined {
+  for (let i = toolCalls.length - 1; i >= 0; i -= 1) {
+    if (isActiveStatus(toolCalls[i]!.status)) return toolCalls[i];
+  }
+  return undefined;
+}
+
+export interface ToolActivitySummaryTiming {
+  activeElapsedMs?: number;
+  modelWaitElapsedMs?: number;
+  waitingForModel?: boolean;
+}
+
+export function buildToolActivitySummaryLabel(
+  toolCalls: ToolCall[],
+  timing: ToolActivitySummaryTiming = {},
+): string {
+  const summary = summarizeToolActivity(toolCalls);
+  if (!summary) return '';
+
+  const activeTool = getActiveTool(toolCalls);
+  if (activeTool && timing.activeElapsedMs != null) {
+    return `${summary} · ${formatTraceDuration(timing.activeElapsedMs)}…`;
+  }
+
+  if (timing.waitingForModel && timing.modelWaitElapsedMs != null) {
+    return `${summary} · 等待模型 ${formatTraceDuration(timing.modelWaitElapsedMs)}…`;
+  }
+
+  const totalDuration = sumCompletedToolDurationMs(toolCalls);
+  if (totalDuration > 0 && !activeTool) {
+    return `${summary} · ${formatTraceDuration(totalDuration)}`;
+  }
+
+  return summary;
+}
+
+export function formatToolCallDuration(
+  toolCall: ToolCall,
+  liveElapsedMs?: number,
+): string | undefined {
+  if (isActiveStatus(toolCall.status)) {
+    if (liveElapsedMs == null) return undefined;
+    return `${formatTraceDuration(liveElapsedMs)}…`;
+  }
+  if (toolCall.durationMs != null && toolCall.durationMs > 0) {
+    return formatTraceDuration(toolCall.durationMs);
+  }
+  return undefined;
+}
 
 export function summarizeToolActivityGroups(toolCalls: ToolCall[]): string[] {
   let explored = 0;

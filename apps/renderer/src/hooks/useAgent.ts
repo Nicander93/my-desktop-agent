@@ -16,6 +16,7 @@ import {
   shouldShowThought,
 } from '@/lib/agentMessage';
 import { applyStreamEvent } from '@/lib/messageParts';
+import { finalizeToolCalls, syncToolCallsFromTrace, applyTraceSpanToToolCalls } from '@/lib/toolCallSync';
 import { parseMcpMentions, parseFileMentions, parseSkillMentions, appendTraceSpan, isTraceMessage, collectTraceFromMessages, mergeAgentTrace, traceRunToAgentTrace } from '@desktop-agent/shared';
 
 function createId(): string {
@@ -122,6 +123,11 @@ export function useAgent() {
             spans: appendTraceSpan(currentTrace.spans, span),
             isLive: true,
           };
+          if (span.type === 'tool_call' || span.type === 'tool_result') {
+            const toolCalls = applyTraceSpanToToolCalls(current.toolCalls || [], span);
+            updates.toolCalls = toolCalls;
+            updates.isStreaming = true;
+          }
           useUIStore.getState().openTracePanel();
         }
       } else {
@@ -232,6 +238,9 @@ export function useAgent() {
         const finalThinking = normalized.thinking ?? current?.thinking;
 
         const finalTrace = await resolveFinalTrace(sessionId, current, result.messages);
+        const syncedToolCalls = finalizeToolCalls(
+          syncToolCallsFromTrace(current?.toolCalls ?? [], finalTrace?.spans ?? []),
+        );
 
         if (finalContent) {
           updateMessage(assistantId, {
@@ -239,12 +248,13 @@ export function useAgent() {
             isStreaming: false,
             thinkingDurationMs,
             trace: finalTrace,
+            toolCalls: syncedToolCalls,
           });
           await saveAssistantMessage(
             assistantId,
             sessionId,
             finalContent,
-            current?.toolCalls,
+            syncedToolCalls,
             finalThinking,
             thinkingDurationMs,
             finalTrace,
@@ -257,24 +267,25 @@ export function useAgent() {
             isStreaming: false,
             thinkingDurationMs,
             trace: finalTrace,
+            toolCalls: syncedToolCalls,
           });
           await saveAssistantMessage(
             assistantId,
             sessionId,
             assistantText,
-            current?.toolCalls,
+            syncedToolCalls,
             finalThinking,
             thinkingDurationMs,
             finalTrace,
             current?.parts,
           );
         } else if (agentError) {
-          updateMessage(assistantId, { ...normalized, content: agentError, isStreaming: false, thinkingDurationMs, trace: finalTrace });
-          await saveAssistantMessage(assistantId, sessionId, agentError, current?.toolCalls, finalThinking, thinkingDurationMs, finalTrace, current?.parts);
+          updateMessage(assistantId, { ...normalized, content: agentError, isStreaming: false, thinkingDurationMs, trace: finalTrace, toolCalls: syncedToolCalls });
+          await saveAssistantMessage(assistantId, sessionId, agentError, syncedToolCalls, finalThinking, thinkingDurationMs, finalTrace, current?.parts);
         } else {
           const emptyReply = '模型未返回有效内容，请检查 API 配置或稍后重试。';
-          updateMessage(assistantId, { ...normalized, content: emptyReply, isStreaming: false, thinkingDurationMs, trace: finalTrace });
-          await saveAssistantMessage(assistantId, sessionId, emptyReply, current?.toolCalls, finalThinking, thinkingDurationMs, finalTrace, current?.parts);
+          updateMessage(assistantId, { ...normalized, content: emptyReply, isStreaming: false, thinkingDurationMs, trace: finalTrace, toolCalls: syncedToolCalls });
+          await saveAssistantMessage(assistantId, sessionId, emptyReply, syncedToolCalls, finalThinking, thinkingDurationMs, finalTrace, current?.parts);
         }
       } else {
         await new Promise((resolve) => setTimeout(resolve, 1000));

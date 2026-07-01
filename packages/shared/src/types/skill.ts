@@ -40,7 +40,6 @@ export interface ParsedSkillMarkdown {
   frontmatter: Record<string, string>;
   body: string;
 }
-<<<<<<< HEAD
 
 export interface RuntimeSkillDefinition {
   name: string;
@@ -49,5 +48,3 @@ export interface RuntimeSkillDefinition {
   contentCache: string;
   enabled: boolean;
 }
-=======
->>>>>>> e2ca66262520acbed1d525d6937a13d2d943b570
