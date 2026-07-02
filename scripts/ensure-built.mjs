@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +16,17 @@ function run(cmd) {
   execSync(cmd, { cwd: root, stdio: 'inherit', shell: true });
 }
 
+function cleanupNpmPollution(sdkReal) {
+  const lockfile = join(sdkReal, 'package-lock.json');
+  if (existsSync(lockfile)) {
+    rmSync(lockfile);
+  }
+  const npmNodeModules = join(sdkReal, 'node_modules', '.package-lock.json');
+  if (existsSync(npmNodeModules)) {
+    rmSync(join(sdkReal, 'node_modules'), { recursive: true, force: true });
+  }
+}
+
 function ensureSdk() {
   if (!force && existsSync(sdkDist)) {
     console.log('[build] SDK already built, skipping');
@@ -25,10 +36,9 @@ function ensureSdk() {
     console.error('[build] @codeany/open-agent-sdk not found — run pnpm install first');
     process.exit(1);
   }
-  if (force || !existsSync(join(sdkDir, 'node_modules'))) {
-    run(`npm install --prefix "${sdkDir}" --include=dev`);
-  }
-  run(`npm run build --prefix "${sdkDir}"`);
+  const sdkReal = realpathSync(sdkDir);
+  cleanupNpmPollution(sdkReal);
+  run(`pnpm --dir "${sdkReal}" exec tsc`);
 }
 
 function ensurePackages() {

@@ -26,6 +26,13 @@ export function formatTraceDuration(ms?: number): string {
   return `${mins}m ${secs}s`;
 }
 
+export function formatTraceTime(timestamp?: string): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('zh-CN', { hour12: false });
+}
+
 export function formatTokenCount(count?: number): string {
   if (count == null) return '—';
   if (count < 1000) return String(count);

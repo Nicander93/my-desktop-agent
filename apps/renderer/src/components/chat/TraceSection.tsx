@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type MouseEvent, useEffect, useMemo, useState } from 'react';
 import {
+  AlertCircle,
+  Brain,
   ChevronRight,
+  ChevronsUp,
   Copy,
   Loader2,
   Maximize2,
-  Brain,
   Wrench,
   Zap,
-  AlertCircle,
 } from 'lucide-react';
 import type {
   AgentTrace,
@@ -19,14 +20,11 @@ import type {
 import {
   formatTraceDuration,
   formatTraceSummaryLabel,
+  formatTraceTime,
   getSpanTypeLabel,
   getTraceRunFromAgentTrace,
   getTraceSummary,
 } from '@/lib/traceUtils';
-import { LlmRequestDetail } from './trace/LlmRequestDetail';
-import { LlmResponseDetail } from './trace/LlmResponseDetail';
-import { ToolSpanDetail } from './trace/ToolSpanDetail';
-import { TraceRawToggle } from './trace/TraceRawToggle';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -35,6 +33,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { LlmRequestDetail } from './trace/LlmRequestDetail';
+import { LlmResponseDetail } from './trace/LlmResponseDetail';
+import { ToolSpanDetail } from './trace/ToolSpanDetail';
+import { TraceRawToggle } from './trace/TraceRawToggle';
 
 interface TraceSectionProps {
   trace: AgentTrace;
@@ -51,7 +53,7 @@ function SpanDetail({ span }: { span: TraceSpan }) {
 
   return (
     <div className="rounded-md border border-gray-100 bg-gray-50/80 p-3 text-[12px]">
-      <div className="flex flex-wrap items-center gap-2 mb-2 text-gray-500">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-gray-500">
         <span className="font-medium text-gray-700">{getSpanTypeLabel(span.type)}</span>
         {model && <Badge variant="secondary">{model}</Badge>}
         {toolName && <Badge variant="outline">{toolName}</Badge>}
@@ -76,33 +78,60 @@ function SpanDetail({ span }: { span: TraceSpan }) {
   );
 }
 
-function TurnBlock({ turn, defaultOpen }: { turn: TraceTurn; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen ?? false);
+function TurnBlock({
+  turn,
+  open,
+  onOpenChange,
+}: {
+  turn: TraceTurn;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const toolCount = turn.toolCalls.length;
   const llmDuration = turn.llmResponse?.durationMs;
+  const startedAt = formatTraceTime(turn.startedAt);
+
+  /** 复制当前轮次的完整结构化 trace，便于排查单轮问题。 */
+  const handleCopyTurn = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    await navigator.clipboard.writeText(JSON.stringify(turn, null, 2));
+  };
 
   return (
     <div className="relative pl-5">
-      <div className="absolute left-[7px] top-0 bottom-0 w-px bg-gray-200" />
+      <div className="absolute bottom-0 left-[7px] top-0 w-px bg-gray-200" />
       <div className="absolute left-0 top-2 h-3.5 w-3.5 rounded-full border-2 border-white bg-indigo-400 shadow-sm" />
 
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 py-1.5 text-left text-[13px] text-gray-700 hover:text-gray-900"
-      >
-        <ChevronRight
-          size={14}
-          className={cn('flex-shrink-0 text-gray-400 transition-transform', open && 'rotate-90')}
-        />
-        <span className="font-medium">Turn {turn.turn}</span>
-        {llmDuration != null && (
-          <span className="text-gray-400">{formatTraceDuration(llmDuration)}</span>
-        )}
-        {toolCount > 0 && (
-          <span className="text-gray-400">{toolCount} 工具</span>
-        )}
-      </button>
+      <div className="flex w-full items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onOpenChange(!open)}
+          className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-left text-[13px] text-gray-700 hover:text-gray-900"
+        >
+          <ChevronRight
+            size={14}
+            className={cn('flex-shrink-0 text-gray-400 transition-transform', open && 'rotate-90')}
+          />
+          <span className="font-medium">Turn {turn.turn}</span>
+          {startedAt && (
+            <span className="text-gray-400">{startedAt}</span>
+          )}
+          {llmDuration != null && (
+            <span className="text-gray-400">{formatTraceDuration(llmDuration)}</span>
+          )}
+          {toolCount > 0 && (
+            <span className="text-gray-400">{toolCount} 工具</span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={handleCopyTurn}
+          className="p-1 rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          title="复制本轮 Trace"
+        >
+          <Copy size={13} />
+        </button>
+      </div>
 
       {open && (
         <div className="mb-3 ml-1 space-y-2">
@@ -122,20 +151,46 @@ function TurnBlock({ turn, defaultOpen }: { turn: TraceTurn; defaultOpen?: boole
 
 export function TraceTimeline({ trace }: { trace: AgentTrace }) {
   const run = useMemo(() => getTraceRunFromAgentTrace(trace), [trace]);
+  const [openTurns, setOpenTurns] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (!run || !trace.isLive) return;
+    const latestTurn = run.turns.at(-1)?.turn;
+    if (latestTurn == null) return;
+    setOpenTurns((current) => ({ ...current, [latestTurn]: true }));
+  }, [run, trace.isLive]);
 
   if (!run) return null;
 
   const compactSpans = trace.spans.filter((s) => s.type === 'compact');
 
+  const handleCollapseAll = () => {
+    setOpenTurns(Object.fromEntries(run.turns.map((turn) => [turn.turn, false])));
+  };
+
   return (
     <div className="space-y-1">
+      {run.turns.length > 0 && (
+        <div className="mb-2 flex justify-end">
+          <button
+            type="button"
+            onClick={handleCollapseAll}
+            className="inline-flex items-center gap-1 rounded px-2 py-1 text-[12px] text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            title="全部收缩"
+          >
+            <ChevronsUp size={13} />
+            全部收缩
+          </button>
+        </div>
+      )}
+
       {run.startSpan && (
         <div className="mb-2 rounded-md border border-indigo-100 bg-indigo-50/50 px-3 py-2 text-[12px] text-indigo-800">
           <div className="flex items-center gap-1.5 font-medium">
             <Zap size={13} />
             开始执行
           </div>
-          <div className="mt-1 text-indigo-600/80 truncate">
+          <div className="mt-1 truncate text-indigo-600/80">
             {(run.startSpan.payload as { model?: string })?.model}
             {' · '}
             {(run.startSpan.payload as { cwd?: string })?.cwd}
@@ -149,7 +204,7 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
           className="flex items-center gap-2 rounded-md border border-amber-100 bg-amber-50/60 px-3 py-1.5 text-[12px] text-amber-800"
         >
           <Brain size={13} />
-          上下文压缩 ({(span.payload as { reason?: string })?.reason})
+          上下文压缩({(span.payload as { reason?: string })?.reason})
         </div>
       ))}
 
@@ -157,7 +212,8 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
         <TurnBlock
           key={turn.turn}
           turn={turn}
-          defaultOpen={trace.isLive && idx === run.turns.length - 1}
+          open={openTurns[turn.turn] ?? (trace.isLive && idx === run.turns.length - 1)}
+          onOpenChange={(open) => setOpenTurns((current) => ({ ...current, [turn.turn]: open }))}
         />
       ))}
 
@@ -213,10 +269,10 @@ export function TraceSection({ trace }: TraceSectionProps) {
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
-            className="flex flex-1 items-center gap-1.5 text-[13px] text-indigo-700 hover:text-indigo-900 transition-colors min-w-0"
+            className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] text-indigo-700 transition-colors hover:text-indigo-900"
           >
             {trace.isLive ? (
-              <Loader2 size={13} className="animate-spin flex-shrink-0 text-indigo-400" />
+              <Loader2 size={13} className="flex-shrink-0 animate-spin text-indigo-400" />
             ) : (
               <ChevronRight
                 size={14}
@@ -225,13 +281,13 @@ export function TraceSection({ trace }: TraceSectionProps) {
             )}
             <Wrench size={13} className="flex-shrink-0 text-indigo-500" />
             <span className="truncate font-medium">Agent Trace</span>
-            <span className="text-indigo-500/80 truncate">{label}</span>
+            <span className="truncate text-indigo-500/80">{label}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setDetailOpen(true)}
-            className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="p-1 rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             title="全屏查看"
           >
             <Maximize2 size={14} />
@@ -239,7 +295,7 @@ export function TraceSection({ trace }: TraceSectionProps) {
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="p-1 rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             title="复制 JSON"
           >
             <Copy size={14} />
@@ -247,15 +303,15 @@ export function TraceSection({ trace }: TraceSectionProps) {
         </div>
 
         {open && (
-          <div className="mt-2 pl-1 max-h-80 overflow-y-auto">
+          <div className="mt-2 max-h-80 overflow-y-auto pl-1">
             <TraceTimeline trace={trace} />
           </div>
         )}
       </div>
 
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-          <DialogHeader className="px-5 pt-5 pb-3 border-b border-gray-100">
+        <DialogContent className="max-h-[85vh] max-w-3xl flex flex-col overflow-hidden p-0">
+          <DialogHeader className="border-b border-gray-100 px-5 pb-3 pt-5">
             <DialogTitle className="flex items-center gap-2 text-base">
               <Wrench size={16} className="text-gray-500" />
               Agent Trace
