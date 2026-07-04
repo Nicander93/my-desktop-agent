@@ -67,8 +67,11 @@ export interface McpToolInfo {
   description: string;
 }
 
+export type AgentRuntimeProfile = 'general' | 'office' | 'coding' | 'file-organizing' | 'mcp';
+
 export interface AgentSendMessageOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
   skillMentions?: string[];
+  profile?: AgentRuntimeProfile;
 }

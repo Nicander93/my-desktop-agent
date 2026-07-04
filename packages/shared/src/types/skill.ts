@@ -23,6 +23,8 @@ export interface SkillCatalogEntry {
   description: string;
   category: SkillCatalogCategory;
   sourcePath: string;
+  /** 内置内容；安装 catalog 时优先使用，避免拉远程官方 skill */
+  bundledContent?: string;
 }
 
 export interface SkillInput {

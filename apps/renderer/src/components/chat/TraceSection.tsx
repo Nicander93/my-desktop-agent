@@ -58,7 +58,14 @@ function SpanDetail({ span }: { span: TraceSpan }) {
         {model && <Badge variant="secondary">{model}</Badge>}
         {toolName && <Badge variant="outline">{toolName}</Badge>}
         {span.durationMs != null && (
-          <span>{formatTraceDuration(span.durationMs)}</span>
+          <span
+            className={cn(
+              span.type === 'tool_result' && 'font-medium text-emerald-700',
+            )}
+            title={span.type === 'tool_result' ? '工具真实执行耗时' : undefined}
+          >
+            {formatTraceDuration(span.durationMs)}
+          </span>
         )}
       </div>
       {payload != null && (
@@ -90,6 +97,11 @@ function TurnBlock({
   const toolCount = turn.toolCalls.length;
   const llmDuration = turn.llmResponse?.durationMs;
   const startedAt = formatTraceTime(turn.startedAt);
+  const toolDurationLabels = turn.toolCalls.flatMap(({ call, result }) => {
+    if (result?.durationMs == null) return [];
+    const name = (call.payload as { name?: string })?.name ?? 'tool';
+    return [`${name} ${formatTraceDuration(result.durationMs)}`];
+  });
 
   /** 复制当前轮次的完整结构化 trace，便于排查单轮问题。 */
   const handleCopyTurn = async (event: MouseEvent<HTMLButtonElement>) => {
@@ -117,9 +129,16 @@ function TurnBlock({
             <span className="text-gray-400">{startedAt}</span>
           )}
           {llmDuration != null && (
-            <span className="text-gray-400">{formatTraceDuration(llmDuration)}</span>
+            <span className="text-gray-400" title="LLM 响应耗时">
+              LLM {formatTraceDuration(llmDuration)}
+            </span>
           )}
-          {toolCount > 0 && (
+          {toolDurationLabels.map((label) => (
+            <span key={label} className="text-emerald-600" title="工具真实执行耗时">
+              {label}
+            </span>
+          ))}
+          {toolCount > 0 && toolDurationLabels.length === 0 && (
             <span className="text-gray-400">{toolCount} 工具</span>
           )}
         </button>
@@ -135,14 +154,14 @@ function TurnBlock({
 
       {open && (
         <div className="mb-3 ml-1 space-y-2">
-          {turn.llmRequest && <SpanDetail span={turn.llmRequest} />}
-          {turn.llmResponse && <SpanDetail span={turn.llmResponse} />}
           {turn.toolCalls.map(({ call, result }) => (
             <div key={call.id} className="space-y-1">
               <SpanDetail span={call} />
               {result && <SpanDetail span={result} />}
             </div>
           ))}
+          {turn.llmRequest && <SpanDetail span={turn.llmRequest} />}
+          {turn.llmResponse && <SpanDetail span={turn.llmResponse} />}
         </div>
       )}
     </div>

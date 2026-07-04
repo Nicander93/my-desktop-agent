@@ -3,6 +3,7 @@ import {
   parseSkillMentions,
   parseSkillMarkdown,
   buildSkillMentionHint,
+  getSkillCatalogEntry,
 } from '../src/index.js';
 
 describe('parseSkillMentions', () => {
@@ -33,5 +34,14 @@ describe('buildSkillMentionHint', () => {
     expect(hint).toContain('Skill 工具');
     expect(hint).toContain('officecli');
     expect(hint).not.toContain('officecli create');
+  });
+});
+
+describe('SKILL_CATALOG', () => {
+  it('bundles agent officecli skill without remote open workflow', () => {
+    const entry = getSkillCatalogEntry('officecli');
+    expect(entry?.bundledContent).toContain('禁止');
+    expect(entry?.bundledContent).toContain('officecli open');
+    expect(entry?.bundledContent).not.toContain('officecli open "$FILE"');
   });
 });

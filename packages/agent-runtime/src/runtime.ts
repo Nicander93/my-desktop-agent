@@ -8,6 +8,7 @@ import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySes
 import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
 import { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
+import { getRuntimeProfilePolicy, profilePolicyToAgentOptions, type RuntimeProfile } from './profiles.js';
 
 /** 全局 Runtime 配置，来自环境变量 */
 export interface RuntimeOptions {
@@ -41,6 +42,7 @@ export interface AgentQueryOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
   skillMentions?: string[];
+  profile?: RuntimeProfile;
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -298,13 +300,20 @@ export class AgentRuntime {
   private buildQueryOverrides(
     queryOptions?: AgentQueryOptions,
   ): Partial<AgentOptions> | undefined {
+    const policy = getRuntimeProfilePolicy(queryOptions?.profile);
+    const profileOptions = profilePolicyToAgentOptions(policy);
+    const skipSkillHint = policy?.profile === 'office';
     const parts = [
-      buildSkillMentionHint(queryOptions?.skillMentions ?? []),
+      policy?.appendSystemPrompt,
+      skipSkillHint ? undefined : buildSkillMentionHint(queryOptions?.skillMentions ?? []),
       buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);
-    if (parts.length === 0) return undefined;
-    return { appendSystemPrompt: parts.join('\n\n') };
+    if (parts.length === 0 && Object.keys(profileOptions).length === 0) return undefined;
+    return {
+      ...profileOptions,
+      ...(parts.length > 0 ? { appendSystemPrompt: parts.join('\n\n') } : {}),
+    };
   }
 
   /** executeTool 使用的路径检查，逻辑与 canUseTool 一致 */

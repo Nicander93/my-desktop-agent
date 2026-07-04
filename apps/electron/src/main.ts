@@ -7,7 +7,7 @@
  * - 桥接 Agent 与对话（conversationId = sessionId）
  */
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { AgentRuntime, RuntimeOptions } from '@desktop-agent/agent-runtime';
+import { AgentRuntime, RuntimeOptions, inferRuntimeProfile } from '@desktop-agent/agent-runtime';
 import type { AgentSendMessageOptions } from '@desktop-agent/shared';
 import { join } from 'path';
 import { loadProjectEnv } from './loadEnvFile';
@@ -196,6 +196,7 @@ function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptio
     mcpMentions: options?.mcpMentions,
     fileRefs: options?.fileRefs,
     skillMentions: options?.skillMentions ?? parseSkillMentions(content),
+    profile: inferRuntimeProfile(content, options?.profile),
   };
 }
 

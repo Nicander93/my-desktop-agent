@@ -12,7 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@codeany/open-agent-sdk": "github:Nicander93/open-agent-sdk-typescript#main",
+    "@codeany/open-agent-sdk": "workspace:*",
     "@desktop-agent/shared": "workspace:*",
     "@desktop-agent/tools": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1"

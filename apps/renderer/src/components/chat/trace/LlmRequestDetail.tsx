@@ -93,9 +93,9 @@ export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
 
       {messages.length > 0 && (
         <TraceCollapsibleSection
-          title="Messages"
-          summary={`${summary.messageCount} 条`}
-          defaultOpen
+          title="Messages（对话上下文，无耗时）"
+          summary={`${summary.messageCount} 条 · 其中的 [tool_result] 不是计时点`}
+          defaultOpen={false}
         >
           <div className="space-y-1.5">
             {messages.map((msg, i) => (

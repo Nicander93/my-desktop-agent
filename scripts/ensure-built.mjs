@@ -7,7 +7,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const force = process.argv.includes('--force');
 const sdkOnly = process.argv.includes('--sdk-only');
 
-const sdkDir = join(root, 'packages/agent-runtime/node_modules/@codeany/open-agent-sdk');
+const sdkDir = join(root, 'packages/open-agent-sdk');
 const sdkDist = join(sdkDir, 'dist/index.js');
 const agentDist = join(root, 'packages/agent-runtime/dist/index.js');
 

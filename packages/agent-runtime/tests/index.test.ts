@@ -21,6 +21,7 @@ describe('AgentRuntime', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAgent.getSessionId.mockReturnValue('session-1');
+    mockAgent.query.mockReturnValue((async function* () {})());
   });
 
   it('should create an agent for a session', () => {
@@ -48,5 +49,29 @@ describe('AgentRuntime', () => {
       })
     );
     expect(runtime.getSessionWorkspaceId('session-1')).toBe('ws-1');
+  });
+
+  it('should apply office profile query overrides', async () => {
+    const runtime = new AgentRuntime({
+      maxTurns: 50,
+      thinking: { type: 'enabled', budgetTokens: 8000 },
+    });
+
+    await runtime.sendMessage(
+      'session-1',
+      '帮我做一个介绍 MCP 的 ppt',
+      undefined,
+      { profile: 'office', skillMentions: ['officecli'] },
+    );
+
+    const [, overrides] = mockAgent.query.mock.calls[0]!;
+    expect(overrides).toEqual(expect.objectContaining({
+      maxTurns: 8,
+      thinking: { type: 'disabled' },
+      allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
+    }));
+    expect(overrides.appendSystemPrompt).toContain('禁止 Bash 执行：officecli open');
+    expect(overrides.appendSystemPrompt).toContain('Desktop Agent 版');
+    expect(overrides.appendSystemPrompt).not.toContain('运行 CLI 命令：officecli load_skill');
   });
 });

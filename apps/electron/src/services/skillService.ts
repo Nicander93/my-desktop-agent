@@ -209,7 +209,7 @@ export async function installFromCatalog(catalogId: string): Promise<SkillRecord
     throw new Error(`Skill "${entry.name}" 已安装`);
   }
 
-  const contentCache = await fetchSkillContent(entry.sourcePath);
+  const contentCache = entry.bundledContent ?? await fetchSkillContent(entry.sourcePath);
   return createSkill({
     name: entry.name,
     displayName: entry.displayName,

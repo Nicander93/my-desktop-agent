@@ -9,6 +9,7 @@
   },
   "include": ["src/**/*"],
   "references": [
+    { "path": "../open-agent-sdk" },
     { "path": "../shared" },
     { "path": "../tools" }
   ]

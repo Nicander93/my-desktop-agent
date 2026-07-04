@@ -8,7 +8,7 @@
     "build:packages": "node scripts/ensure-built.mjs --force",
     "postinstall": "node scripts/ensure-built.mjs",
     "dev": "node scripts/ensure-built.mjs && concurrently -n packages,renderer,electron -c yellow,cyan,magenta \"pnpm exec tsc -b packages/agent-runtime --watch --preserveWatchOutput\" \"pnpm --filter @desktop-agent/renderer dev\" \"pnpm --filter @desktop-agent/electron dev\"",
-    "build": "pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
+    "build": "pnpm run build:packages && pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "lint": "eslint .",

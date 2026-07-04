@@ -13,6 +13,7 @@ export type {
   McpImportFile,
   McpImportServerConfig,
   McpToolInfo,
+  AgentRuntimeProfile,
   AgentSendMessageOptions,
 } from './types/mcp.js';
 export { MCP_CATALOG, getCatalogEntry } from './mcp/catalog.js';
@@ -34,7 +35,7 @@ export type {
   ParsedSkillMarkdown,
   RuntimeSkillDefinition,
 } from './types/skill.js';
-export { SKILL_CATALOG, getSkillCatalogEntry } from './skills/catalog.js';
+export { SKILL_CATALOG, getSkillCatalogEntry, OFFICECLI_PPTX_AGENT_SKILL } from './skills/catalog.js';
 export {
   parseSkillMarkdown,
   getSkillPromptBody,
