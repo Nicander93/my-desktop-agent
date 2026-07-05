@@ -1,0 +1,54 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "vitest": false,
+  "rules": {
+    "exports": "off",
+    "types": "off"
+  },
+  "workspaces": {
+    "apps/renderer": {
+      "entry": ["src/main.tsx", "tests/**/*.test.ts"],
+      "project": ["src/**/*.{ts,tsx}", "tests/**/*.ts"]
+    },
+    "apps/electron": {
+      "entry": [
+        "src/main.ts",
+        "src/preload.ts",
+        "electron.vite.config.ts",
+        "tests/**/*.test.ts"
+      ],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "electron.vite.config.ts"]
+    },
+    "packages/shared": {
+      "entry": ["src/index.ts", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/agent-runtime": {
+      "entry": ["src/index.ts", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "packages/open-agent-sdk": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+      "ignore": ["examples/**"]
+    }
+  },
+  "ignore": [
+    "vitest.config.ts",
+    "scripts/migrate-renderer-features.mjs",
+    "apps/electron/src/runtime/index.ts",
+    "packages/agent-runtime/src/streaming-openai-provider.ts",
+    "packages/agent-runtime/src/types.ts",
+    "apps/renderer/src/components/ui/avatar.tsx",
+    "apps/renderer/src/features/chat/ActivityStatus.tsx",
+    "apps/renderer/src/features/chat/ToolCallCard.tsx"
+  ],
+  "ignoreDependencies": [
+    "@vitest/ui",
+    "@types/uuid",
+    "@tailwindcss/typography",
+    "date-fns",
+    "jszip",
+    "tailwindcss"
+  ]
+}

@@ -6,7 +6,7 @@ import { getThinkingPreview } from '../src/lib/toolActivitySummary';
 describe('getToolActivityLabel', () => {
   it('formats Read with line range', () => {
     const label = getToolActivityLabel('Read', {
-      file_path: 'apps/renderer/src/components/chat/MessageItem.tsx',
+      file_path: 'apps/renderer/src/features/chat/MessageItem.tsx',
       offset: 0,
       limit: 73,
     });
@@ -21,6 +21,6 @@ describe('getToolActivityLabel', () => {
 
 describe('getThinkingPreview', () => {
   it('returns last non-empty line', () => {
-    expect(getThinkingPreview('第一行\n第二行')).toBe('第二行');
+    expect(getThinkingPreview('???\n???')).toBe('???');
   });
 });

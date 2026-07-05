@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["apps/renderer/src/*"]
+    },
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": [
+    "apps/renderer/src/**/*",
+    "apps/electron/src/**/*",
+    "packages/shared/src/**/*",
+    "packages/agent-runtime/src/**/*",
+    "packages/open-agent-sdk/src/**/*"
+  ]
+}

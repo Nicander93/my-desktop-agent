@@ -14,7 +14,6 @@
   "dependencies": {
     "@codeany/open-agent-sdk": "workspace:*",
     "@desktop-agent/shared": "workspace:*",
-    "@desktop-agent/tools": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1"
   },
   "devDependencies": {

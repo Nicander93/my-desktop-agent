@@ -1,6 +1,6 @@
-import { ChatPanel } from '@/components/chat/ChatPanel';
+import { ChatPanel } from '@/features/chat/ChatPanel';
 import { ResizeHandle } from '@/components/layout/ResizeHandle';
-import { ToolPanel } from '@/components/tools/ToolPanel';
+import { ToolPanel } from '@/features/tools-panel/ToolPanel';
 import { useUIStore } from '@/stores/uiStore';
 
 export function ChatPage() {

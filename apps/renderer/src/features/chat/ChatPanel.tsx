@@ -6,7 +6,7 @@
  * 2. 未选对话   → 引导新建对话
  * 3. 正常聊天   → MessageList + ChatInput
  */
-import { Header } from '../layout/Header';
+import { Header } from '@/components/layout/Header';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { useAgent } from '@/hooks/useAgent';

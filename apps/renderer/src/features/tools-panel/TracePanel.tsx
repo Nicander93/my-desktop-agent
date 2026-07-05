@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Copy, Loader2, Wrench } from 'lucide-react';
 import type { AgentTrace } from '@desktop-agent/shared';
 import { useChatStore } from '@/stores/chatStore';
-import { TraceTimeline } from '@/components/chat/TraceSection';
+import { TraceTimeline } from '@/features/chat/TraceSection';
 import {
   formatTraceSummaryLabel,
   getTraceRunFromAgentTrace,

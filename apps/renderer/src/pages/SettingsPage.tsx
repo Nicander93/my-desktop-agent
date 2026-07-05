@@ -3,10 +3,10 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { GeneralSettings } from '@/components/settings/GeneralSettings';
-import { ModelSettings } from '@/components/settings/ModelSettings';
-import { McpSettings } from '@/components/settings/McpSettings';
-import { SkillSettings } from '@/components/settings/SkillSettings';
+import { GeneralSettings } from '@/features/settings/GeneralSettings';
+import { ModelSettings } from '@/features/settings/ModelSettings';
+import { McpSettings } from '@/features/settings/McpSettings';
+import { SkillSettings } from '@/features/settings/SkillSettings';
 
 const settingsTabs = [
   { id: 'general', label: '通用' },

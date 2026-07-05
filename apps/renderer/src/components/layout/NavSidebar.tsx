@@ -9,7 +9,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { useNewConversation } from '@/hooks/useNewConversation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { WorkspaceList } from '@/components/workspace/WorkspaceList';
+import { WorkspaceList } from '@/features/workspace/WorkspaceList';
 import { cn } from '@/lib/utils';
 
 export function NavSidebar() {

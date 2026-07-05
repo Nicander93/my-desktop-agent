@@ -10,6 +10,3 @@ export type { RuntimeProfile, RuntimeProfilePolicy, ToolResultPolicy } from './p
 
 // 重新导出 SDK 类型
 export type { Agent, AgentOptions, SDKMessage } from '@codeany/open-agent-sdk';
-
-// 导出共享类型
-export * from '@desktop-agent/shared';

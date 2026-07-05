@@ -23,7 +23,7 @@ function buildSdkConfig(server: McpServerRecord, workspacePath?: string): Record
   const config = buildSessionMcpServers([server], workspacePath, {
     commandResolver: createBundledCommandResolver(getBinaryManagerPaths()),
   });
-  const entry = config[server.name];
+  const entry = config[server.name] as { env?: Record<string, string> } | undefined;
   if (!entry) return undefined;
 
   const subprocessEnv = buildSubprocessEnv('general', getBinaryManagerPaths());
@@ -31,7 +31,7 @@ function buildSdkConfig(server: McpServerRecord, workspacePath?: string): Record
     ...entry,
     env: {
       ...subprocessEnv,
-      ...((entry.env as Record<string, string> | undefined) ?? {}),
+      ...(entry.env ?? {}),
     },
   };
 }
