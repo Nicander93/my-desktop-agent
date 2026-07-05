@@ -49,6 +49,7 @@ declare global {
         write: (workspaceId: string, path: string, content: string) => Promise<{ success: boolean; error?: string }>;
         readDir: (workspaceId: string, dirPath: string) => Promise<{ success: boolean; entries?: import('@desktop-agent/shared').FileEntry[]; error?: string }>;
         search: (workspaceId: string, query: string) => Promise<{ success: boolean; results?: import('@desktop-agent/shared').FileSearchResult[]; error?: string }>;
+        getPreviewUrl: (workspaceId: string, path: string) => Promise<{ success: boolean; url?: string; error?: string }>;
       };
       mcp: {
         getAll: () => Promise<{ success: boolean; servers?: import('@desktop-agent/shared').McpServerRecord[]; error?: string }>;

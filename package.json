@@ -7,7 +7,8 @@
     "build:sdk": "node scripts/ensure-built.mjs --sdk-only --force",
     "build:packages": "node scripts/ensure-built.mjs --force",
     "postinstall": "node scripts/ensure-built.mjs",
-    "dev": "node scripts/ensure-built.mjs && concurrently -n packages,renderer,electron -c yellow,cyan,magenta \"pnpm exec tsc -b packages/agent-runtime --watch --preserveWatchOutput\" \"pnpm --filter @desktop-agent/renderer dev\" \"pnpm --filter @desktop-agent/electron dev\"",
+    "setup:binaries": "pnpm exec tsx scripts/setup-binaries.ts",
+    "dev": "node scripts/ensure-built.mjs && pnpm exec tsx scripts/free-dev-port.ts && pnpm exec tsx scripts/setup-binaries.ts --check && concurrently -n packages,renderer,electron -c yellow,cyan,magenta \"pnpm exec tsc -b packages/agent-runtime --watch --preserveWatchOutput\" \"pnpm --filter @desktop-agent/renderer dev\" \"pnpm exec tsx scripts/wait-and-start-electron.ts\"",
     "build": "pnpm run build:packages && pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -20,6 +21,7 @@
     "@vitest/ui": "^4.0.0",
     "concurrently": "^9.0.0",
     "prettier": "^3.4.0",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.0"
   }

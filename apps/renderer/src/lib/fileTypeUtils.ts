@@ -15,9 +15,9 @@ export function resolveEditorFileType(
   mimeType: string,
   encoding: 'utf8' | 'base64'
 ): EditorFileType {
-  if (encoding === 'utf8') return 'text';
-
   const ext = getExtFromPath(path);
+  if (ext === 'html' || ext === 'htm') return 'html';
+  if (encoding === 'utf8') return 'text';
   if (mimeType.startsWith('image/')) return 'image';
   if (ext === 'docx') return 'docx';
   if (ext === 'pptx') return 'pptx';

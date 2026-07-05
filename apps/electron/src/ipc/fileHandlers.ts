@@ -3,6 +3,10 @@
  */
 import { ipcMain, BrowserWindow } from 'electron';
 import * as fileService from '../services/fileService';
+import {
+  assertPreviewAccess,
+  buildWorkspacePreviewUrl,
+} from '../services/workspacePreviewProtocol';
 
 export function registerFileHandlers(getWindow: () => BrowserWindow | null): void {
   ipcMain.handle('workspace-fs:stat', async (event, workspaceId: string, path: string) => {
@@ -65,6 +69,19 @@ export function registerFileHandlers(getWindow: () => BrowserWindow | null): voi
       const window = BrowserWindow.fromWebContents(event.sender) ?? getWindow();
       const results = await fileService.searchFiles(workspaceId, query, window);
       return { success: true, results };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  });
+
+  ipcMain.handle('workspace-fs:get-preview-url', async (event, workspaceId: string, path: string) => {
+    try {
+      const window = BrowserWindow.fromWebContents(event.sender) ?? getWindow();
+      await assertPreviewAccess(workspaceId, path, window);
+      return { success: true, url: buildWorkspacePreviewUrl(workspaceId, path) };
     } catch (error) {
       return {
         success: false,

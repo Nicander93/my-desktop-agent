@@ -23,6 +23,7 @@ export {
   parseMcpImportJson,
   importConfigToServerInput,
   type McpBuildContext,
+  type McpCommandResolver,
 } from './mcp/buildConfig.js';
 export { parseMcpMentions, buildMcpMentionPrompt } from './mcp/mentions.js';
 export { parseFileMentions, buildFileMentionPrompt } from './files/mentions.js';

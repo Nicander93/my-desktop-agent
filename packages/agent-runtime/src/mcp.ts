@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { basename } from 'node:path';
 import { buildMcpServersForSdk, type McpServerRecord, type McpToolInfo } from '@desktop-agent/shared';
 
 const INSTALL_TIMEOUT_MS = 180_000;
@@ -7,9 +8,24 @@ const DEFAULT_TEST_TIMEOUT_MS = 60_000;
 export type McpConnectionTestOptions = {
   timeoutMs?: number;
   skipPreinstall?: boolean;
+  /** 合并进 MCP 子进程的环境变量 */
+  subprocessEnv?: Record<string, string>;
 };
 
 type SdkConfig = Record<string, unknown>;
+
+export function resolveSpawnCommandName(command: string): string {
+  return basename(command).replace(/\.(exe|cmd)$/i, '').toLowerCase();
+}
+
+function mergeSpawnEnv(config: SdkConfig, subprocessEnv?: Record<string, string>): Record<string, string> {
+  const configEnv = (config.env as Record<string, string> | undefined) ?? {};
+  return {
+    ...process.env,
+    ...subprocessEnv,
+    ...configEnv,
+  } as Record<string, string>;
+}
 
 function runProcess(
   command: string,
@@ -21,7 +37,7 @@ function runProcess(
   return new Promise((resolve) => {
     let settled = false;
     const child = spawn(command, args, {
-      env: { ...process.env, ...env },
+      env,
       stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
     });
@@ -54,36 +70,38 @@ function runProcess(
 
 export async function preinstallMcpDependencies(
   config: SdkConfig,
+  subprocessEnv?: Record<string, string>,
 ): Promise<{ success: boolean; error?: string }> {
   const type = (config.type as string | undefined) ?? 'stdio';
   if (type !== 'stdio') return { success: true };
 
   const command = config.command as string | undefined;
   const args = (config.args as string[]) ?? [];
-  const env = (config.env as Record<string, string>) ?? {};
   if (!command) return { success: true };
 
-  if (command === 'uvx' && args.length >= 1) {
-    return runProcess(command, [args[0], '--help'], env, INSTALL_TIMEOUT_MS);
+  const spawnEnv = mergeSpawnEnv(config, subprocessEnv);
+  const cmd = resolveSpawnCommandName(command);
+
+  if (cmd === 'uvx' && args.length >= 1) {
+    return runProcess(command, [args[0], '--help'], spawnEnv, INSTALL_TIMEOUT_MS);
   }
 
-  if (command === 'npx') {
-    return runProcess(command, args, env, 30_000, true);
+  if (cmd === 'npx') {
+    return runProcess(command, args, spawnEnv, 30_000, true);
   }
 
   return { success: true };
 }
 
-async function createTransport(config: SdkConfig) {
+async function createTransport(config: SdkConfig, subprocessEnv?: Record<string, string>) {
   const type = (config.type as string | undefined) ?? 'stdio';
 
   if (type === 'stdio') {
     const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
-    const env = (config.env as Record<string, string> | undefined) ?? {};
     return new StdioClientTransport({
       command: config.command as string,
       args: (config.args as string[]) ?? [],
-      env: { ...process.env, ...env } as Record<string, string>,
+      env: mergeSpawnEnv(config, subprocessEnv) as Record<string, string>,
     });
   }
 
@@ -110,7 +128,7 @@ export async function testMcpConnection(
   options?: McpConnectionTestOptions,
 ): Promise<{ success: boolean; tools: McpToolInfo[]; error?: string }> {
   if (!options?.skipPreinstall) {
-    const pre = await preinstallMcpDependencies(config);
+    const pre = await preinstallMcpDependencies(config, options?.subprocessEnv);
     if (!pre.success) {
       return { success: false, tools: [], error: pre.error || '依赖下载失败' };
     }
@@ -121,7 +139,7 @@ export async function testMcpConnection(
 
   try {
     const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
-    const transport = await createTransport(config);
+    const transport = await createTransport(config, options?.subprocessEnv);
     const client = new Client({ name: `desktop-agent-${name}`, version: '1.0.0' }, { capabilities: {} });
 
     await client.connect(transport, requestOptions);
@@ -145,17 +163,22 @@ export async function testMcpConnection(
 export async function setupMcpServer(
   name: string,
   config: SdkConfig,
+  options?: Pick<McpConnectionTestOptions, 'subprocessEnv'>,
 ): Promise<{ success: boolean; tools: McpToolInfo[]; error?: string }> {
-  const pre = await preinstallMcpDependencies(config);
+  const pre = await preinstallMcpDependencies(config, options?.subprocessEnv);
   if (!pre.success) {
     return { success: false, tools: [], error: pre.error || '依赖下载失败' };
   }
-  return testMcpConnection(name, config, { skipPreinstall: true });
+  return testMcpConnection(name, config, { skipPreinstall: true, subprocessEnv: options?.subprocessEnv });
 }
 
 export function buildSessionMcpServers(
   servers: McpServerRecord[],
   workspacePath?: string,
+  options?: { commandResolver?: (command: string) => string },
 ): Record<string, unknown> {
-  return buildMcpServersForSdk(servers, { workspacePath });
+  return buildMcpServersForSdk(servers, {
+    workspacePath,
+    commandResolver: options?.commandResolver,
+  });
 }

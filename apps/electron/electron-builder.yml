@@ -1,0 +1,20 @@
+appId: com.desktop-agent.app
+productName: Desktop Agent
+directories:
+  output: release
+  buildResources: resources
+files:
+  - dist/**/*
+  - package.json
+extraResources:
+  - from: resources/binaries/manifest.json
+    to: binaries/manifest.json
+  - from: resources/binaries/archives
+    to: binaries/archives
+win:
+  target:
+    - nsis
+  artifactName: ${productName}-${version}-win-${arch}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

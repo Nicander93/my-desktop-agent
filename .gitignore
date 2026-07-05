@@ -129,6 +129,10 @@ dist
 .pnp.*
 
 
+# Desktop Agent bundled runtime archives (downloaded locally)
+apps/electron/resources/binaries/archives/*
+!apps/electron/resources/binaries/archives/.gitkeep
+
 # ai
 .cursor
 .codex

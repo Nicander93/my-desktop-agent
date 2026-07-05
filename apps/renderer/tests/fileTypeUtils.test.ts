@@ -30,6 +30,11 @@ describe('fileTypeUtils', () => {
     expect(resolveEditorFileType('/a/p.png', 'image/png', 'base64')).toBe('image');
   });
 
+  it('resolves html', () => {
+    expect(resolveEditorFileType('/a/page.html', 'text/html', 'utf8')).toBe('html');
+    expect(resolveEditorFileType('/a/page.htm', 'text/plain', 'utf8')).toBe('html');
+  });
+
   it('maps file extension to monaco language', () => {
     expect(getLanguageFromPath('/a/b.ts')).toBe('typescript');
     expect(getLanguageFromPath('/a/c.yaml')).toBe('yaml');

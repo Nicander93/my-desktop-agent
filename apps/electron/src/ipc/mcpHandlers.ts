@@ -1,6 +1,5 @@
 import { ipcMain } from 'electron';
 import {
-  buildMcpServersForSdk,
   parseMcpImportJson,
   type AgentSendMessageOptions,
   type McpServerInput,
@@ -10,6 +9,32 @@ import * as mcpService from '../services/mcpService';
 import * as workspaceService from '../services/workspaceService';
 import * as conversationService from '../services/conversationService';
 import type { McpServerRecord } from '@desktop-agent/shared';
+import { createBundledCommandResolver, buildSubprocessEnv } from '../runtime/policy';
+import { getBinaryManagerPaths, isRuntimeReady, getRuntimeInitError } from '../runtime/manager';
+
+function getRuntimeBlockedMessage(): string | undefined {
+  if (process.platform === 'win32' && !isRuntimeReady()) {
+    return getRuntimeInitError() ?? '运行时未就绪，请先运行 pnpm setup:binaries';
+  }
+  return undefined;
+}
+
+function buildSdkConfig(server: McpServerRecord, workspacePath?: string): Record<string, unknown> | undefined {
+  const config = buildSessionMcpServers([server], workspacePath, {
+    commandResolver: createBundledCommandResolver(getBinaryManagerPaths()),
+  });
+  const entry = config[server.name];
+  if (!entry) return undefined;
+
+  const subprocessEnv = buildSubprocessEnv('general', getBinaryManagerPaths());
+  return {
+    ...entry,
+    env: {
+      ...subprocessEnv,
+      ...((entry.env as Record<string, string> | undefined) ?? {}),
+    },
+  };
+}
 
 function resolveWorkspacePath(conversationId?: string): string | undefined {
   if (!conversationId) return undefined;
@@ -17,11 +42,6 @@ function resolveWorkspacePath(conversationId?: string): string | undefined {
   if (!conversation) return undefined;
   const workspace = workspaceService.getWorkspace(conversation.workspaceId);
   return workspace?.path;
-}
-
-function buildSdkConfig(server: McpServerRecord, workspacePath?: string): Record<string, unknown> | undefined {
-  const config = buildMcpServersForSdk([server], { workspacePath });
-  return config[server.name];
 }
 
 async function prepareInstalledMcpServer(
@@ -32,7 +52,9 @@ async function prepareInstalledMcpServer(
   if (!sdkConfig) {
     return { success: false, tools: [], error: '无法构建 MCP 配置' };
   }
-  return setupMcpServer(server.name, sdkConfig);
+  return setupMcpServer(server.name, sdkConfig, {
+    subprocessEnv: buildSubprocessEnv('general', getBinaryManagerPaths()),
+  });
 }
 
 export function registerMcpHandlers(): void {
@@ -89,6 +111,9 @@ export function registerMcpHandlers(): void {
   });
 
   ipcMain.handle('mcp:install-catalog', async (_, catalogId: string, secrets?: Record<string, string>) => {
+    const blocked = getRuntimeBlockedMessage();
+    if (blocked) return { success: false, error: blocked };
+
     let server: McpServerRecord | undefined;
     try {
       server = mcpService.installFromCatalog(catalogId, secrets);
@@ -105,6 +130,9 @@ export function registerMcpHandlers(): void {
   });
 
   ipcMain.handle('mcp:import-json', async (_, raw: string) => {
+    const blocked = getRuntimeBlockedMessage();
+    if (blocked) return { success: false, error: blocked };
+
     try {
       const entries = parseMcpImportJson(raw);
       const servers: McpServerRecord[] = [];
@@ -143,6 +171,9 @@ export function registerMcpHandlers(): void {
 
   ipcMain.handle('mcp:test-connection', async (_, id: string, conversationId?: string) => {
     try {
+      const blocked = getRuntimeBlockedMessage();
+      if (blocked) return { success: false, error: blocked, tools: [] };
+
       const server = mcpService.getMcpServer(id);
       if (!server) return { success: false, error: 'MCP 不存在' };
 
@@ -152,7 +183,9 @@ export function registerMcpHandlers(): void {
         return { success: false, error: '无法构建 MCP 配置' };
       }
 
-      return testMcpConnection(server.name, sdkConfig);
+      return testMcpConnection(server.name, sdkConfig, {
+        subprocessEnv: buildSubprocessEnv('general', getBinaryManagerPaths()),
+      });
     } catch (error) {
       return { success: false, error: error instanceof Error ? error.message : '测试失败', tools: [] };
     }
@@ -160,7 +193,9 @@ export function registerMcpHandlers(): void {
 }
 
 export function getEnabledMcpServersForWorkspace(workspacePath?: string): Record<string, unknown> {
-  return buildSessionMcpServers(mcpService.getEnabledMcpServers(), workspacePath);
+  return buildSessionMcpServers(mcpService.getEnabledMcpServers(), workspacePath, {
+    commandResolver: createBundledCommandResolver(getBinaryManagerPaths()),
+  });
 }
 
 export type { AgentSendMessageOptions };

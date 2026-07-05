@@ -7,6 +7,10 @@
  * - 桥接 Agent 与对话（conversationId = sessionId）
  */
 import { app, BrowserWindow, ipcMain } from 'electron';
+import {
+  registerWorkspacePreviewProtocol,
+  registerWorkspacePreviewScheme,
+} from './services/workspacePreviewProtocol';
 import { AgentRuntime, RuntimeOptions, inferRuntimeProfile } from '@desktop-agent/agent-runtime';
 import type { AgentSendMessageOptions } from '@desktop-agent/shared';
 import { join } from 'path';
@@ -22,13 +26,18 @@ import { parseSkillMentions } from '@desktop-agent/shared';
 import * as conversationService from './services/conversationService';
 import * as workspaceService from './services/workspaceService';
 import { setupPathInterceptor } from './services/agentPathInterceptor';
+import { BinaryManager, setBinaryManager, isRuntimeReady, getRuntimeInitError } from './runtime/manager';
+import { buildSubprocessEnv, mergeRuntimeEnvIntoMcpServers } from './runtime/policy';
 
 loadProjectEnv();
+registerWorkspacePreviewScheme();
 
 /** 全局 Agent 运行时实例，按 sessionId 管理多个 Agent */
 let runtime: AgentRuntime;
 /** 主窗口引用，用于流式推送和路径访问弹窗 */
 let mainWindow: BrowserWindow | null = null;
+/** App 级运行时管理 */
+let binaryManager: BinaryManager;
 
 /** 读取环境变量，兼容 electron-vite 的 MAIN_VITE_ 前缀 */
 function readEnv(name: string): string | undefined {
@@ -103,9 +112,10 @@ function createWindow(): void {
     }
   });
 
+  const rendererUrl = process.env.ELECTRON_RENDERER_URL || 'http://127.0.0.1:3000';
   const isDev = process.env.NODE_ENV === 'development' || !!process.env.ELECTRON_RENDERER_URL;
   if (isDev) {
-    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL || 'http://localhost:3000');
+    mainWindow.loadURL(rendererUrl);
     mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/dist/index.html'));
@@ -155,8 +165,19 @@ function getAgentErrorFromMessages(messages: any[]): string | undefined {
 }
 
 app.whenReady().then(async () => {
+  // 必须在 createRuntime 之前完成，让 git/npx/MCP 子进程继承 bundled 环境
+  binaryManager = new BinaryManager();
+  setBinaryManager(binaryManager);
+  try {
+    await binaryManager.ensureInstalled();
+    binaryManager.applyBaseEnv();
+  } catch (error) {
+    console.error('[desktop-agent] 运行时初始化失败:', error instanceof Error ? error.message : error);
+  }
+
   await getDatabaseAsync();
   createRuntime();
+  registerWorkspacePreviewProtocol(() => mainWindow);
   createWindow();
   registerWorkspaceHandlers();
   registerConversationHandlers();
@@ -180,28 +201,48 @@ app.on('window-all-closed', async () => {
   }
 });
 
+function getRuntimeBlockedMessage(): string | undefined {
+  if (process.platform === 'win32' && !isRuntimeReady()) {
+    return getRuntimeInitError() ?? '运行时未就绪，请先运行 pnpm setup:binaries';
+  }
+  return undefined;
+}
+
 function buildAgentSessionOptions(conversationId: string) {
   const context = resolveWorkspaceContext(conversationId);
   if (!context) return undefined;
+
+  const subprocessEnv = buildSubprocessEnv('general', binaryManager.getPaths());
+  const mcpServers = mergeRuntimeEnvIntoMcpServers(
+    getEnabledMcpServersForWorkspace(context.cwd),
+    subprocessEnv,
+  );
+
   return {
     cwd: context.cwd,
     workspaceId: context.workspaceId,
-    mcpServers: getEnabledMcpServersForWorkspace(context.cwd),
+    mcpServers,
     skills: getRuntimeSkillDefinitions(),
+    subprocessEnv,
   };
 }
 
 function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
+  const profile = inferRuntimeProfile(content, options?.profile);
   return {
     mcpMentions: options?.mcpMentions,
     fileRefs: options?.fileRefs,
     skillMentions: options?.skillMentions ?? parseSkillMentions(content),
-    profile: inferRuntimeProfile(content, options?.profile),
+    profile,
+    subprocessEnv: buildSubprocessEnv(profile, binaryManager.getPaths()),
   };
 }
 
 /** 预创建 Agent session，绑定工作区 cwd 和 workspaceId */
 ipcMain.handle('agent:create-session', (_, sessionId: string) => {
+  const blocked = getRuntimeBlockedMessage();
+  if (blocked) return { success: false, error: blocked };
+
   const sessionOptions = buildAgentSessionOptions(sessionId);
   if (!sessionOptions) {
     return { success: false, error: '找不到对话所属工作区' };
@@ -213,6 +254,9 @@ ipcMain.handle('agent:create-session', (_, sessionId: string) => {
 /** 发送消息并流式推送 agent:stream-message 到渲染进程 */
 ipcMain.handle('agent:send-message', async (_, sessionId: string, content: string, options?: AgentSendMessageOptions) => {
   try {
+    const blocked = getRuntimeBlockedMessage();
+    if (blocked) return { success: false, error: blocked };
+
     const sessionOptions = buildAgentSessionOptions(sessionId);
     if (!sessionOptions) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };
@@ -247,6 +291,9 @@ ipcMain.handle('agent:send-message', async (_, sessionId: string, content: strin
 /** 非流式单次 prompt，同样绑定工作区上下文 */
 ipcMain.handle('agent:prompt', async (_, sessionId: string, content: string, options?: AgentSendMessageOptions) => {
   try {
+    const blocked = getRuntimeBlockedMessage();
+    if (blocked) return { success: false, error: blocked };
+
     const sessionOptions = buildAgentSessionOptions(sessionId);
     if (!sessionOptions) {
       return { success: false, error: '找不到对话所属工作区，请确认工作区存在' };

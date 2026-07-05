@@ -35,6 +35,8 @@ export interface AgentSessionOptions {
   mcpServers?: Record<string, unknown>;
   /** 已安装 Skills，用于注册到 SDK */
   skills?: RuntimeSkillDefinition[];
+  /** 子进程环境变量（按 session/profile，不污染全局 process.env） */
+  subprocessEnv?: Record<string, string>;
 }
 
 /** 单轮对话的可选参数 */
@@ -43,6 +45,7 @@ export interface AgentQueryOptions {
   fileRefs?: string[];
   skillMentions?: string[];
   profile?: RuntimeProfile;
+  subprocessEnv?: Record<string, string>;
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -125,6 +128,7 @@ export class AgentRuntime {
       ...(sessionOptions?.mcpServers && Object.keys(sessionOptions.mcpServers).length > 0
         ? { mcpServers: sessionOptions.mcpServers as AgentOptions['mcpServers'] }
         : {}),
+      ...(sessionOptions?.subprocessEnv ? { subprocessEnv: sessionOptions.subprocessEnv } : {}),
     };
 
     const agent = createAgent(agentOptions);
@@ -309,10 +313,12 @@ export class AgentRuntime {
       buildMcpMentionPrompt(queryOptions?.mcpMentions ?? []),
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);
-    if (parts.length === 0 && Object.keys(profileOptions).length === 0) return undefined;
+    const subprocessEnvOverride = queryOptions?.subprocessEnv;
+    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride) return undefined;
     return {
       ...profileOptions,
       ...(parts.length > 0 ? { appendSystemPrompt: parts.join('\n\n') } : {}),
+      ...(subprocessEnvOverride ? { subprocessEnv: subprocessEnvOverride } : {}),
     };
   }
 

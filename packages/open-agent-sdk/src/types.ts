@@ -205,6 +205,8 @@ export interface ToolContext {
   model?: string
   /** Parent agent's API type */
   apiType?: import('./providers/types.js').ApiType
+  /** Per-session env for shell/MCP subprocesses (avoids mutating global process.env) */
+  subprocessEnv?: Record<string, string>
 }
 
 export interface ToolResult {
@@ -393,6 +395,8 @@ export interface AgentOptions {
   stream?: boolean
   /** Environment variables */
   env?: Record<string, string | undefined>
+  /** Per-session subprocess env (Bash/MCP), merged over process.env at spawn time */
+  subprocessEnv?: Record<string, string>
   /** Tool names to pre-approve without prompting */
   allowedTools?: string[]
   /** Tool names to deny */
@@ -499,4 +503,6 @@ export interface QueryEngineConfig {
   sessionId?: string
   /** Trace recorder for observability (opt-in) */
   traceRecorder?: import('./trace.js').TraceRecorder
+  /** Per-session subprocess env passed to tools */
+  subprocessEnv?: Record<string, string>
 }

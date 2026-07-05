@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "platform": "win32-x64",
+  "runtimes": {
+    "node": {
+      "version": "22.14.0",
+      "archive": "node-v22.14.0-win-x64.zip",
+      "url": "https://nodejs.org/dist/v22.14.0/node-v22.14.0-win-x64.zip",
+      "mirrorUrl": "https://cdn.npmmirror.com/binaries/node/v22.14.0/node-v22.14.0-win-x64.zip",
+      "extractDir": "node",
+      "stripTopLevelDir": true,
+      "verifyFile": "node.exe"
+    },
+    "git": {
+      "version": "2.47.1",
+      "archive": "MinGit-2.47.1-64-bit.zip",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/MinGit-2.47.1-64-bit.zip",
+      "mirrorUrl": "https://mirror.ghproxy.com/https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/MinGit-2.47.1-64-bit.zip",
+      "extractDir": "git",
+      "stripTopLevelDir": true,
+      "verifyFile": "cmd/git.exe"
+    },
+    "uv": {
+      "version": "0.6.14",
+      "archive": "uv-x86_64-pc-windows-msvc.zip",
+      "url": "https://github.com/astral-sh/uv/releases/download/0.6.14/uv-x86_64-pc-windows-msvc.zip",
+      "mirrorUrl": "https://mirror.ghproxy.com/https://github.com/astral-sh/uv/releases/download/0.6.14/uv-x86_64-pc-windows-msvc.zip",
+      "extractDir": "uv",
+      "stripTopLevelDir": false,
+      "verifyFile": "uv.exe"
+    }
+  }
+}

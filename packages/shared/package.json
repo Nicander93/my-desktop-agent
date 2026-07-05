@@ -6,12 +6,27 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./runtime": {
+      "types": "./dist/runtime/index.d.ts",
+      "import": "./dist/runtime/index.js",
+      "require": "./dist/runtime/index.js",
+      "default": "./dist/runtime/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
     "vitest": "^4.0.0"
   }

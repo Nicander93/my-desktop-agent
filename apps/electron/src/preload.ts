@@ -98,6 +98,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('workspace-fs:read-dir', workspaceId, dirPath),
     search: (workspaceId: string, query: string) =>
       ipcRenderer.invoke('workspace-fs:search', workspaceId, query),
+    getPreviewUrl: (workspaceId: string, path: string) =>
+      ipcRenderer.invoke('workspace-fs:get-preview-url', workspaceId, path),
   },
 
   mcp: {

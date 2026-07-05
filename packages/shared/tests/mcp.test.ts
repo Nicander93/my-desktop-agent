@@ -47,6 +47,31 @@ describe('buildMcpServersForSdk', () => {
     const config = buildMcpServersForSdk(servers, { workspacePath: 'D:/proj' });
     expect(config.filesystem.args).toEqual(['-y', 'server', 'D:/proj']);
   });
+
+  it('resolves bundled commands when resolver provided', () => {
+    const servers: McpServerRecord[] = [{
+      id: '1',
+      name: 'fetch',
+      displayName: 'Fetch',
+      description: '',
+      source: 'catalog',
+      catalogId: 'fetch',
+      transport: 'stdio',
+      command: 'npx',
+      args: ['-y', 'server-fetch'],
+      url: null,
+      env: {},
+      enabled: true,
+      sortOrder: 0,
+      createdAt: 1,
+      updatedAt: 1,
+    }];
+
+    const config = buildMcpServersForSdk(servers, {
+      commandResolver: (command) => `bundled/${command}`,
+    });
+    expect(config.fetch.command).toBe('bundled/npx');
+  });
 });
 
 describe('parseCommandLine', () => {

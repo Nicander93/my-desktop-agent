@@ -4,7 +4,7 @@ import { useUIStore } from './uiStore';
 import { useFileExplorerStore } from './fileExplorerStore';
 import { resolveEditorFileType } from '@/lib/fileTypeUtils';
 
-export type EditorFileType = 'text' | 'image' | 'docx' | 'pptx' | 'xlsx' | 'pdf' | 'binary';
+export type EditorFileType = 'text' | 'image' | 'docx' | 'pptx' | 'xlsx' | 'pdf' | 'html' | 'binary';
 
 interface EditorState {
   activeFile: string | null;
@@ -52,7 +52,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
 
       const fileType = resolveEditorFileType(path, result.file.mimeType, result.file.encoding);
-      useUIStore.getState().setToolPanelTab('explorer');
+      useUIStore.getState().setToolPanelTab(fileType === 'html' ? 'preview' : 'explorer');
       useFileExplorerStore.getState().selectPath(path);
 
       set({
@@ -82,7 +82,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   saveFile: async () => {
     const { activeFile, content, fileType } = get();
-    if (!activeFile || content === null || fileType !== 'text') return;
+    if (!activeFile || content === null || (fileType !== 'text' && fileType !== 'html')) return;
 
     const workspaceId = useWorkspaceStore.getState().currentWorkspaceId;
     if (!workspaceId) {

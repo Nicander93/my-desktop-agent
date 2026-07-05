@@ -584,6 +584,7 @@ export class QueryEngine {
       provider: this.provider,
       model: this.config.model,
       apiType: this.provider.apiType,
+      subprocessEnv: this.config.subprocessEnv,
     }
 
     const MAX_CONCURRENCY = parseInt(

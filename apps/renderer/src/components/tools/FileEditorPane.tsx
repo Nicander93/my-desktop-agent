@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
-import { File, Code, FileText, Image, Save, X, Loader2, FileSpreadsheet, Presentation } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { File, Code, FileText, Image, Save, X, Loader2, FileSpreadsheet, Presentation, Globe } from 'lucide-react';
 import { useEditorStore, type EditorFileType } from '@/stores/editorStore';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { MonacoCodeEditor } from './MonacoCodeEditor';
 import { DocxPreview } from './previews/DocxPreview';
 import { PptxPreview } from './previews/PptxPreview';
 import { XlsxPreview } from './previews/XlsxPreview';
 import { PdfPreview } from './previews/PdfPreview';
+import { HtmlPreview } from './previews/HtmlPreview';
 
 function getFileName(path: string): string {
   const parts = path.split(/[/\\]/);
@@ -25,6 +27,8 @@ function FileTypeIcon({ fileType }: { fileType: EditorFileType }) {
       return <Presentation size={16} className="text-[var(--color-primary-500)] shrink-0" />;
     case 'xlsx':
       return <FileSpreadsheet size={16} className="text-[var(--color-primary-500)] shrink-0" />;
+    case 'html':
+      return <Globe size={16} className="text-[var(--color-primary-500)] shrink-0" />;
     case 'pdf':
     case 'binary':
     default:
@@ -49,19 +53,26 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
     saveFile,
     closeFile,
   } = useEditorStore();
+  const [htmlViewMode, setHtmlViewMode] = useState<'preview' | 'source'>('preview');
+
+  useEffect(() => {
+    setHtmlViewMode('preview');
+  }, [activeFile]);
+
+  const isEditableText = fileType === 'text' || fileType === 'html';
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        if (isDirty && fileType === 'text') {
+        if (isDirty && isEditableText && (fileType !== 'html' || htmlViewMode === 'source')) {
           saveFile();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDirty, fileType, saveFile]);
+  }, [isDirty, fileType, htmlViewMode, isEditableText, saveFile]);
 
   if (!activeFile) {
     return (
@@ -80,7 +91,27 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
           {getFileName(activeFile)}
           {isDirty && <span className="text-orange-500 ml-1">●</span>}
         </span>
-        {isDirty && fileType === 'text' && (
+        {fileType === 'html' && (
+          <div className="flex items-center gap-0.5 shrink-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn('h-7 px-2 text-xs', htmlViewMode === 'preview' && 'bg-gray-100')}
+              onClick={() => setHtmlViewMode('preview')}
+            >
+              预览
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn('h-7 px-2 text-xs', htmlViewMode === 'source' && 'bg-gray-100')}
+              onClick={() => setHtmlViewMode('source')}
+            >
+              源码
+            </Button>
+          </div>
+        )}
+        {isDirty && isEditableText && (fileType !== 'html' || htmlViewMode === 'source') && (
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => saveFile()} disabled={isLoading} title="保存 (Ctrl+S)">
             <Save size={14} />
           </Button>
@@ -99,6 +130,20 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
 
       {!isLoading && error && (
         <div className="p-4 text-sm text-red-600">{error}</div>
+      )}
+
+      {!isLoading && !error && fileType === 'html' && content !== null && htmlViewMode === 'preview' && (
+        <HtmlPreview filePath={activeFile} />
+      )}
+
+      {!isLoading && !error && fileType === 'html' && content !== null && htmlViewMode === 'source' && (
+        <div className="flex-1 min-h-0">
+          <MonacoCodeEditor
+            path={activeFile}
+            value={content}
+            onChange={updateContent}
+          />
+        </div>
       )}
 
       {!isLoading && !error && fileType === 'text' && content !== null && (

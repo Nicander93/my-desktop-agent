@@ -52,7 +52,9 @@ export const BashTool = defineTool({
 
       const proc = spawn(shell.cmd, args, {
         cwd: context.cwd,
-        env: { ...process.env },
+        env: context.subprocessEnv
+          ? { ...process.env, ...context.subprocessEnv }
+          : { ...process.env },
         timeout: timeoutMs,
         stdio: ['pipe', 'pipe', 'pipe'],
       })

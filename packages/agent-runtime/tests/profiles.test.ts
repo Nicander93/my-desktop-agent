@@ -7,6 +7,11 @@ describe('runtime profiles', () => {
     expect(inferRuntimeProfile('写一个 React 组件')).toBe('general');
   });
 
+  it('should infer coding profile from dev keywords', () => {
+    expect(inferRuntimeProfile('帮我修复这个 bug')).toBe('coding');
+    expect(inferRuntimeProfile('运行 pnpm test')).toBe('coding');
+  });
+
   it('should map office policy to agent query options', () => {
     const policy = getRuntimeProfilePolicy('office');
     expect(policy?.appendSystemPrompt).toContain('officecli batch');

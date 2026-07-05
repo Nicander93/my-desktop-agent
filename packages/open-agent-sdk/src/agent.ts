@@ -333,6 +333,7 @@ export class Agent {
       hookRegistry: this.hookRegistry,
       sessionId: this.sid,
       traceRecorder: this.traceRecorder ?? undefined,
+      subprocessEnv: overrides?.subprocessEnv ?? opts.subprocessEnv,
     })
     this.currentEngine = engine
 

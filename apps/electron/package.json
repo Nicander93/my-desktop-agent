@@ -9,6 +9,7 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "dist:win": "pnpm run build && npx --yes electron-builder@25.1.8 --win --config electron-builder.yml",
     "test": "vitest run",
     "test:watch": "vitest"
   },

@@ -35,6 +35,25 @@ const OFFICE_KEYWORDS = [
   '表格',
 ];
 
+const CODING_KEYWORDS = [
+  // 命中后走 workspace 依赖策略，允许项目内 npm install
+  'bug',
+  'fix',
+  'refactor',
+  'test',
+  'unit test',
+  'npm',
+  'pnpm',
+  'yarn',
+  'compile',
+  'build',
+  'debug',
+  '测试',
+  '重构',
+  '修复',
+  '单元测试',
+];
+
 export const OFFICE_FAST_PATH_PROMPT = [
   '你正在处理 Office 文档任务（Desktop Agent）。以下 Agent 执行约束 **优先于** officecli 官方 load_skill / 交互式 shell 文档中的 open、save、Quick Start。',
   '',
@@ -57,6 +76,10 @@ export function inferRuntimeProfile(content: string, explicit?: RuntimeProfile):
   const lower = content.toLowerCase();
   if (OFFICE_KEYWORDS.some((keyword) => lower.includes(keyword))) {
     return 'office';
+  }
+
+  if (CODING_KEYWORDS.some((keyword) => lower.includes(keyword.toLowerCase()))) {
+    return 'coding';
   }
 
   return 'general';

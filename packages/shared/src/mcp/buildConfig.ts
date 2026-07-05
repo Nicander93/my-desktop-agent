@@ -3,7 +3,11 @@ import type { McpImportFile, McpImportServerConfig, McpServerRecord } from '../t
 export interface McpBuildContext {
   workspacePath?: string;
   secrets?: Record<string, string>;
+  /** 将 npx/uvx 等解析为 bundled 绝对路径 */
+  commandResolver?: McpCommandResolver;
 }
+
+export type McpCommandResolver = (command: string) => string;
 
 function replacePlaceholders(value: string, ctx: McpBuildContext): string {
   let result = value;
@@ -41,9 +45,12 @@ export function buildMcpServersForSdk(
 
     if (server.transport === 'stdio') {
       if (!server.command) continue;
+      const command = ctx.commandResolver
+        ? ctx.commandResolver(server.command)
+        : server.command;
       out[server.name] = {
         type: 'stdio',
-        command: server.command,
+        command,
         args: server.args.map((arg) => replacePlaceholders(arg, ctx)),
         ...(resolveEnv(server.env, ctx) ? { env: resolveEnv(server.env, ctx) } : {}),
       };
