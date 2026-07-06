@@ -26,6 +26,7 @@ import type {
   CanUseToolFn,
   Message,
   PermissionMode,
+  ContentBlockParam,
 } from './types.js'
 import { QueryEngine } from './engine.js'
 import { getAllBaseTools, filterTools } from './tools/index.js'
@@ -251,7 +252,7 @@ export class Agent {
    * Run a query with streaming events.
    */
   async *query(
-    prompt: string,
+    prompt: string | ContentBlockParam[],
     overrides?: Partial<AgentOptions>,
   ): AsyncGenerator<SDKMessage, void> {
     await this.setupDone
@@ -343,8 +344,9 @@ export class Agent {
     }
 
     // Start trace run
+    const tracePrompt = typeof prompt === 'string' ? prompt : JSON.stringify(prompt)
     const runId = this.traceRecorder?.startRun({
-      prompt,
+      prompt: tracePrompt,
       model: opts.model || this.modelId,
       cwd,
       toolNames: tools.map((t) => t.name),
@@ -619,7 +621,7 @@ export function createAgent(options: AgentOptions = {}): Agent {
  * The agent is created, used, and cleaned up automatically.
  */
 export async function* query(params: {
-  prompt: string
+  prompt: string | ContentBlockParam[]
   options?: AgentOptions
 }): AsyncGenerator<SDKMessage, void> {
   const ephemeral = createAgent(params.options)

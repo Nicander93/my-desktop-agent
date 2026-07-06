@@ -1,3 +1,5 @@
+import type { AgentMessageAttachmentRef } from './attachment.js';
+
 export type McpTransport = 'stdio' | 'sse' | 'http';
 export type McpServerSource = 'catalog' | 'custom';
 export type McpCatalogCategory = 'files' | 'office' | 'web' | 'dev' | 'database' | 'other';
@@ -74,4 +76,6 @@ export interface AgentSendMessageOptions {
   fileRefs?: string[];
   skillMentions?: string[];
   profile?: AgentRuntimeProfile;
+  attachments?: AgentMessageAttachmentRef[];
+  messageId?: string;
 }

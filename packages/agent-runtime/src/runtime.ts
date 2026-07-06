@@ -4,7 +4,7 @@
  * 基于 @codeany/open-agent-sdk，支持多 session 管理。
  * 每个 session 可绑定独立 cwd 和 workspaceId，用于工作区隔离。
  */
-import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace } from '@codeany/open-agent-sdk';
+import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace, type ContentBlockParam } from '@codeany/open-agent-sdk';
 import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
 import { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
@@ -143,7 +143,7 @@ export class AgentRuntime {
   /** 流式发送消息，确保 Agent 已启用 trace */
   async sendMessage(
     sessionId: string,
-    content: string,
+    content: string | ContentBlockParam[],
     sessionOptions?: AgentSessionOptions,
     queryOptions?: AgentQueryOptions,
   ): Promise<AsyncGenerator<SDKMessage>> {

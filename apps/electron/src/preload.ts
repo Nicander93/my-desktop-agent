@@ -80,6 +80,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('message:delete-by-conversation', conversationId)
   },
 
+  attachment: {
+    selectImages: (conversationId: string) =>
+      ipcRenderer.invoke('attachment:select-images', conversationId),
+    createFromBytes: (input: import('@desktop-agent/shared').CreateAttachmentFromBytesInput) =>
+      ipcRenderer.invoke('attachment:create-from-bytes', input),
+    getPreviewUrl: (id: string, variant?: import('@desktop-agent/shared').ImageAttachmentVariant) =>
+      ipcRenderer.invoke('attachment:get-preview-url', id, variant),
+    deleteDraft: (id: string) =>
+      ipcRenderer.invoke('attachment:delete-draft', id),
+  },
+
   dialog: {
     selectDirectory: (options?: { title?: string; defaultPath?: string }) =>
       ipcRenderer.invoke('dialog:select-directory', options),

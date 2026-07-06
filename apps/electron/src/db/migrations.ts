@@ -103,6 +103,30 @@ const migrations: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS idx_skills_enabled ON skills(enabled);
     `
+  },
+  {
+    version: 4,
+    up: `
+      CREATE TABLE IF NOT EXISTS attachments (
+        id TEXT PRIMARY KEY,
+        conversationId TEXT NOT NULL,
+        messageId TEXT,
+        status TEXT NOT NULL CHECK(status IN ('draft','linked')),
+        mimeType TEXT NOT NULL,
+        fileName TEXT NOT NULL,
+        storagePath TEXT NOT NULL,
+        size INTEGER NOT NULL,
+        width INTEGER,
+        height INTEGER,
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL,
+        FOREIGN KEY (conversationId) REFERENCES conversations(id) ON DELETE CASCADE,
+        FOREIGN KEY (messageId) REFERENCES messages(id) ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_attachments_conversation ON attachments(conversationId, createdAt);
+      CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(messageId);
+      CREATE INDEX IF NOT EXISTS idx_attachments_status ON attachments(status);
+    `
   }
 ];
 

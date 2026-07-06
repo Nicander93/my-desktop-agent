@@ -39,6 +39,12 @@ declare global {
         update: (id: string, updates: { content?: string; toolCalls?: unknown[]; metadata?: Record<string, unknown> }) => Promise<{ success: boolean; message?: any }>;
         deleteByConversation: (conversationId: string) => Promise<{ success: boolean }>;
       };
+      attachment: {
+        selectImages: (conversationId: string) => Promise<{ success: boolean; canceled?: boolean; attachments?: import('@desktop-agent/shared').ImageAttachment[]; error?: string }>;
+        createFromBytes: (input: import('@desktop-agent/shared').CreateAttachmentFromBytesInput) => Promise<{ success: boolean; attachment?: import('@desktop-agent/shared').ImageAttachment; error?: string }>;
+        getPreviewUrl: (id: string, variant?: import('@desktop-agent/shared').ImageAttachmentVariant) => Promise<{ success: boolean; url?: string; error?: string }>;
+        deleteDraft: (id: string) => Promise<{ success: boolean; error?: string }>;
+      };
       dialog: {
         selectDirectory: (options?: { title?: string; defaultPath?: string }) => Promise<{ success: boolean; path?: string; canceled?: boolean }>;
         confirmPathAccess: (options: { workspacePath: string; targetPath: string }) => Promise<{ success: boolean; response?: number; alwaysAllow?: boolean }>;

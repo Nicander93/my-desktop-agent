@@ -2,6 +2,14 @@
 export type { MessagePart } from './types/message.js';
 export type { Workspace, WorkspaceSettings } from './types/workspace.js';
 export type { Conversation, Message as ConversationMessage } from './types/conversation.js';
+export type {
+  AgentMessageAttachmentRef,
+  AttachmentDraft,
+  CreateAttachmentFromBytesInput,
+  ImageAttachment,
+  ImageAttachmentStatus,
+  ImageAttachmentVariant,
+} from './types/attachment.js';
 export type { FileEntry, FileStat, ReadFileResult, FileSearchResult } from './types/filesystem.js';
 export type {
   McpTransport,

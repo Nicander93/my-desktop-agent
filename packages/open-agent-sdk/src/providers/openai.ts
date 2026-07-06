@@ -24,12 +24,16 @@ import type {
 
 interface OpenAIChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
-  content?: string | null
+  content?: string | OpenAIContentPart[] | null
   /** DeepSeek reasoner and compatible APIs */
   reasoning_content?: string | null
   tool_calls?: OpenAIToolCall[]
   tool_call_id?: string
 }
+
+type OpenAIContentPart =
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string } }
 
 interface OpenAIToolCall {
   id: string
@@ -371,13 +375,18 @@ export class OpenAIProvider implements LLMProvider {
       return
     }
 
-    // Content blocks may contain text and/or tool_result blocks
-    const textParts: string[] = []
+    // Content blocks may contain text, image, and/or tool_result blocks.
+    const contentParts: OpenAIContentPart[] = []
     const toolResults: Array<{ tool_use_id: string; content: string }> = []
 
     for (const block of msg.content) {
       if (block.type === 'text') {
-        textParts.push(block.text)
+        contentParts.push({ type: 'text', text: block.text })
+      } else if (block.type === 'image') {
+        const url = this.convertImageSource(block.source)
+        if (url) {
+          contentParts.push({ type: 'image_url', image_url: { url } })
+        }
       } else if (block.type === 'tool_result') {
         toolResults.push({
           tool_use_id: block.tool_use_id,
@@ -395,10 +404,22 @@ export class OpenAIProvider implements LLMProvider {
       })
     }
 
-    // Text parts become a user message
-    if (textParts.length > 0) {
-      result.push({ role: 'user', content: textParts.join('\n') })
+    // Text and image parts become a user message.
+    if (contentParts.length > 0) {
+      result.push({ role: 'user', content: contentParts })
     }
+  }
+
+  private convertImageSource(source: any): string | null {
+    if (!source || typeof source !== 'object') return null
+    if (source.type === 'base64' && source.data) {
+      const mediaType = source.media_type || source.mediaType || 'image/png'
+      return `data:${mediaType};base64,${source.data}`
+    }
+    if (source.type === 'url' && source.url) {
+      return source.url
+    }
+    return null
   }
 
   private convertAssistantMessage(

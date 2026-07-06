@@ -4,7 +4,7 @@
  * 内存中维护当前对话的消息列表，通过 IPC 同步到 SQLite
  */
 import { create } from 'zustand';
-import type { AgentTrace, MessagePart } from '@desktop-agent/shared';
+import type { AgentTrace, ImageAttachment, MessagePart } from '@desktop-agent/shared';
 import { syncToolCallsFromTrace } from '@/lib/toolCallSync';
 
 export interface Message {
@@ -19,6 +19,7 @@ export interface Message {
   toolCalls?: ToolCall[];
   trace?: AgentTrace;
   parts?: MessagePart[];
+  attachments?: ImageAttachment[];
 }
 
 export interface ToolCall {
@@ -78,6 +79,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
             thinkingDurationMs: m.metadata?.thinkingDurationMs as number | undefined,
             trace,
             parts: m.metadata?.parts as MessagePart[] | undefined,
+            attachments: m.metadata?.attachments as ImageAttachment[] | undefined,
           };
         });
         set({ messages, currentConversationId: conversationId });
@@ -104,6 +106,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
           thinkingDurationMs: message.thinkingDurationMs,
           trace: message.trace,
           parts: message.parts,
+          attachments: message.attachments,
         },
         message.id,
       );

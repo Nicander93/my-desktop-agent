@@ -18,6 +18,7 @@ import {
 import { applyStreamEvent } from '@/lib/messageParts';
 import { finalizeToolCalls, syncToolCallsFromTrace, applyTraceSpanToToolCalls } from '@/lib/toolCallSync';
 import { parseMcpMentions, parseFileMentions, parseSkillMentions, appendTraceSpan, isTraceMessage, collectTraceFromMessages, mergeAgentTrace, traceRunToAgentTrace } from '@desktop-agent/shared';
+import type { ImageAttachment } from '@desktop-agent/shared';
 
 function createId(): string {
   return Math.random().toString(36).substring(2, 15);
@@ -34,6 +35,21 @@ function normalizeAssistantFields(message: Message): Partial<Message> {
   }
 
   return {};
+}
+
+function snapshotAttachment(attachment: ImageAttachment): ImageAttachment {
+  return {
+    id: attachment.id,
+    conversationId: attachment.conversationId,
+    messageId: attachment.messageId ?? null,
+    status: 'linked',
+    mimeType: attachment.mimeType,
+    fileName: attachment.fileName,
+    size: attachment.size,
+    width: attachment.width ?? null,
+    height: attachment.height ?? null,
+    createdAt: attachment.createdAt,
+  };
 }
 
 async function resolveFinalTrace(
@@ -159,7 +175,7 @@ export function useAgent() {
     };
   }, [updateMessage]);
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, attachments: ImageAttachment[] = []) => {
     const workspaceId = useWorkspaceStore.getState().currentWorkspaceId;
     const sessionId = useSessionStore.getState().currentSessionId;
 
@@ -184,7 +200,8 @@ export function useAgent() {
 
     const userMsg: Message = {
       id: createId(), conversationId: sessionId, role: 'user',
-      content, timestamp: Date.now()
+      content, timestamp: Date.now(),
+      attachments: attachments.map(snapshotAttachment),
     };
     addMessage(userMsg);
     persistMessage(userMsg);
@@ -211,6 +228,8 @@ export function useAgent() {
           mcpMentions,
           fileRefs,
           skillMentions,
+          attachments: attachments.map((attachment) => ({ id: attachment.id, kind: 'image' as const })),
+          messageId: userMsg.id,
         });
 
         streamingMessageIdRef.current = null;

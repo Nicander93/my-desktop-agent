@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Check, Copy, ExternalLink, Pencil } from 'lucide-react';
-import type { MessagePart } from '@desktop-agent/shared';
+import { useEffect, useState } from 'react';
+import { Check, Copy, ExternalLink, Pencil, X } from 'lucide-react';
+import type { ImageAttachment, MessagePart } from '@desktop-agent/shared';
 import { Message, ToolCall } from '@/stores/chatStore';
 import { MarkdownContent } from './MarkdownContent';
 import { ToolActivityLog } from './ToolActivityLog';
@@ -11,6 +11,72 @@ import { derivePartsFromLegacy } from '@/lib/messageParts';
 
 interface MessageItemProps {
   message: Message;
+}
+
+function AttachmentGrid({ attachments }: { attachments?: ImageAttachment[] }) {
+  const [urls, setUrls] = useState<Record<string, string>>({});
+  const [preview, setPreview] = useState<{ attachment: ImageAttachment; url: string } | null>(null);
+
+  useEffect(() => {
+    if (!attachments?.length) return;
+    for (const attachment of attachments) {
+      if (urls[attachment.id]) continue;
+      window.electronAPI?.attachment.getPreviewUrl(attachment.id, 'thumb').then((result) => {
+        if (result?.success && result.url) {
+          setUrls((current) => ({ ...current, [attachment.id]: result.url! }));
+        }
+      });
+    }
+  }, [attachments, urls]);
+
+  if (!attachments?.length) return null;
+
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap gap-2">
+        {attachments.map((attachment) => {
+          const url = urls[attachment.id];
+          return (
+            <button
+              key={attachment.id}
+              type="button"
+              onClick={() => url && setPreview({ attachment, url })}
+              className="h-24 w-24 overflow-hidden rounded-lg border border-gray-200 bg-white"
+              title={attachment.fileName}
+            >
+              {url ? (
+                <img src={url} alt={attachment.fileName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full bg-gray-100" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {preview && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
+          onClick={() => setPreview(null)}
+        >
+          <button
+            type="button"
+            className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+            onClick={() => setPreview(null)}
+            title="关闭"
+          >
+            <X size={18} />
+          </button>
+          <img
+            src={preview.url}
+            alt={preview.attachment.fileName}
+            className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
 }
 
 function resolveParts(message: Message): MessagePart[] {
@@ -40,7 +106,8 @@ export function MessageItem({ message }: MessageItemProps) {
       <div className="flex justify-end">
         <div className="max-w-[85%] group">
           <div className="px-4 py-2.5 rounded-2xl bg-[#edf3fe] text-gray-800 text-[15px] leading-relaxed">
-            <p className="whitespace-pre-wrap">{message.content}</p>
+            <AttachmentGrid attachments={message.attachments} />
+            {message.content && <p className="whitespace-pre-wrap">{message.content}</p>}
           </div>
           <div className="flex justify-end gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button

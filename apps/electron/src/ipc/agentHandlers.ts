@@ -15,6 +15,11 @@ import { getEnabledMcpServersForWorkspace } from './mcpHandlers';
 import { getRuntimeSkillDefinitions } from './skillHandlers';
 import { BinaryManager, isRuntimeReady, getRuntimeInitError } from '../runtime/manager';
 import { buildSubprocessEnv, mergeRuntimeEnvIntoMcpServers } from '../runtime/policy';
+import {
+  getAttachmentsForMessage,
+  linkAttachments,
+  readAttachmentBase64,
+} from '../services/attachmentService';
 
 function readEnv(name: string): string | undefined {
   return process.env[name] || process.env[`MAIN_VITE_${name}`];
@@ -55,6 +60,34 @@ function getRuntimeBlockedMessage(): string | undefined {
     return getRuntimeInitError() ?? '运行时未就绪，请先运行 pnpm setup:binaries';
   }
   return undefined;
+}
+
+function buildPromptContent(sessionId: string, content: string, options?: AgentSendMessageOptions): string | any[] {
+  const refs = options?.attachments ?? [];
+  if (refs.length === 0) return content;
+
+  const attachments = getAttachmentsForMessage(refs, sessionId);
+  if (options?.messageId) {
+    linkAttachments(refs, sessionId, options.messageId);
+  }
+
+  const blocks: any[] = [{
+    type: 'text',
+    text: content.trim() || '请识别这张图片',
+  }];
+
+  for (const attachment of attachments) {
+    blocks.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: attachment.mimeType,
+        data: readAttachmentBase64(attachment),
+      },
+    });
+  }
+
+  return blocks;
 }
 
 export function registerAgentHandlers(
@@ -118,9 +151,10 @@ export function registerAgentHandlers(
         }
 
         const runtime = getRuntime();
+        const promptContent = buildPromptContent(sessionId, content, options);
         const stream = await runtime.sendMessage(
           sessionId,
-          content,
+          promptContent,
           sessionOptions,
           buildAgentQueryOptions(content, options),
         );
