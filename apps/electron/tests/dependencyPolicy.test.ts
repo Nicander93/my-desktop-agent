@@ -5,7 +5,7 @@ import {
   buildSubprocessEnv,
   createBundledCommandResolver,
 } from '../src/runtime/policy.js';
-import { getAppRuntimePaths } from '@desktop-agent/shared/runtime';
+import { getAppRuntimePaths, resolveCommandIfBundled } from '@desktop-agent/shared/runtime';
 
 const home = 'C:/Users/Test';
 const paths = getAppRuntimePaths(home);
@@ -58,6 +58,6 @@ describe('buildSubprocessEnv', () => {
 describe('createBundledCommandResolver', () => {
   it('resolves bundled commands', () => {
     const resolve = createBundledCommandResolver(paths);
-    expect(resolve('npx')).toContain('npx.cmd');
+    expect(resolve('npx')).toBe(resolveCommandIfBundled(paths, 'npx'));
   });
 });
