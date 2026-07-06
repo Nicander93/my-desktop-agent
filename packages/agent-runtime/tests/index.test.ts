@@ -29,9 +29,24 @@ describe('AgentRuntime', () => {
     const agent = runtime.createAgent('session-1');
 
     expect(createAgent).toHaveBeenCalledWith(
-      expect.objectContaining({ sessionId: 'session-1', persistSession: true })
+      expect.objectContaining({
+        sessionId: 'session-1',
+        persistSession: true,
+        promptCache: { enabled: true, ttl: '5m' },
+      })
     );
     expect(agent).toBe(mockAgent);
+  });
+
+  it('should allow prompt cache defaults to be overridden', () => {
+    const runtime = new AgentRuntime({ promptCache: { enabled: true, ttl: '1h' } });
+    runtime.createAgent('session-1');
+
+    expect(createAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        promptCache: { enabled: true, ttl: '1h' },
+      })
+    );
   });
 
   it('should create an agent with session-specific cwd and workspaceId', () => {

@@ -69,6 +69,9 @@ interface OpenAIChatResponse {
     prompt_tokens: number
     completion_tokens: number
     total_tokens: number
+    prompt_tokens_details?: {
+      cached_tokens?: number
+    }
   }
 }
 
@@ -100,6 +103,9 @@ interface OpenAIStreamChunk {
     prompt_tokens: number
     completion_tokens: number
     total_tokens: number
+    prompt_tokens_details?: {
+      cached_tokens?: number
+    }
   }
 }
 
@@ -131,6 +137,7 @@ export class OpenAIProvider implements LLMProvider {
     if (tools && tools.length > 0) {
       body.tools = tools
     }
+    this.applyPromptCache(body, params)
 
     // Make API call
     const response = await fetch(`${this.baseURL}/chat/completions`, {
@@ -174,6 +181,7 @@ export class OpenAIProvider implements LLMProvider {
     if (tools && tools.length > 0) {
       body.tools = tools
     }
+    this.applyPromptCache(body, params)
 
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
@@ -206,7 +214,7 @@ export class OpenAIProvider implements LLMProvider {
     let fullContent = ''
     const toolCalls: Map<number, { id: string; name: string; arguments: string }> = new Map()
     let stopReason: string = 'end_turn'
-    let usage = { input_tokens: 0, output_tokens: 0 }
+    let usage: CreateMessageResponse['usage'] = { input_tokens: 0, output_tokens: 0 }
 
     try {
       while (true) {
@@ -274,6 +282,7 @@ export class OpenAIProvider implements LLMProvider {
               usage = {
                 input_tokens: chunk.usage.prompt_tokens,
                 output_tokens: chunk.usage.completion_tokens,
+                cached_input_tokens: chunk.usage.prompt_tokens_details?.cached_tokens,
               }
             }
 
@@ -486,6 +495,20 @@ export class OpenAIProvider implements LLMProvider {
     }))
   }
 
+  private applyPromptCache(body: Record<string, any>, params: CreateMessageParams): void {
+    if (!params.promptCache?.enabled || !this.supportsPromptCacheOptions()) return
+    if (params.promptCache.key) {
+      body.prompt_cache_key = params.promptCache.key
+    }
+    if (params.promptCache.retention) {
+      body.prompt_cache_retention = params.promptCache.retention
+    }
+  }
+
+  private supportsPromptCacheOptions(): boolean {
+    return this.baseURL === 'https://api.openai.com/v1'
+  }
+
   // --------------------------------------------------------------------------
   // Response Conversion: OpenAI → Internal
   // --------------------------------------------------------------------------
@@ -548,6 +571,7 @@ export class OpenAIProvider implements LLMProvider {
       usage: {
         input_tokens: data.usage?.prompt_tokens || 0,
         output_tokens: data.usage?.completion_tokens || 0,
+        cached_input_tokens: data.usage?.prompt_tokens_details?.cached_tokens,
       },
     }
   }

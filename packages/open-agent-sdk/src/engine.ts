@@ -44,10 +44,11 @@ import {
   withRetry,
   isPromptTooLongError,
 } from './utils/retry.js'
-import { getSystemContext, getUserContext } from './utils/context.js'
+import { getSystemContext, getCurrentDateContext, readProjectContextContent } from './utils/context.js'
 import { normalizeMessagesForAPI } from './utils/messages.js'
 import type { HookRegistry, HookInput, HookOutput } from './hooks.js'
 import type { TraceRecorder } from './trace.js'
+import { createHash } from 'crypto'
 
 // ============================================================================
 // Tool format conversion
@@ -79,10 +80,7 @@ interface ToolUseBlock {
 
 async function buildSystemPrompt(config: QueryEngineConfig): Promise<string> {
   if (config.systemPrompt) {
-    const base = config.systemPrompt
-    return config.appendSystemPrompt
-      ? base + '\n\n' + config.appendSystemPrompt
-      : base
+    return config.systemPrompt
   }
 
   const parts: string[] = []
@@ -106,20 +104,9 @@ async function buildSystemPrompt(config: QueryEngineConfig): Promise<string> {
     }
   }
 
-  // System context (git status, etc.)
+  // Static project context (AGENTS.md/AGENT.md/CLAUDE.md).
   try {
-    const sysCtx = await getSystemContext(config.cwd)
-    if (sysCtx) {
-      parts.push('\n# Environment\n')
-      parts.push(sysCtx)
-    }
-  } catch {
-    // Context is best-effort
-  }
-
-  // User context (AGENT.md, date)
-  try {
-    const userCtx = await getUserContext(config.cwd)
+    const userCtx = await readProjectContextContent(config.cwd)
     if (userCtx) {
       parts.push('\n# Project Context\n')
       parts.push(userCtx)
@@ -128,14 +115,59 @@ async function buildSystemPrompt(config: QueryEngineConfig): Promise<string> {
     // Context is best-effort
   }
 
-  // Working directory
-  parts.push(`\n# Working Directory\n${config.cwd}`)
+  return parts.join('\n')
+}
 
-  if (config.appendSystemPrompt) {
-    parts.push('\n' + config.appendSystemPrompt)
+async function buildRuntimeContext(config: QueryEngineConfig): Promise<string> {
+  const parts: string[] = []
+
+  parts.push(getCurrentDateContext())
+
+  try {
+    const sysCtx = await getSystemContext(config.cwd)
+    if (sysCtx) parts.push(`# environment\n${sysCtx}`)
+  } catch {
+    // Context is best-effort
   }
 
-  return parts.join('\n')
+  parts.push(`# workingDirectory\n${config.cwd}`)
+
+  if (config.appendSystemPrompt?.trim()) {
+    parts.push(`# runtimeInstructions\n${config.appendSystemPrompt.trim()}`)
+  }
+
+  return parts.join('\n\n')
+}
+
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableJson).join(',')}]`
+  }
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => a.localeCompare(b))
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`).join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+function hashStable(value: unknown): string {
+  return createHash('sha256').update(stableJson(value)).digest('hex').slice(0, 16)
+}
+
+function resolvePromptCache(
+  config: QueryEngineConfig,
+  systemPrompt: string,
+  tools: NormalizedTool[],
+): QueryEngineConfig['promptCache'] | undefined {
+  if (!config.promptCache?.enabled) return undefined
+
+  return {
+    ...config.promptCache,
+    key: config.promptCache.key ??
+      `agent:${config.model}:tools:${hashStable(tools)}:system:${hashStable(systemPrompt)}`,
+  }
 }
 
 // ============================================================================
@@ -213,14 +245,20 @@ export class QueryEngine {
       return
     }
 
-    // Add user message
-    this.messages.push({ role: 'user', content: prompt as any })
-
     // Build tool definitions for provider
     const tools = this.config.tools.map(toProviderTool)
 
     // Build system prompt
     const systemPrompt = await buildSystemPrompt(this.config)
+    const runtimeContext = await buildRuntimeContext(this.config)
+    const promptCache = resolvePromptCache(this.config, systemPrompt, tools)
+
+    if (runtimeContext.trim()) {
+      this.messages.push({ role: 'user', content: runtimeContext })
+    }
+
+    // Add user message after runtime context so dynamic context stays near the tail.
+    this.messages.push({ role: 'user', content: prompt as any })
 
     // Emit init system message
     yield {
@@ -301,6 +339,7 @@ export class QueryEngine {
           this.config.thinking?.type === 'enabled' && this.config.thinking.budgetTokens
             ? { type: 'enabled', budget_tokens: this.config.thinking.budgetTokens }
             : undefined,
+        promptCache,
         estimatedInputTokens:
           estimateMessagesTokens(apiMessages as any[]) +
           estimateSystemPromptTokens(systemPrompt),
@@ -325,6 +364,7 @@ export class QueryEngine {
                       budget_tokens: this.config.thinking.budgetTokens,
                     }
                   : undefined,
+              promptCache,
             })
           }
 
@@ -394,6 +434,7 @@ export class QueryEngine {
                         budget_tokens: this.config.thinking.budgetTokens,
                       }
                     : undefined,
+                promptCache,
               })
             },
             undefined,
@@ -458,6 +499,11 @@ export class QueryEngine {
           this.totalUsage.cache_read_input_tokens =
             (this.totalUsage.cache_read_input_tokens || 0) +
             response.usage.cache_read_input_tokens
+        }
+        if (response.usage.cached_input_tokens) {
+          this.totalUsage.cached_input_tokens =
+            (this.totalUsage.cached_input_tokens || 0) +
+            response.usage.cached_input_tokens
         }
         this.totalCost += estimateCost(this.config.model, response.usage)
       }

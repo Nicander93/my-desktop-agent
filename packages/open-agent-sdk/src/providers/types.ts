@@ -25,6 +25,14 @@ export interface CreateMessageParams {
   messages: NormalizedMessageParam[]
   tools?: NormalizedTool[]
   thinking?: { type: string; budget_tokens?: number }
+  promptCache?: PromptCacheConfig
+}
+
+export interface PromptCacheConfig {
+  enabled?: boolean
+  key?: string
+  retention?: 'in_memory' | '24h'
+  ttl?: '5m' | '1h'
 }
 
 /**
@@ -65,6 +73,7 @@ export interface CreateMessageResponse {
     output_tokens: number
     cache_creation_input_tokens?: number
     cache_read_input_tokens?: number
+    cached_input_tokens?: number
   }
 }
 

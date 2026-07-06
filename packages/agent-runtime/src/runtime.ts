@@ -23,6 +23,7 @@ export interface RuntimeOptions {
     type: 'adaptive' | 'enabled' | 'disabled';
     budgetTokens?: number;
   };
+  promptCache?: AgentOptions['promptCache'];
 }
 
 /** 创建单个 Agent session 时的上下文 */
@@ -124,6 +125,7 @@ export class AgentRuntime {
       resume: sessionId,
       stream: true,
       trace: { enabled: true, persist: true },
+      promptCache: this.options.promptCache ?? { enabled: true, ttl: '5m' },
       ...(this.options.thinking ? { thinking: this.options.thinking } : {}),
       ...(sessionOptions?.mcpServers && Object.keys(sessionOptions.mcpServers).length > 0
         ? { mcpServers: sessionOptions.mcpServers as AgentOptions['mcpServers'] }

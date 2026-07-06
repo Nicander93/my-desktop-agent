@@ -42,6 +42,7 @@ export class AnthropicProvider implements LLMProvider {
         budget_tokens: params.thinking.budget_tokens,
       }
     }
+    this.applyPromptCache(requestParams, params)
 
     const response = await this.client.messages.create(requestParams)
 
@@ -79,6 +80,7 @@ export class AnthropicProvider implements LLMProvider {
         budget_tokens: params.thinking.budget_tokens,
       }
     }
+    this.applyPromptCache(requestParams, params)
 
     const stream = this.client.messages.stream(requestParams)
 
@@ -167,6 +169,14 @@ export class AnthropicProvider implements LLMProvider {
           content: contentBlocks as any,
         }
       }
+    }
+  }
+
+  private applyPromptCache(requestParams: Record<string, any>, params: CreateMessageParams): void {
+    if (!params.promptCache?.enabled) return
+    requestParams.cache_control = {
+      type: 'ephemeral',
+      ...(params.promptCache.ttl === '1h' ? { ttl: '1h' } : {}),
     }
   }
 }

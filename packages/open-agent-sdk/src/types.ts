@@ -173,6 +173,7 @@ export interface TokenUsage {
   output_tokens: number
   cache_creation_input_tokens?: number
   cache_read_input_tokens?: number
+  cached_input_tokens?: number
 }
 
 // --------------------------------------------------------------------------
@@ -369,6 +370,8 @@ export interface AgentOptions {
   systemPrompt?: string | { type: 'preset'; preset: 'default'; append?: string }
   /** Append to default system prompt */
   appendSystemPrompt?: string
+  /** Provider prompt caching hints. */
+  promptCache?: import('./providers/types.js').PromptCacheConfig
   /** Available tools (ToolDefinition[] or string[] preset) */
   tools?: ToolDefinition[] | string[] | { type: 'preset'; preset: 'default' }
   /** Maximum number of agentic turns per query */
@@ -487,6 +490,7 @@ export interface QueryEngineConfig {
   tools: ToolDefinition[]
   systemPrompt?: string
   appendSystemPrompt?: string
+  promptCache?: import('./providers/types.js').PromptCacheConfig
   maxTurns: number
   maxBudgetUsd?: number
   maxTokens: number

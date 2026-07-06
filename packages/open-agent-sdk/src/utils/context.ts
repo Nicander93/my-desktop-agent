@@ -99,6 +99,7 @@ function detectMainBranch(cwd: string): string | null {
  */
 export async function discoverProjectContextFiles(cwd: string): Promise<string[]> {
   const candidates = [
+    join(cwd, 'AGENTS.md'),
     join(cwd, 'AGENT.md'),
     join(cwd, 'CLAUDE.md'),
     join(cwd, '.claude', 'CLAUDE.md'),
@@ -164,6 +165,10 @@ export async function getSystemContext(cwd: string): Promise<string> {
   return parts.join('\n\n')
 }
 
+export function getCurrentDateContext(): string {
+  return `# currentDate\nToday's date is ${new Date().toISOString().split('T')[0]}.`
+}
+
 /**
  * Get user context (AGENT.md, date, etc).
  */
@@ -171,7 +176,7 @@ export async function getUserContext(cwd: string): Promise<string> {
   const parts: string[] = []
 
   // Current date
-  parts.push(`# currentDate\nToday's date is ${new Date().toISOString().split('T')[0]}.`)
+  parts.push(getCurrentDateContext())
 
   // Project context files
   const projectCtx = await readProjectContextContent(cwd)

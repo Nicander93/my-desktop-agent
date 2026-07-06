@@ -53,6 +53,7 @@ export function getTokenCountFromUsage(usage: {
   output_tokens: number
   cache_creation_input_tokens?: number
   cache_read_input_tokens?: number
+  cached_input_tokens?: number
 }): number {
   return (
     usage.input_tokens +

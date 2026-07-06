@@ -92,6 +92,8 @@ function addUsage(total: TokenUsage | undefined, usage?: TokenUsage): TokenUsage
       (total.cache_creation_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0),
     cache_read_input_tokens:
       (total.cache_read_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0),
+    cached_input_tokens:
+      (total.cached_input_tokens ?? 0) + (usage.cached_input_tokens ?? 0),
   };
 }
 

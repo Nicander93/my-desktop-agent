@@ -8,7 +8,7 @@
 import { appendFile, readFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import type { TokenUsage } from './types.js'
-import type { NormalizedMessageParam, NormalizedTool } from './providers/types.js'
+import type { NormalizedMessageParam, NormalizedTool, PromptCacheConfig } from './providers/types.js'
 
 // --------------------------------------------------------------------------
 // Trace Types
@@ -43,6 +43,7 @@ export interface LlmRequestPayload {
   tools?: NormalizedTool[]
   maxTokens?: number
   thinking?: { type: string; budget_tokens?: number }
+  promptCache?: PromptCacheConfig
   estimatedInputTokens?: number
 }
 

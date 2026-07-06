@@ -56,6 +56,14 @@ import type { NormalizedMessageParam } from './providers/types.js'
 // Agent class
 // --------------------------------------------------------------------------
 
+function stabilizeTools(tools: ToolDefinition[]): ToolDefinition[] {
+  const byName = new Map<string, ToolDefinition>()
+  for (const tool of tools) {
+    byName.set(tool.name, tool)
+  }
+  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export class Agent {
   private cfg: AgentOptions
   private toolPool: ToolDefinition[]
@@ -199,7 +207,7 @@ export class Agent {
       pool = raw as ToolDefinition[]
     }
 
-    return filterTools(pool, this.cfg.allowedTools, this.cfg.disallowedTools)
+    return stabilizeTools(filterTools(pool, this.cfg.allowedTools, this.cfg.disallowedTools))
   }
 
   /**
@@ -303,6 +311,7 @@ export class Agent {
         tools = ot as ToolDefinition[]
       }
     }
+    tools = stabilizeTools(tools)
 
     // Recreate provider if overrides change credentials or apiType
     let provider = this.provider
@@ -322,6 +331,7 @@ export class Agent {
       tools,
       systemPrompt,
       appendSystemPrompt,
+      promptCache: opts.promptCache,
       maxTurns: opts.maxTurns ?? 10,
       maxBudgetUsd: opts.maxBudgetUsd,
       maxTokens: opts.maxTokens ?? 16384,
