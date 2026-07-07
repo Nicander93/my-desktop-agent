@@ -57,8 +57,8 @@ describe('buildMcpServersForSdk', () => {
       source: 'catalog',
       catalogId: 'fetch',
       transport: 'stdio',
-      command: 'npx',
-      args: ['-y', 'server-fetch'],
+      command: 'uvx',
+      args: ['mcp-server-fetch'],
       url: null,
       env: {},
       enabled: true,
@@ -70,7 +70,7 @@ describe('buildMcpServersForSdk', () => {
     const config = buildMcpServersForSdk(servers, {
       commandResolver: (command) => `bundled/${command}`,
     });
-    expect(config.fetch.command).toBe('bundled/npx');
+    expect(config.fetch.command).toBe('bundled/uvx');
   });
 });
 

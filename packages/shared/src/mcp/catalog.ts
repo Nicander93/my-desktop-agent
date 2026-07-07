@@ -30,8 +30,9 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
     category: 'web',
     transport: 'stdio',
     template: {
-      command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-fetch'],
+      command: 'uvx',
+      args: ['mcp-server-fetch'],
+      env: { PYTHONIOENCODING: 'utf-8' },
     },
   },
   {
