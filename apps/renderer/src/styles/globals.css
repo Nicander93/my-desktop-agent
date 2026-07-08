@@ -17,6 +17,13 @@
   --color-sidebar-border: #e5e7eb;
   --color-content-bg: #ffffff;
   --color-tool-bg: #f8faf9;
+
+  /* 中性文本 / 表面令牌，供骨架层引用，替代散落的 text-gray-* */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #374151;
+  --color-text-tertiary: #4b5563;
+  --color-text-muted: #9ca3af;
+  --color-surface-hover: #f3f4f6;
 }
 
 :root {
@@ -29,7 +36,7 @@ body {
   margin: 0;
   padding: 0;
   background-color: var(--color-content-bg);
-  color: #1f2937;
+  color: var(--color-text-primary);
 }
 
 * {

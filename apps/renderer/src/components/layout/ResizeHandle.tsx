@@ -36,12 +36,11 @@ export function ResizeHandle({ onResize, className }: ResizeHandleProps) {
       aria-orientation="vertical"
       onMouseDown={handleMouseDown}
       className={cn(
-        'group relative w-px shrink-0 cursor-col-resize select-none bg-[var(--color-sidebar-border)]',
-        'hover:bg-[var(--color-primary-400)] active:bg-[var(--color-primary-500)]',
+        'app-resize-handle',
         className
       )}
     >
-      <div className="absolute inset-y-0 -left-1.5 -right-1.5" />
+      <div className="app-resize-handle__hit" />
     </div>
   );
 }
