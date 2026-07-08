@@ -9,8 +9,8 @@ Contract   packages/shared              跨进程类型与纯函数
 L0 Engine  packages/open-agent-sdk      Agent loop、内置 tools、MCP
 L1 Runtime packages/agent-runtime       Desktop 策略（profile、session、路径）
 L2 Host    apps/electron               IPC、DB、OS、窗口
-L3 Bridge  preload + electron.d.ts      极薄 IPC 契约
-L4 UI      apps/renderer               React UI（仅 shared + electronAPI）
+L3 Bridge  preload + electron.d.ts      IPC转发层
+L4 UI      apps/renderer               React UI
 ```
 
 **设计目标**：每个需求能映射到明确的改动位置；跨层依赖由 `pnpm dep-check` 自动拦截。
