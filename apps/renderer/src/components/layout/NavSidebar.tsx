@@ -21,22 +21,20 @@ export function NavSidebar() {
   return (
     <aside
       className={cn(
-        'h-full shrink-0 bg-[var(--color-sidebar-bg)] flex flex-col',
-        sidebarCollapsed && 'w-16'
+        'app-sidebar',
+        sidebarCollapsed && 'app-sidebar--collapsed'
       )}
       style={sidebarCollapsed ? undefined : { width: sidebarWidth }}
     >
-      <ScrollArea className="flex-1">
-        <nav className="p-3 space-y-1">
+      <ScrollArea className="app-sidebar__body">
+        <nav className="app-sidebar__nav">
           <button
             type="button"
             onClick={() => void startNewConversation()}
             className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200',
-              isChatActive
-                ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
-                : 'text-gray-600 hover:bg-gray-100',
-              sidebarCollapsed && 'justify-center'
+              'app-nav-item',
+              isChatActive && 'app-nav-item--active',
+              sidebarCollapsed && 'app-nav-item--collapsed'
             )}
           >
             <MessageSquarePlus size={20} />
@@ -47,15 +45,13 @@ export function NavSidebar() {
         </nav>
       </ScrollArea>
 
-      <div className="p-3 border-t border-[var(--color-sidebar-border)]">
+      <div className="app-sidebar__footer">
         <NavLink
           to="/settings"
           className={({ isActive }) => cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200',
-            isActive
-              ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
-              : 'text-gray-600 hover:bg-gray-100',
-            sidebarCollapsed && 'justify-center'
+            'app-nav-item',
+            isActive && 'app-nav-item--active',
+            sidebarCollapsed && 'app-nav-item--collapsed'
           )}
         >
           <Settings size={20} />

@@ -1,0 +1,137 @@
+/**
+ * 应用骨架样式（语义化 class）
+ *
+ * 仅覆盖整体布局结构（AppLayout / NavSidebar / Header / ResizeHandle），
+ * 颜色全部引用 globals.css @theme 中定义的设计令牌，便于统一调整与暗色模式。
+ * 功能 / 叶子组件（ui/*、chat 面板）仍使用 Tailwind utility，不在本文件内。
+ *
+ * 本文件为普通（未分层）CSS：在 Tailwind v4 中生成的 utility 位于 @layer utilities，
+ * 未分层样式优先级更高，可确保骨架样式不被零散 utility 意外覆盖。
+ */
+
+/* ===== 应用外壳 ===== */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background: var(--color-content-bg);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ===== 左侧导航栏 ===== */
+.app-sidebar {
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-sidebar-bg);
+}
+
+.app-sidebar--collapsed {
+  width: 4rem;
+}
+
+.app-sidebar__body {
+  flex: 1;
+  min-height: 0;
+}
+
+.app-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+}
+
+.app-sidebar__footer {
+  padding: 0.75rem;
+  border-top: 1px solid var(--color-sidebar-border);
+}
+
+/* 导航项（新对话 / 设置），活跃与悬浮态复用同一组 class */
+.app-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-tertiary);
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.app-nav-item:hover {
+  background: var(--color-surface-hover);
+}
+
+.app-nav-item--active {
+  background: var(--color-primary-100);
+  color: var(--color-primary-700);
+}
+
+.app-nav-item--collapsed {
+  justify-content: center;
+}
+
+/* ===== 顶部栏 ===== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 3rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--color-sidebar-border);
+  background: var(--color-content-bg);
+}
+
+.app-header__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.app-header__subtitle {
+  max-width: 28rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ===== 侧栏拖拽手柄 ===== */
+.app-resize-handle {
+  position: relative;
+  width: 1px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  user-select: none;
+  background: var(--color-sidebar-border);
+}
+
+.app-resize-handle:hover {
+  background: var(--color-primary-400);
+}
+
+.app-resize-handle:active {
+  background: var(--color-primary-500);
+}
+
+.app-resize-handle__hit {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -0.375rem;
+  right: -0.375rem;
+}

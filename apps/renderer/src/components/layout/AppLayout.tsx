@@ -7,10 +7,10 @@ export function AppLayout() {
   const { sidebarCollapsed, adjustSidebarWidth } = useUIStore();
 
   return (
-    <div className="flex h-screen bg-[var(--color-content-bg)]">
+    <div className="app-layout">
       <NavSidebar />
       {!sidebarCollapsed && <ResizeHandle onResize={adjustSidebarWidth} />}
-      <main className="flex-1 min-w-0 overflow-hidden">
+      <main className="app-main">
         <Outlet />
       </main>
     </div>

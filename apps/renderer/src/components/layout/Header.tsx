@@ -17,15 +17,15 @@ export function Header({ title }: HeaderProps) {
   const displayTitle = title ?? currentWorkspace?.name ?? 'Desktop Agent';
 
   return (
-    <header className="h-12 flex items-center justify-between px-4 border-b border-[var(--color-sidebar-border)] bg-[var(--color-content-bg)]">
+    <header className="app-header">
       <div>
-        <h1 className="text-sm font-medium text-gray-700">{displayTitle}</h1>
+        <h1 className="app-header__title">{displayTitle}</h1>
         {currentWorkspace && displayTitle === currentWorkspace.name && (
-          <p className="text-xs text-gray-400 truncate max-w-md">{currentWorkspace.path}</p>
+          <p className="app-header__subtitle">{currentWorkspace.path}</p>
         )}
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="app-header__actions">
         <Button
           variant="ghost"
           size="icon"
