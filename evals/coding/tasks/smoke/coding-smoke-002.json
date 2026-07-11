@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-smoke-002",
+  "title": "Diagnose and repair a quantity calculation",
+  "suite": "smoke",
+  "prompt": "Read README.md, inspect the failing verification, and make the smallest change needed in src/cart.js. Do not edit verify.mjs or package.json. Run node verify.mjs after the change and report the result.",
+  "workspace": {
+    "fixture": "../fixtures/cart-quantity-base"
+  },
+  "checks": [
+    {
+      "id": "cart-module-present",
+      "type": "file-exists",
+      "path": "src/cart.js"
+    },
+    {
+      "id": "quantity-is-used",
+      "type": "file-contains",
+      "path": "src/cart.js",
+      "includes": "quantity"
+    },
+    {
+      "id": "verification-command",
+      "type": "command",
+      "command": "node",
+      "args": ["verify.mjs"],
+      "stdoutIncludes": "verified"
+    }
+  ],
+  "limits": {
+    "maxTurns": 8,
+    "timeoutMs": 120000,
+    "maxChangedFiles": 1
+  },
+  "tags": ["smoke", "read", "edit", "command", "diagnosis"]
+}

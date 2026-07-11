@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-smoke-003",
+  "title": "Create a deterministic JSON configuration",
+  "suite": "smoke",
+  "prompt": "Read README.md and create config/settings.json exactly as requested. Do not modify verify.mjs or package.json. Run node verify.mjs after writing the file and report the result.",
+  "workspace": {
+    "fixture": "../fixtures/settings-config-base"
+  },
+  "checks": [
+    {
+      "id": "settings-file-present",
+      "type": "file-exists",
+      "path": "config/settings.json"
+    },
+    {
+      "id": "settings-has-required-key",
+      "type": "file-contains",
+      "path": "config/settings.json",
+      "includes": "\"maxRetries\""
+    },
+    {
+      "id": "settings-snapshot",
+      "type": "snapshot",
+      "path": "config/settings.json",
+      "expectedPath": "../fixtures/settings-config-expected/settings.json",
+      "weight": 2
+    },
+    {
+      "id": "verification-command",
+      "type": "command",
+      "command": "node",
+      "args": ["verify.mjs"],
+      "stdoutIncludes": "verified"
+    }
+  ],
+  "limits": {
+    "maxTurns": 8,
+    "timeoutMs": 120000,
+    "maxChangedFiles": 1
+  },
+  "tags": ["smoke", "filesystem", "json", "snapshot", "command"]
+}

@@ -43,6 +43,13 @@ module.exports = {
       to: { path: '^apps/renderer/' },
     },
     {
+      name: 'evals-no-desktop-host',
+      comment: 'Headless evaluation harness must not depend on Electron or renderer code',
+      severity: 'error',
+      from: { path: '^evals/' },
+      to: { path: '^(electron|apps/electron|apps/renderer)' },
+    },
+    {
       name: 'ui-no-features',
       comment: 'UI primitives must not import feature modules',
       severity: 'error',
@@ -55,6 +62,6 @@ module.exports = {
       fileName: 'tsconfig.depcruise.json',
     },
     tsPreCompilationDeps: true,
-    includeOnly: '^(apps|packages)/',
+    includeOnly: '^(apps|packages|evals)/',
   },
 };

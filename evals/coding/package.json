@@ -1,0 +1,21 @@
+{
+  "name": "desktop-agent-evals-coding",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Desktop Agent 编程任务评测运行器（headless）",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "eval": "tsx run-coding-eval.ts"
+  },
+  "dependencies": {
+    "@desktop-agent/agent-runtime": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "vitest": "^4.0.0"
+  }
+}
