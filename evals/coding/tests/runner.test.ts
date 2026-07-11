@@ -70,6 +70,27 @@ describe('evaluation runner', () => {
     expect(result).toMatchObject({ passed: false });
     expect(result.evidence.join(' ')).toContain('escapes its allowed root');
   });
+
+  it('waits for cancellation before snapshotting a timed-out workspace', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'desktop-agent-eval-'));
+    const task = await createTask(root);
+    task.limits = { ...task.limits, timeoutMs: 10 };
+    let releaseExecution: (() => void) | undefined;
+    const executor: AgentExecutor = {
+      execute: () => new Promise((resolve) => {
+        releaseExecution = () => resolve({ text: 'cancelled', traceSpans: [] });
+      }),
+      async cancel() {
+        await writeFile(join(root, 'cancel-finished'), 'yes', 'utf8');
+        releaseExecution?.();
+      },
+    };
+
+    const result = await runTask({ task, runDirectory: join(root, 'runs', 'timeout'), model, executor });
+
+    expect(result.status).toBe('timeout');
+    expect(await readFile(join(root, 'cancel-finished'), 'utf8')).toBe('yes');
+  });
 });
 
 async function createTask(root: string, includeFailingCommand = false): Promise<LoadedEvalTask> {

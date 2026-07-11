@@ -116,7 +116,7 @@ export async function runCommand(
     };
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill();
+      terminateProcessTree(child.pid);
     }, timeoutMs);
 
     child.stdout?.on('data', (chunk: Buffer) => { stdout = append(stdout, chunk); });
@@ -129,6 +129,20 @@ export async function runCommand(
     });
     child.on('close', (exitCode) => finish({ exitCode, stdout, stderr, timedOut }));
   });
+}
+
+function terminateProcessTree(pid: number | undefined): void {
+  if (!pid) return;
+  if (process.platform === 'win32') {
+    const killer = spawn('taskkill', ['/PID', String(pid), '/T', '/F'], { shell: false, windowsHide: true });
+    killer.on('error', () => undefined);
+    return;
+  }
+  try {
+    process.kill(pid, 'SIGTERM');
+  } catch {
+    // The command may have exited between the timeout and termination.
+  }
 }
 
 function normalizeText(value: string): string {

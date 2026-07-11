@@ -29,31 +29,38 @@ export interface AgentExecutor {
 }
 
 export class RuntimeAgentExecutor implements AgentExecutor {
-  private readonly runtime: AgentRuntime;
+  private readonly activeRuntimes = new Map<string, AgentRuntime>();
 
-  constructor(options: RuntimeOptions) {
-    this.runtime = new AgentRuntime(options);
-  }
+  constructor(private readonly options: RuntimeOptions) {}
 
   async execute(input: { task: LoadedEvalTask; workspacePath: string; sessionId: string }): Promise<AgentExecutionResult> {
+    const runtime = new AgentRuntime({
+      ...this.options,
+      maxTurns: input.task.limits?.maxTurns ?? this.options.maxTurns,
+    });
+    this.activeRuntimes.set(input.sessionId, runtime);
+    const subprocessEnv = createSanitizedSubprocessEnv();
     try {
-      const text = await this.runtime.prompt(
+      const text = await runtime.prompt(
         input.sessionId,
         input.task.prompt,
-        { cwd: input.workspacePath },
-        { profile: 'coding' },
+        { cwd: input.workspacePath, subprocessEnv },
+        { profile: 'coding', subprocessEnv },
       );
-      const agent = this.runtime.getAgent(input.sessionId);
+      const agent = runtime.getAgent(input.sessionId);
       return { text, traceSpans: (agent?.getTrace() ?? []) as unknown as EvalTraceSpan[] };
     } finally {
-      await this.runtime.close(input.sessionId);
+      this.activeRuntimes.delete(input.sessionId);
+      await runtime.close(input.sessionId);
     }
   }
 
   async cancel(sessionId: string): Promise<void> {
-    const agent = this.runtime.getAgent(sessionId);
+    const runtime = this.activeRuntimes.get(sessionId);
+    if (!runtime) return;
+    const agent = runtime.getAgent(sessionId);
     await agent?.interrupt();
-    await this.runtime.close(sessionId);
+    await runtime.close(sessionId);
   }
 }
 
@@ -117,7 +124,6 @@ export async function runTask(options: RunTaskOptions): Promise<EvalRunResult> {
   } catch (error) {
     if (error instanceof EvalTimeoutError) {
       timedOut = true;
-      void options.executor.cancel?.(sessionId);
     } else {
       agentError = error instanceof Error ? error.message : String(error);
     }
@@ -198,15 +204,39 @@ async function runWithTimeout(
   void run.catch(() => undefined);
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([
-      run,
-      new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new EvalTimeoutError(`Timed out after ${timeoutMs}ms.`)), timeoutMs);
-      }),
-    ]);
+    try {
+      return await Promise.race([
+        run,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new EvalTimeoutError(`Timed out after ${timeoutMs}ms.`)), timeoutMs);
+        }),
+      ]);
+    } catch (error) {
+      if (!(error instanceof EvalTimeoutError)) throw error;
+      await executor.cancel?.(input.sessionId);
+      await waitForSettlement(run, 5_000);
+      throw error;
+    }
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+async function waitForSettlement(run: Promise<unknown>, graceMs: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    run.then(() => undefined, () => undefined),
+    new Promise<void>((resolveGrace) => { timer = setTimeout(resolveGrace, graceMs); }),
+  ]);
+  if (timer) clearTimeout(timer);
+}
+
+/** Override secret-like variables so tools cannot inherit provider credentials. */
+function createSanitizedSubprocessEnv(): Record<string, string> {
+  const sensitiveName = /(api[_-]?key|token|secret|password|credential)/i;
+  return Object.fromEntries(Object.keys(process.env)
+    .filter((key) => sensitiveName.test(key))
+    .map((key) => [key, '']));
 }
 
 function appendChangedFilesCheck(checks: CheckResult[], maxChangedFiles: number | undefined, changedFiles: number): void {
