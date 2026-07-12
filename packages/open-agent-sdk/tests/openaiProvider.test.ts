@@ -97,4 +97,61 @@ describe('OpenAIProvider', () => {
     expect(requestBody?.prompt_cache_retention).toBe('24h');
     expect(result.usage.cached_input_tokens).toBe(80);
   });
+
+  it('normalizes a known textual JSON tool call from a compatible server', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      id: 'chatcmpl-local',
+      choices: [{
+        index: 0,
+        message: { role: 'assistant', content: '{"name":"Read","arguments":{"file_path":"README.md"}}' },
+        finish_reason: 'stop',
+      }],
+      usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
+    }), { status: 200 }));
+
+    const provider = new OpenAIProvider({ apiKey: 'ollama', baseURL: 'http://localhost:11434/v1' });
+    const result = await provider.createMessage({
+      model: 'qwen2.5-coder:7b',
+      maxTokens: 128,
+      system: '',
+      messages: [{ role: 'user', content: 'Read the README' }],
+      tools: [{ name: 'Read', description: 'Read a file', input_schema: { type: 'object' } }],
+    });
+
+    expect(result.stopReason).toBe('tool_use');
+    expect(result.content[0]).toMatchObject({
+      type: 'tool_use',
+      name: 'Read',
+      input: { file_path: 'README.md' },
+    });
+  });
+
+  it('executes only the first known call when a local model emits multiple fenced calls', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      id: 'chatcmpl-local',
+      choices: [{
+        index: 0,
+        message: {
+          role: 'assistant',
+          content: '```json\n{"name":"Write","arguments":{"file_path":"a.js","content":"ok"}}\n```\n\n```json\n{"name":"Bash","arguments":{"command":"node a.js"}}\n```',
+        },
+        finish_reason: 'stop',
+      }],
+    }), { status: 200 }));
+
+    const provider = new OpenAIProvider({ apiKey: 'ollama', baseURL: 'http://localhost:11434/v1' });
+    const result = await provider.createMessage({
+      model: 'qwen2.5-coder:7b',
+      maxTokens: 128,
+      system: '',
+      messages: [{ role: 'user', content: 'write then run' }],
+      tools: [
+        { name: 'Write', description: 'Write', input_schema: { type: 'object' } },
+        { name: 'Bash', description: 'Run', input_schema: { type: 'object' } },
+      ],
+    });
+
+    expect(result.content).toHaveLength(1);
+    expect(result.content[0]).toMatchObject({ type: 'tool_use', name: 'Write' });
+  });
 });

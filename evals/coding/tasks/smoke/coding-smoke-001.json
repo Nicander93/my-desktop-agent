@@ -3,7 +3,7 @@
   "id": "coding-smoke-001",
   "title": "Complete a small isolated JavaScript module",
   "suite": "smoke",
-  "prompt": "Read README.md in the current workspace. Implement src/greet.js as described there. Run node verify.mjs after editing, then briefly report the verification result.",
+  "prompt": "Create src/greet.js as an ES module. It must export function greet(name) and return exactly `Hello, ${name}!`. Use the Write tool to create the file, then use Bash to run node verify.mjs and briefly report the verification result.",
   "workspace": {
     "fixture": "../fixtures/greeting-base"
   },

@@ -426,6 +426,7 @@ export class Agent {
   ): Promise<QueryResult> {
     const t0 = performance.now()
     const collected = { text: '', turns: 0, tokens: { in: 0, out: 0 } }
+    let executionError: string | undefined
 
     for await (const ev of this.query(text, overrides)) {
       switch (ev.type) {
@@ -441,9 +442,14 @@ export class Agent {
           collected.turns = ev.num_turns ?? 0
           collected.tokens.in = ev.usage?.input_tokens ?? 0
           collected.tokens.out = ev.usage?.output_tokens ?? 0
+          if (ev.is_error || ev.subtype === 'error' || ev.subtype === 'error_during_execution') {
+            executionError = ev.errors?.join('; ') || `Agent execution failed (${ev.subtype}).`
+          }
           break
       }
     }
+
+    if (executionError) throw new Error(executionError)
 
     return {
       text: collected.text,

@@ -45,7 +45,11 @@ export class RuntimeAgentExecutor implements AgentExecutor {
         input.sessionId,
         input.task.prompt,
         { cwd: input.workspacePath, subprocessEnv },
-        { profile: 'coding', subprocessEnv },
+        {
+          profile: 'coding',
+          subprocessEnv,
+          allowedTools: ['Read', 'Write', 'Edit', 'Bash', 'Glob', 'Grep'],
+        },
       );
       const agent = runtime.getAgent(input.sessionId);
       return { text, traceSpans: (agent?.getTrace() ?? []) as unknown as EvalTraceSpan[] };

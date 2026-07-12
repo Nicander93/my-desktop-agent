@@ -47,6 +47,8 @@ export interface AgentQueryOptions {
   skillMentions?: string[];
   profile?: RuntimeProfile;
   subprocessEnv?: Record<string, string>;
+  allowedTools?: string[];
+  disallowedTools?: string[];
 }
 
 /** 路径访问检查请求，由主进程 pathGuard 处理 */
@@ -316,9 +318,12 @@ export class AgentRuntime {
       buildFileMentionPrompt(queryOptions?.fileRefs ?? []),
     ].filter(Boolean);
     const subprocessEnvOverride = queryOptions?.subprocessEnv;
-    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride) return undefined;
+    const toolOverrides = queryOptions?.allowedTools || queryOptions?.disallowedTools;
+    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride && !toolOverrides) return undefined;
     return {
       ...profileOptions,
+      ...(queryOptions?.allowedTools ? { allowedTools: queryOptions.allowedTools } : {}),
+      ...(queryOptions?.disallowedTools ? { disallowedTools: queryOptions.disallowedTools } : {}),
       ...(parts.length > 0 ? { appendSystemPrompt: parts.join('\n\n') } : {}),
       ...(subprocessEnvOverride ? { subprocessEnv: subprocessEnvOverride } : {}),
     };

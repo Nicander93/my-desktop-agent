@@ -464,9 +464,11 @@ export class QueryEngine {
         yield {
           type: 'result',
           subtype: 'error',
+          is_error: true,
           usage: this.totalUsage,
           num_turns: this.turnCount,
           cost: this.totalCost,
+          errors: [err instanceof Error ? err.message : String(err)],
         }
         return
       }

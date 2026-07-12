@@ -161,7 +161,7 @@ export class OpenAIProvider implements LLMProvider {
     const data = (await response.json()) as OpenAIChatResponse
 
     // Convert response back to normalized format
-    return this.convertResponse(data)
+    return this.convertResponse(data, tools)
   }
 
   async *createStreamingMessage(
@@ -233,13 +233,26 @@ export class OpenAIProvider implements LLMProvider {
           if (data === '[DONE]') {
             // Build final content blocks
             const content: NormalizedResponseBlock[] = []
+            const textToolCall = toolCalls.size === 0
+              ? parseTextToolCall(fullContent, tools)
+              : undefined
 
             if (fullReasoning) {
               content.push({ type: 'thinking', thinking: fullReasoning })
             }
 
-            if (fullContent) {
+            if (fullContent && !textToolCall) {
               content.push({ type: 'text', text: fullContent })
+            }
+
+            if (textToolCall) {
+              content.push({
+                type: 'tool_use',
+                id: textToolCall.id,
+                name: textToolCall.function.name,
+                input: JSON.parse(textToolCall.function.arguments),
+              })
+              stopReason = 'tool_calls'
             }
 
             // Sort tool calls by index and add them
@@ -513,7 +526,7 @@ export class OpenAIProvider implements LLMProvider {
   // Response Conversion: OpenAI → Internal
   // --------------------------------------------------------------------------
 
-  private convertResponse(data: OpenAIChatResponse): CreateMessageResponse {
+  private convertResponse(data: OpenAIChatResponse, tools?: OpenAITool[]): CreateMessageResponse {
     const choice = data.choices[0]
     if (!choice) {
       return {
@@ -527,6 +540,9 @@ export class OpenAIProvider implements LLMProvider {
     const message = choice.message as OpenAIChatResponse['choices'][0]['message'] & {
       reasoning_content?: string | null
     }
+    const textToolCall = !message.tool_calls?.length && message.content
+      ? parseTextToolCall(message.content, tools)
+      : undefined
 
     // Reasoning/thinking first (DeepSeek reasoner)
     if (message.reasoning_content) {
@@ -534,8 +550,17 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     // Add text content
-    if (message.content) {
+    if (message.content && !textToolCall) {
       content.push({ type: 'text', text: message.content })
+    }
+
+    if (textToolCall) {
+      content.push({
+        type: 'tool_use',
+        id: textToolCall.id,
+        name: textToolCall.function.name,
+        input: JSON.parse(textToolCall.function.arguments),
+      })
     }
 
     // Add tool calls
@@ -563,7 +588,7 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     // Map finish_reason to our normalized stop reasons
-    const stopReason = this.mapFinishReason(choice.finish_reason)
+    const stopReason = textToolCall ? 'tool_use' : this.mapFinishReason(choice.finish_reason)
 
     return {
       content,
@@ -589,5 +614,30 @@ export class OpenAIProvider implements LLMProvider {
       default:
         return reason
     }
+  }
+}
+
+/**
+ * Some OpenAI-compatible local servers return a requested tool call as a JSON
+ * text block instead of `message.tool_calls`. Accept only a complete JSON
+ * object whose name matches one of the tools sent with this request.
+ */
+function parseTextToolCall(content: string, tools?: OpenAITool[]): OpenAIToolCall | undefined {
+  if (!tools?.length) return undefined
+  const trimmedContent = content.trim()
+  const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```/i.exec(trimmedContent)
+  const trimmed = fenced?.[1] ?? trimmedContent
+  try {
+    const value = JSON.parse(trimmed) as { name?: unknown; arguments?: unknown }
+    if (!value || typeof value !== 'object' || typeof value.name !== 'string') return undefined
+    if (!tools.some((tool) => tool.function.name === value.name)) return undefined
+    if (typeof value.arguments !== 'object' || value.arguments === null || Array.isArray(value.arguments)) return undefined
+    return {
+      id: `text-tool-${crypto.randomUUID()}`,
+      type: 'function',
+      function: { name: value.name, arguments: JSON.stringify(value.arguments) },
+    }
+  } catch {
+    return undefined
   }
 }
