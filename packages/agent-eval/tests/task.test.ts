@@ -2,6 +2,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { loadTask } from '../src/task.js';
+import { loadTaskCollection } from '../src/collection.js';
 
 describe('coding-bugfix-basic task', () => {
   it('explicitly declares the task execution contract and protected tests', async () => {
@@ -23,5 +24,13 @@ describe('coding-bugfix-basic task', () => {
     const tasks = await Promise.all(['coding-mario-web', 'office-ai-ppt', 'office-excel-report'].map((id) => loadTask(resolve(packageDirectory, `../../benchmarks/tasks/${id}/task.json`))));
     expect(tasks.map((task) => task.profile)).toEqual(['coding', 'office', 'office']);
     expect(tasks.every((task) => task.capabilities.length > 0 && task.verifier.commands?.length)).toBe(true);
+  });
+
+  it('loads the migrated coding smoke collection without the legacy runner', async () => {
+    const packageDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    const tasks = await loadTaskCollection(resolve(packageDirectory, '../../benchmarks/tasks'), { suite: 'smoke' });
+
+    expect(tasks.map((task) => task.id)).toEqual(expect.arrayContaining(['coding-smoke-001', 'coding-smoke-002', 'coding-smoke-003']));
+    expect(tasks.every((task) => task.profile === 'coding' && task.verifier.commands?.length)).toBe(true);
   });
 });

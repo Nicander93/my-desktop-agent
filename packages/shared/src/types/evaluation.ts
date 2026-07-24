@@ -11,6 +11,9 @@ export interface EvaluationTask {
   /** Runtime capabilities requested by the task. Resolution begins in PR 3. */
   capabilities: string[];
   workflowId?: string;
+  /** Optional collection metadata used by headless benchmark suites. */
+  suite?: 'smoke' | 'regression' | 'quality';
+  tags?: string[];
   fixture: string;
   verifier: EvaluationVerifier;
   limits?: EvaluationLimits;
@@ -26,6 +29,7 @@ export interface EvaluationVerifier {
   commands?: EvaluationCommand[];
   requiredFiles?: string[];
   unchangedPaths?: string[];
+  checks?: EvaluationVerifierCheck[];
 }
 
 export interface EvaluationCommand {
@@ -33,7 +37,13 @@ export interface EvaluationCommand {
   args?: string[];
   expectedExitCode?: number;
   timeoutMs?: number;
+  stdoutIncludes?: string | string[];
 }
+
+export type EvaluationVerifierCheck =
+  | { id: string; type: 'file-exists'; path: string; weight?: number }
+  | { id: string; type: 'file-contains'; path: string; includes: string | string[]; match?: 'all' | 'any'; weight?: number }
+  | { id: string; type: 'snapshot'; path: string; expectedPath: string; weight?: number };
 
 export interface EvaluationVerification {
   passed: boolean;

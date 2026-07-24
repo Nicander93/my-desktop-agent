@@ -12,7 +12,6 @@ const targets = [
   'packages/agent-runtime/src',
   'packages/agent-eval/src',
   'packages/open-agent-sdk/src',
-  'evals/coding',
 ];
 
 for (const target of targets) {

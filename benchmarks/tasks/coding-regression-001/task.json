@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-regression-001",
+  "version": "0.1.0",
+  "title": "Make Retry-After parsing strict and safe",
+  "suite": "regression",
+  "tags": ["input-validation", "edge-cases", "command"],
+  "prompt": "Use node verify.mjs to understand the failure. Fix src/retry-after.js so it accepts only positive integer seconds. Do not edit verify.mjs or package.json. Re-run the verifier.",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "fixture": "fixture",
+  "verifier": {
+    "unchangedPaths": ["verify.mjs", "package.json"],
+    "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
+    "checks": [{ "id": "strict-integer-guard", "type": "file-contains", "path": "src/retry-after.js", "includes": "Number.isInteger" }]
+  },
+  "limits": { "maxTurns": 15, "timeoutMs": 180000, "maxChangedFiles": 1 }
+}

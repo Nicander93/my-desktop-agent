@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-smoke-001",
+  "version": "0.1.0",
+  "title": "Complete a small isolated JavaScript module",
+  "suite": "smoke",
+  "tags": ["filesystem", "edit", "command"],
+  "prompt": "Create src/greet.js as an ES module. Export greet(name), returning exactly `Hello, ${name}!`. Do not modify verify.mjs or package.json. Run node verify.mjs when finished.",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "fixture": "fixture",
+  "verifier": {
+    "unchangedPaths": ["verify.mjs", "package.json"],
+    "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
+    "checks": [{ "id": "greeting-content", "type": "file-contains", "path": "src/greet.js", "includes": ["export function greet", "Hello, ${name}!"], "weight": 2 }]
+  },
+  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-smoke-003",
+  "version": "0.1.0",
+  "title": "Create a deterministic JSON configuration",
+  "suite": "smoke",
+  "tags": ["filesystem", "json", "snapshot", "command"],
+  "prompt": "Create config/settings.json as requested by the verifier. Do not modify verify.mjs or package.json. Run node verify.mjs after writing the file.",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "fixture": "fixture",
+  "verifier": {
+    "unchangedPaths": ["verify.mjs", "package.json"],
+    "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
+    "checks": [{ "id": "settings-snapshot", "type": "snapshot", "path": "config/settings.json", "expectedPath": "expected/settings.json", "weight": 2 }]
+  },
+  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+}

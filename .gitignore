@@ -140,6 +140,7 @@ apps/electron/resources/binaries/archives/*
 
 # Headless evaluation artifacts
 eval-results/
+evals/coding/
 
 # Local pnpm store created by isolated evaluation fixtures
 .pnpm-store/

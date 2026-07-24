@@ -8,7 +8,7 @@ export async function prepareWorkspace(fixturePath: string, baselinePath: string
   await cp(fixturePath, workspacePath, { recursive: true, force: true });
 }
 
-export async function writeDiff(before: string, after: string, destination: string): Promise<void> {
+export async function writeDiff(before: string, after: string, destination: string): Promise<number> {
   const beforeFiles = await listFiles(before);
   const afterFiles = await listFiles(after);
   const paths = [...new Set([...beforeFiles.keys(), ...afterFiles.keys()])].sort();
@@ -20,6 +20,7 @@ export async function writeDiff(before: string, after: string, destination: stri
     entries.push(`--- a/${path}\n+++ b/${path}\n@@\n-${oldValue ?? ''}\n+${newValue ?? ''}`);
   }
   await writeFile(destination, `${entries.join('\n')}\n`, 'utf8');
+  return entries.length;
 }
 
 async function listFiles(root: string, current = root, result = new Map<string, string>()): Promise<Map<string, string>> {

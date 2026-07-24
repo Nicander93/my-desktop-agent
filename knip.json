@@ -35,10 +35,6 @@
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
       "ignore": ["examples/**"]
-    },
-    "evals/coding": {
-      "entry": ["run-coding-eval.ts", "vitest.config.ts", "tests/**/*.test.ts"],
-      "project": ["*.ts", "tests/**/*.ts"]
     }
   },
   "ignore": [

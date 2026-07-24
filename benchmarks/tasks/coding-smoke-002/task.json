@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-smoke-002",
+  "version": "0.1.0",
+  "title": "Diagnose and repair a quantity calculation",
+  "suite": "smoke",
+  "tags": ["read", "edit", "command", "diagnosis"],
+  "prompt": "Inspect the failing verifier and make the smallest change needed in src/cart.js. Do not edit verify.mjs or package.json. Run node verify.mjs after the change.",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "fixture": "fixture",
+  "verifier": {
+    "unchangedPaths": ["verify.mjs", "package.json"],
+    "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
+    "checks": [{ "id": "quantity-is-used", "type": "file-contains", "path": "src/cart.js", "includes": "quantity" }]
+  },
+  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+}

@@ -88,8 +88,17 @@ export async function runTask(task: LoadedEvaluationTask, options: {
   }
 
   if (execution) await writeFile(tracePath, `${JSON.stringify(execution.trace, null, 2)}\n`, 'utf8');
-  await writeDiff(baselinePath, workspacePath, diffPath);
+  const changedFiles = await writeDiff(baselinePath, workspacePath, diffPath);
   const verifier = await verifyTask(task, workspacePath, baselinePath);
+  if (task.limits?.maxChangedFiles !== undefined) {
+    verifier.checks.push({
+      id: 'changed-files-limit',
+      passed: changedFiles <= task.limits.maxChangedFiles,
+      evidence: `Changed ${changedFiles} files (maximum ${task.limits.maxChangedFiles}).`,
+      durationMs: 0,
+    });
+    verifier.passed = verifier.checks.every((check) => check.passed);
+  }
   const endedAt = new Date().toISOString();
   const result: EvaluationResult = {
     schemaVersion: 1,

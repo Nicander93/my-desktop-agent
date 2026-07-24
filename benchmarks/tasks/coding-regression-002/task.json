@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-regression-002",
+  "version": "0.1.0",
+  "title": "Implement deterministic tag normalization",
+  "suite": "regression",
+  "tags": ["collections", "edge-cases", "command"],
+  "prompt": "Implement normalizeTags in src/tags.js. The verifier covers normal and edge cases. Do not edit verify.mjs or package.json. Run node verify.mjs after editing.",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "fixture": "fixture",
+  "verifier": {
+    "unchangedPaths": ["verify.mjs", "package.json"],
+    "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
+    "checks": [{ "id": "tags-export-present", "type": "file-contains", "path": "src/tags.js", "includes": "normalizeTags" }]
+  },
+  "limits": { "maxTurns": 15, "timeoutMs": 180000, "maxChangedFiles": 1 }
+}

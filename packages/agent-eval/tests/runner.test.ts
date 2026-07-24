@@ -42,6 +42,51 @@ describe('agent-eval runner', () => {
     expect(result.status).toBe('passed');
     expect(result.verifier.checks.every((check) => check.passed)).toBe(true);
   });
+
+  it('fails verification when an agent changes more files than the task allows', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
+    const fixture = join(root, 'fixture');
+    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
+    const task = { ...createTask(root), limits: { maxChangedFiles: 1 } };
+    const executor: AgentExecutor = {
+      async execute(_task, workspacePath) {
+        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
+        await writeFile(join(workspacePath, 'extra.txt'), 'unexpected\n', 'utf8');
+        return { text: 'done', trace: [] };
+      },
+    };
+
+    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+
+    expect(result.status).toBe('failed');
+    expect(result.verifier.checks).toContainEqual(expect.objectContaining({ id: 'changed-files-limit', passed: false }));
+  });
+
+  it('runs migrated declarative verifier checks', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
+    const fixture = join(root, 'fixture');
+    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
+    const task = {
+      ...createTask(root),
+      verifier: {
+        requiredFiles: ['answer.txt'],
+        checks: [{ id: 'answer-content', type: 'file-contains' as const, path: 'answer.txt', includes: 'fixed' }],
+      },
+    };
+    const executor: AgentExecutor = {
+      async execute(_task, workspacePath) {
+        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
+        return { text: 'done', trace: [] };
+      },
+    };
+
+    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+
+    expect(result.status).toBe('passed');
+    expect(result.verifier.checks).toContainEqual(expect.objectContaining({ id: 'answer-content', passed: true }));
+  });
 });
 
 describe('process execution', () => {

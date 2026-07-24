@@ -43,13 +43,6 @@ module.exports = {
       to: { path: '^apps/renderer/' },
     },
     {
-      name: 'evals-no-desktop-host',
-      comment: 'Headless evaluation harness must not depend on Electron or renderer code',
-      severity: 'error',
-      from: { path: '^evals/' },
-      to: { path: '^(electron|apps/electron|apps/renderer)' },
-    },
-    {
       name: 'agent-eval-no-desktop-host',
       comment: 'The reusable headless evaluator must not depend on Electron or renderer code',
       severity: 'error',
@@ -69,6 +62,6 @@ module.exports = {
       fileName: 'tsconfig.depcruise.json',
     },
     tsPreCompilationDeps: true,
-    includeOnly: '^(apps|packages|evals)/',
+    includeOnly: '^(apps|packages)/',
   },
 };
