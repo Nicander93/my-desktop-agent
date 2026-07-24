@@ -57,13 +57,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   conversation: {
-    create: (workspaceId: string, title?: string, model?: string) =>
-      ipcRenderer.invoke('conversation:create', workspaceId, title, model),
+    create: (workspaceId: string, title?: string, model?: string, modelConfigId?: string) =>
+      ipcRenderer.invoke('conversation:create', workspaceId, title, model, modelConfigId),
     getAll: (workspaceId: string, includeArchived?: boolean) =>
       ipcRenderer.invoke('conversation:get-all', workspaceId, includeArchived),
     get: (id: string) =>
       ipcRenderer.invoke('conversation:get', id),
-    update: (id: string, updates: { title?: string; model?: string; isArchived?: boolean }) =>
+    update: (id: string, updates: { title?: string; model?: string; modelConfigId?: string; isArchived?: boolean }) =>
       ipcRenderer.invoke('conversation:update', id, updates),
     delete: (id: string) =>
       ipcRenderer.invoke('conversation:delete', id)
@@ -78,6 +78,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.invoke('message:update', id, updates),
     deleteByConversation: (conversationId: string) =>
       ipcRenderer.invoke('message:delete-by-conversation', conversationId)
+  },
+
+  model: {
+    getAll: () => ipcRenderer.invoke('model:get-all'),
+    create: (input: import('@desktop-agent/shared').ModelConfigInput) => ipcRenderer.invoke('model:create', input),
+    update: (id: string, updates: Partial<import('@desktop-agent/shared').ModelConfigInput>) => ipcRenderer.invoke('model:update', id, updates),
+    delete: (id: string) => ipcRenderer.invoke('model:delete', id),
+    testConnection: (input: import('@desktop-agent/shared').ModelConfigInput) => ipcRenderer.invoke('model:test-connection', input),
   },
 
   attachment: {

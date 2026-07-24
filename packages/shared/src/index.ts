@@ -2,6 +2,17 @@
 export type { MessagePart } from './types/message.js';
 export type { Workspace, WorkspaceSettings } from './types/workspace.js';
 export type { Conversation, Message as ConversationMessage } from './types/conversation.js';
+export type { ModelConfig, ModelConfigInput, ModelConnectionTestResult } from './types/model.js';
+export type {
+  EvaluationArtifacts,
+  EvaluationCheck,
+  EvaluationCommand,
+  EvaluationLimits,
+  EvaluationResult,
+  EvaluationTask,
+  EvaluationVerification,
+  EvaluationVerifier,
+} from './types/evaluation.js';
 export type {
   AgentMessageAttachmentRef,
   AttachmentDraft,

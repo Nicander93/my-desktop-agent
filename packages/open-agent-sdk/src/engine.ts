@@ -123,11 +123,13 @@ async function buildRuntimeContext(config: QueryEngineConfig): Promise<string> {
 
   parts.push(getCurrentDateContext())
 
-  try {
-    const sysCtx = await getSystemContext(config.cwd)
-    if (sysCtx) parts.push(`# environment\n${sysCtx}`)
-  } catch {
-    // Context is best-effort
+  if (config.includeEnvironmentContext !== false) {
+    try {
+      const sysCtx = await getSystemContext(config.cwd)
+      if (sysCtx) parts.push(`# environment\n${sysCtx}`)
+    } catch {
+      // Context is best-effort
+    }
   }
 
   parts.push(`# workingDirectory\n${config.cwd}`)
@@ -186,6 +188,7 @@ export class QueryEngine {
   private apiTimeMs = 0
   private hookRegistry?: HookRegistry
   private traceRecorder?: TraceRecorder
+  private failedToolCalls = new Map<string, number>()
 
   constructor(config: QueryEngineConfig) {
     this.config = config
@@ -791,6 +794,14 @@ export class QueryEngine {
 
     emitToolCall()
 
+    const retryKey = `${block.name}:${JSON.stringify(block.input)}`
+    const retryLimit = this.config.maxSameToolRetries
+    if (retryLimit !== undefined && (this.failedToolCalls.get(retryKey) ?? 0) >= retryLimit) {
+      const msg = `Error: repeated failed tool call blocked after ${retryLimit} attempts`
+      emitToolResult(msg, true, block.name)
+      return withTrace({ type: 'tool_result', tool_use_id: block.id, content: msg, is_error: true, tool_name: block.name })
+    }
+
     // Execute the tool
     try {
       const result = await tool.call(block.input, context)
@@ -808,8 +819,12 @@ export class QueryEngine {
           ? result.content
           : JSON.stringify(result.content)
       emitToolResult(output, !!result.is_error, block.name)
-
-      return withTrace({ ...result, tool_use_id: block.id, tool_name: block.name })
+      if (result.is_error) this.failedToolCalls.set(retryKey, (this.failedToolCalls.get(retryKey) ?? 0) + 1)
+      // Trace receives the unmodified output. Only the next model turn sees a transformed result.
+      const modelResult = this.config.toolResultTransformer
+        ? this.config.toolResultTransformer(result, { toolName: block.name })
+        : result
+      return withTrace({ ...modelResult, tool_use_id: block.id, tool_name: block.name })
     } catch (err: any) {
       // Hook: PostToolUseFailure
       await this.executeHooks('PostToolUseFailure', {
@@ -821,6 +836,7 @@ export class QueryEngine {
 
       const msg = `Tool execution error: ${err.message}`
       emitToolResult(msg, true, block.name)
+      this.failedToolCalls.set(retryKey, (this.failedToolCalls.get(retryKey) ?? 0) + 1)
 
       return withTrace({
         type: 'tool_result',

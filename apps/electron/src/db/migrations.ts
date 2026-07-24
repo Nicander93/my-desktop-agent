@@ -127,6 +127,25 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(messageId);
       CREATE INDEX IF NOT EXISTS idx_attachments_status ON attachments(status);
     `
+  },
+  {
+    version: 5,
+    up: `
+      CREATE TABLE IF NOT EXISTS model_configs (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        provider TEXT NOT NULL CHECK(provider IN ('openai-compatible')),
+        baseURL TEXT NOT NULL,
+        apiKey TEXT,
+        model TEXT NOT NULL,
+        enabled INTEGER NOT NULL DEFAULT 1,
+        isDefault INTEGER NOT NULL DEFAULT 0,
+        createdAt INTEGER NOT NULL,
+        updatedAt INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_model_configs_enabled ON model_configs(enabled);
+      ALTER TABLE conversations ADD COLUMN modelConfigId TEXT;
+    `
   }
 ];
 

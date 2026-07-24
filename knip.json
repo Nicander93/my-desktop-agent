@@ -27,6 +27,10 @@
       "entry": ["src/index.ts", "tests/**/*.test.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
+    "packages/agent-eval": {
+      "entry": ["src/index.ts", "src/cli.ts", "vitest.config.ts", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+    },
     "packages/open-agent-sdk": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"],
@@ -38,6 +42,7 @@
     }
   },
   "ignore": [
+    "benchmarks/**",
     "vitest.config.ts",
     "scripts/migrate-renderer-features.mjs",
     "apps/electron/src/runtime/index.ts",

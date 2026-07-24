@@ -12,7 +12,7 @@
     "build": "pnpm run build:packages && pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "typecheck": "tsc -b packages/shared packages/open-agent-sdk packages/agent-runtime apps/renderer apps/electron && pnpm --filter desktop-agent-evals-coding typecheck",
+    "typecheck": "tsc -b packages/shared packages/open-agent-sdk packages/agent-runtime packages/agent-eval apps/renderer apps/electron && pnpm --filter desktop-agent-evals-coding typecheck",
     "dep-check": "node scripts/dep-check.mjs",
     "knip": "knip",
     "check": "pnpm typecheck && pnpm lint && pnpm dep-check && pnpm knip && pnpm test",
@@ -21,7 +21,8 @@
     "eval:coding": "tsx evals/coding/run-coding-eval.ts",
     "eval:coding:smoke": "tsx evals/coding/run-coding-eval.ts --suite smoke",
     "eval:coding:regression": "tsx evals/coding/run-coding-eval.ts --suite regression",
-    "eval:coding:quality": "tsx evals/coding/run-coding-eval.ts --suite quality"
+    "eval:coding:quality": "tsx evals/coding/run-coding-eval.ts --suite quality",
+    "eval": "pnpm --filter @desktop-agent/agent-eval build && node packages/agent-eval/dist/cli.js"
   },
   "devDependencies": {
     "dependency-cruiser": "^17.3.8",

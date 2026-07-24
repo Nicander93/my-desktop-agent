@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "office-ai-ppt",
+  "version": "1.0.0",
+  "title": "生成本地小模型应用演示文稿",
+  "prompt": "基于 source.md 创建 output/local-model-agent.pptx。需要 8 至 10 页，有封面、目录、核心观点、架构、案例、风险和结论，且至少一页结构图或流程图。完成后运行验证脚本。",
+  "profile": "office",
+  "capabilities": ["read-project", "create-pptx", "validate-pptx", "render-preview"],
+  "workflowId": "office-create-validate",
+  "fixture": "fixture",
+  "verifier": {
+    "requiredFiles": ["output/local-model-agent.pptx"],
+    "commands": [{ "command": "powershell", "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "verify.ps1"] }]
+  },
+  "limits": { "maxTurns": 16, "timeoutMs": 300000, "maxChangedFiles": 5 }
+}

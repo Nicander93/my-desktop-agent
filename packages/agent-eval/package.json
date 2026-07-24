@@ -1,0 +1,22 @@
+{
+  "name": "@desktop-agent/agent-eval",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": { "agent-eval": "dist/cli.js", "agent-eval-report": "dist/report-cli.js" },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@desktop-agent/agent-runtime": "workspace:*",
+    "@desktop-agent/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}

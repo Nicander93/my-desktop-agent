@@ -72,6 +72,7 @@ export interface RunStartPayload {
   model: string
   cwd: string
   toolNames: string[]
+  metadata?: Record<string, unknown>
 }
 
 export interface RunEndPayload {
@@ -102,7 +103,7 @@ export interface TraceConfig {
   enabled?: boolean
   /** Persist spans to trace.jsonl. Default true. */
   persist?: boolean
-  /** Truncate large tool outputs in trace. Default 10000 chars. 0 = no limit. */
+  /** Truncate large tool outputs in trace. Default 0 (preserve raw output). */
   maxToolOutputChars?: number
   /** Real-time callback for each recorded span. */
   onSpan?: (span: TraceSpan) => void
@@ -172,7 +173,7 @@ export class TraceRecorder {
     this.sessionId = sessionId
     this.enabled = cfg.enabled !== false
     this.persist = cfg.persist !== false
-    this.maxToolOutputChars = cfg.maxToolOutputChars ?? 10_000
+    this.maxToolOutputChars = cfg.maxToolOutputChars ?? 0
     this.onSpan = cfg.onSpan
   }
 

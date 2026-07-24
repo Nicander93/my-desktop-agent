@@ -27,6 +27,8 @@ interface OpenAIChatMessage {
   content?: string | OpenAIContentPart[] | null
   /** DeepSeek reasoner and compatible APIs */
   reasoning_content?: string | null
+  /** Ollama-compatible reasoning field. */
+  reasoning?: string | null
   tool_calls?: OpenAIToolCall[]
   tool_call_id?: string
 }
@@ -61,6 +63,7 @@ interface OpenAIChatResponse {
       role: 'assistant'
       content: string | null
       reasoning_content?: string | null
+      reasoning?: string | null
       tool_calls?: OpenAIToolCall[]
     }
     finish_reason: 'stop' | 'length' | 'tool_calls' | 'content_filter' | string
@@ -87,6 +90,7 @@ interface OpenAIStreamChunk {
       role?: 'assistant'
       content?: string | null
       reasoning_content?: string | null
+      reasoning?: string | null
       tool_calls?: Array<{
         index: number
         id?: string
@@ -142,10 +146,7 @@ export class OpenAIProvider implements LLMProvider {
     // Make API call
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: this.buildHeaders(),
       body: JSON.stringify(body),
     })
 
@@ -185,10 +186,7 @@ export class OpenAIProvider implements LLMProvider {
 
     const response = await fetch(`${this.baseURL}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: this.buildHeaders(),
       body: JSON.stringify(body),
     })
 
@@ -260,12 +258,7 @@ export class OpenAIProvider implements LLMProvider {
               ([a], [b]) => a - b,
             )
             for (const [, tc] of sortedToolCalls) {
-              let input: any
-              try {
-                input = JSON.parse(tc.arguments)
-              } catch {
-                input = tc.arguments
-              }
+              const input = parseToolArguments(tc.arguments)
               content.push({
                 type: 'tool_use',
                 id: tc.id,
@@ -310,9 +303,10 @@ export class OpenAIProvider implements LLMProvider {
             const delta = choice.delta
 
             // Handle reasoning/thinking (DeepSeek reasoner, etc.)
-            if (delta.reasoning_content) {
-              fullReasoning += delta.reasoning_content
-              yield { type: 'thinking_delta', thinking: delta.reasoning_content }
+            const reasoning = delta.reasoning_content ?? delta.reasoning
+            if (reasoning) {
+              fullReasoning += reasoning
+              yield { type: 'thinking_delta', thinking: reasoning }
             }
 
             // Handle content text
@@ -483,7 +477,8 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     if (reasoningContent) {
-      assistantMsg.reasoning_content = reasoningContent
+      if (this.isOllamaCompatible()) assistantMsg.reasoning = reasoningContent
+      else assistantMsg.reasoning_content = reasoningContent
     }
 
     if (toolCalls.length > 0) {
@@ -522,6 +517,10 @@ export class OpenAIProvider implements LLMProvider {
     return this.baseURL === 'https://api.openai.com/v1'
   }
 
+  private isOllamaCompatible(): boolean {
+    return /(^|\.)ollama(?:\.ai)?(?::\d+)?$|127\.0\.0\.1:11434|localhost:11434/i.test(new URL(this.baseURL).host)
+  }
+
   // --------------------------------------------------------------------------
   // Response Conversion: OpenAI → Internal
   // --------------------------------------------------------------------------
@@ -539,14 +538,16 @@ export class OpenAIProvider implements LLMProvider {
     const content: NormalizedResponseBlock[] = []
     const message = choice.message as OpenAIChatResponse['choices'][0]['message'] & {
       reasoning_content?: string | null
+      reasoning?: string | null
     }
     const textToolCall = !message.tool_calls?.length && message.content
       ? parseTextToolCall(message.content, tools)
       : undefined
 
     // Reasoning/thinking first (DeepSeek reasoner)
-    if (message.reasoning_content) {
-      content.push({ type: 'thinking', thinking: message.reasoning_content })
+    const reasoning = message.reasoning_content ?? message.reasoning
+    if (reasoning) {
+      content.push({ type: 'thinking', thinking: reasoning })
     }
 
     // Add text content
@@ -566,12 +567,7 @@ export class OpenAIProvider implements LLMProvider {
     // Add tool calls
     if (message.tool_calls) {
       for (const tc of message.tool_calls) {
-        let input: any
-        try {
-          input = JSON.parse(tc.function.arguments)
-        } catch {
-          input = tc.function.arguments
-        }
+        const input = parseToolArguments(tc.function.arguments)
 
         content.push({
           type: 'tool_use',
@@ -615,6 +611,13 @@ export class OpenAIProvider implements LLMProvider {
         return reason
     }
   }
+
+  private buildHeaders(): Record<string, string> {
+    return {
+      'Content-Type': 'application/json',
+      ...(this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : {}),
+    }
+  }
 }
 
 /**
@@ -640,4 +643,21 @@ function parseTextToolCall(content: string, tools?: OpenAITool[]): OpenAIToolCal
   } catch {
     return undefined
   }
+
+}
+
+/** Conservative repair for common OpenAI-compatible tool argument formatting faults. */
+function parseToolArguments(argumentsText: string): unknown {
+  const candidates = [
+    argumentsText,
+    /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(argumentsText.trim())?.[1],
+  ].filter((value): value is string => Boolean(value));
+  for (const candidate of candidates) {
+    try { return JSON.parse(candidate); } catch { /* try a safe syntactic repair below */ }
+    const repaired = candidate
+      .replace(/,\s*([}\]])/g, '$1')
+      .replace(/'([^'\\]*(?:\\.[^'\\]*)*)'/g, '"$1"');
+    try { return JSON.parse(repaired); } catch { /* preserve the original below */ }
+  }
+  return argumentsText;
 }

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "office-excel-report",
+  "version": "1.0.0",
+  "title": "生成区域用水分析工作簿",
+  "prompt": "读取 input/water.csv，生成 output/water-report.xlsx。保留原始数据，并创建清洗数据、指标汇总和图表；再输出 output/summary.html。完成后运行验证脚本。",
+  "profile": "office",
+  "capabilities": ["inspect-spreadsheet", "transform-data", "create-charts", "validate-spreadsheet"],
+  "workflowId": "spreadsheet-analyze-report",
+  "fixture": "fixture",
+  "verifier": {
+    "requiredFiles": ["output/water-report.xlsx", "output/summary.html", "input/water.csv"],
+    "unchangedPaths": ["input/water.csv"],
+    "commands": [{ "command": "powershell", "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "verify.ps1"] }]
+  },
+  "limits": { "maxTurns": 16, "timeoutMs": 300000, "maxChangedFiles": 6 }
+}

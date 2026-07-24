@@ -420,6 +420,7 @@ export type {
   ToolInputSchema,
   ToolContext,
   ToolResult,
+  ToolResultTransformer,
 
   // Permission types
   PermissionMode,

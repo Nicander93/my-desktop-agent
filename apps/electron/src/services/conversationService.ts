@@ -11,6 +11,7 @@ export interface Conversation {
   workspaceId: string;
   title: string;
   model: string | null;
+  modelConfigId: string | null;
   isArchived: boolean;
   createdAt: number;
   updatedAt: number;
@@ -34,20 +35,20 @@ function queryOne<T>(sql: string, params: any[] = []): T | undefined {
 }
 
 /** 在指定工作区下创建对话 */
-export function createConversation(workspaceId: string, title?: string, model?: string): Conversation {
+export function createConversation(workspaceId: string, title?: string, model?: string, modelConfigId?: string): Conversation {
   const db = getDatabase();
   const id = uuidv4();
   const now = Date.now();
 
   db.run(
-    `INSERT INTO conversations (id, workspaceId, title, model, createdAt, updatedAt)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [id, workspaceId, title || '新对话', model || null, now, now]
+    `INSERT INTO conversations (id, workspaceId, title, model, modelConfigId, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, workspaceId, title || '新对话', model || null, modelConfigId || null, now, now]
   );
 
   saveDatabase();
 
-  return { id, workspaceId, title: title || '新对话', model: model || null, isArchived: false, createdAt: now, updatedAt: now };
+  return { id, workspaceId, title: title || '新对话', model: model || null, modelConfigId: modelConfigId || null, isArchived: false, createdAt: now, updatedAt: now };
 }
 
 export function getConversation(id: string): Conversation | undefined {
@@ -62,7 +63,7 @@ export function getConversationsByWorkspace(workspaceId: string, includeArchived
   return queryAll<any>(query, [workspaceId]);
 }
 
-export function updateConversation(id: string, updates: Partial<Pick<Conversation, 'title' | 'model' | 'isArchived'>>): Conversation | null {
+export function updateConversation(id: string, updates: Partial<Pick<Conversation, 'title' | 'model' | 'modelConfigId' | 'isArchived'>>): Conversation | null {
   const conversation = getConversation(id);
   if (!conversation) return null;
 
@@ -72,6 +73,7 @@ export function updateConversation(id: string, updates: Partial<Pick<Conversatio
 
   if (updates.title !== undefined) { fields.push('title = ?'); values.push(updates.title); }
   if (updates.model !== undefined) { fields.push('model = ?'); values.push(updates.model); }
+  if (updates.modelConfigId !== undefined) { fields.push('modelConfigId = ?'); values.push(updates.modelConfigId); }
   if (updates.isArchived !== undefined) { fields.push('isArchived = ?'); values.push(updates.isArchived ? 1 : 0); }
 
   fields.push('updatedAt = ?');

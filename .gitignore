@@ -138,3 +138,8 @@ apps/electron/resources/binaries/archives/*
 .codex
 .mimo
 
+# Headless evaluation artifacts
+eval-results/
+
+# Local pnpm store created by isolated evaluation fixtures
+.pnpm-store/

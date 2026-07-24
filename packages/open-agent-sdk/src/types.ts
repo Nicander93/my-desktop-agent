@@ -217,6 +217,12 @@ export interface ToolResult {
   is_error?: boolean
 }
 
+/** Generic hook for adapting a tool result before it becomes model context. */
+export type ToolResultTransformer = (
+  result: ToolResult,
+  context: { toolName: string; profile?: string },
+) => ToolResult;
+
 // --------------------------------------------------------------------------
 // Permission Types
 // --------------------------------------------------------------------------
@@ -370,6 +376,8 @@ export interface AgentOptions {
   systemPrompt?: string | { type: 'preset'; preset: 'default'; append?: string }
   /** Append to default system prompt */
   appendSystemPrompt?: string
+  /** Include best-effort host environment details in the runtime context. */
+  includeEnvironmentContext?: boolean
   /** Provider prompt caching hints. */
   promptCache?: import('./providers/types.js').PromptCacheConfig
   /** Available tools (ToolDefinition[] or string[] preset) */
@@ -400,6 +408,12 @@ export interface AgentOptions {
   env?: Record<string, string | undefined>
   /** Per-session subprocess env (Bash/MCP), merged over process.env at spawn time */
   subprocessEnv?: Record<string, string>
+  /** Transforms model-visible tool output; Trace always receives the raw result first. */
+  toolResultTransformer?: ToolResultTransformer
+  /** Optional generic metadata persisted with the trace run start span. */
+  traceMetadata?: Record<string, unknown>
+  /** Stop repeated identical failed tool calls after this many attempts. */
+  maxSameToolRetries?: number
   /** Tool names to pre-approve without prompting */
   allowedTools?: string[]
   /** Tool names to deny */
@@ -490,6 +504,7 @@ export interface QueryEngineConfig {
   tools: ToolDefinition[]
   systemPrompt?: string
   appendSystemPrompt?: string
+  includeEnvironmentContext?: boolean
   promptCache?: import('./providers/types.js').PromptCacheConfig
   maxTurns: number
   maxBudgetUsd?: number
@@ -509,4 +524,7 @@ export interface QueryEngineConfig {
   traceRecorder?: import('./trace.js').TraceRecorder
   /** Per-session subprocess env passed to tools */
   subprocessEnv?: Record<string, string>
+  toolResultTransformer?: ToolResultTransformer
+  traceMetadata?: Record<string, unknown>
+  maxSameToolRetries?: number
 }

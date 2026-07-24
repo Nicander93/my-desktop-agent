@@ -27,10 +27,10 @@ declare global {
         updateSettings: (workspaceId: string, settings: { allowedPaths?: string[]; restrictedMode?: boolean }) => Promise<{ success: boolean }>;
       };
       conversation: {
-        create: (workspaceId: string, title?: string, model?: string) => Promise<{ success: boolean; conversation?: any; error?: string }>;
+        create: (workspaceId: string, title?: string, model?: string, modelConfigId?: string) => Promise<{ success: boolean; conversation?: any; error?: string }>;
         getAll: (workspaceId: string, includeArchived?: boolean) => Promise<{ success: boolean; conversations?: any[]; error?: string }>;
         get: (id: string) => Promise<{ success: boolean; conversation?: any; error?: string }>;
-        update: (id: string, updates: { title?: string; model?: string; isArchived?: boolean }) => Promise<{ success: boolean; conversation?: any; error?: string }>;
+        update: (id: string, updates: { title?: string; model?: string; modelConfigId?: string; isArchived?: boolean }) => Promise<{ success: boolean; conversation?: any; error?: string }>;
         delete: (id: string) => Promise<{ success: boolean }>;
       };
       message: {
@@ -38,6 +38,13 @@ declare global {
         getByConversation: (conversationId: string, limit?: number, offset?: number) => Promise<{ success: boolean; messages?: any[] }>;
         update: (id: string, updates: { content?: string; toolCalls?: unknown[]; metadata?: Record<string, unknown> }) => Promise<{ success: boolean; message?: any }>;
         deleteByConversation: (conversationId: string) => Promise<{ success: boolean }>;
+      };
+      model: {
+        getAll: () => Promise<{ success: boolean; configs?: import('@desktop-agent/shared').ModelConfig[]; error?: string }>;
+        create: (input: import('@desktop-agent/shared').ModelConfigInput) => Promise<{ success: boolean; config?: import('@desktop-agent/shared').ModelConfig; error?: string }>;
+        update: (id: string, updates: Partial<import('@desktop-agent/shared').ModelConfigInput>) => Promise<{ success: boolean; config?: import('@desktop-agent/shared').ModelConfig; error?: string }>;
+        delete: (id: string) => Promise<{ success: boolean; error?: string }>;
+        testConnection: (input: import('@desktop-agent/shared').ModelConfigInput) => Promise<import('@desktop-agent/shared').ModelConnectionTestResult>;
       };
       attachment: {
         selectImages: (conversationId: string) => Promise<{ success: boolean; canceled?: boolean; attachments?: import('@desktop-agent/shared').ImageAttachment[]; error?: string }>;

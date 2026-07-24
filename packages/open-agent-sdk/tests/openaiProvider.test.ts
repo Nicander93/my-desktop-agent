@@ -126,6 +126,42 @@ describe('OpenAIProvider', () => {
     });
   });
 
+  it('omits authorization when a local compatible endpoint has no API key', async () => {
+    let headers: Headers | undefined;
+    vi.stubGlobal('fetch', async (_url: string, init?: RequestInit) => {
+      headers = new Headers(init?.headers);
+      return new Response(JSON.stringify({
+        id: 'chatcmpl-local', choices: [{ index: 0, message: { role: 'assistant', content: 'ok' }, finish_reason: 'stop' }],
+      }), { status: 200 });
+    });
+
+    const provider = new OpenAIProvider({ baseURL: 'http://127.0.0.1:11434/v1' });
+    await provider.createMessage({ model: 'qwen2.5-coder:7b', maxTokens: 128, system: '', messages: [{ role: 'user', content: 'hello' }] });
+
+    expect(headers?.has('Authorization')).toBe(false);
+  });
+
+  it('preserves Ollama reasoning responses for the next tool turn', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      id: 'chatcmpl-local',
+      choices: [{ index: 0, message: { role: 'assistant', content: 'ok', reasoning: 'inspect first' }, finish_reason: 'stop' }],
+    }), { status: 200 }));
+
+    const provider = new OpenAIProvider({ baseURL: 'http://127.0.0.1:11434/v1' });
+    const result = await provider.createMessage({ model: 'qwen3.5:9b', maxTokens: 32, system: '', messages: [{ role: 'user', content: 'hello' }] });
+
+    expect(result.content).toContainEqual({ type: 'thinking', thinking: 'inspect first' });
+  });
+
+  it('repairs a conservative trailing-comma tool argument response from a compatible model', async () => {
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
+      id: 'chatcmpl-local', choices: [{ index: 0, message: { role: 'assistant', content: null, tool_calls: [{ id: 'call-1', type: 'function', function: { name: 'Read', arguments: "{'file_path':'README.md',}" } }] }, finish_reason: 'tool_calls' }],
+    }), { status: 200 }));
+    const provider = new OpenAIProvider({ baseURL: 'http://127.0.0.1:11434/v1' });
+    const result = await provider.createMessage({ model: 'qwen', maxTokens: 32, system: '', messages: [{ role: 'user', content: 'read' }], tools: [{ name: 'Read', description: 'read', input_schema: { type: 'object' } }] });
+    expect(result.content[0]).toMatchObject({ type: 'tool_use', input: { file_path: 'README.md' } });
+  });
+
   it('executes only the first known call when a local model emits multiple fenced calls', async () => {
     vi.stubGlobal('fetch', async () => new Response(JSON.stringify({
       id: 'chatcmpl-local',

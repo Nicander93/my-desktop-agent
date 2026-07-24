@@ -10,8 +10,8 @@ import * as messageService from '../services/messageService';
 
 /** 注册 conversation:* 和 message:* IPC 通道 */
 export function registerConversationHandlers(): void {
-  ipcMain.handle('conversation:create', (_, workspaceId: string, title?: string, model?: string) => {
-    const conversation = conversationService.createConversation(workspaceId, title, model);
+  ipcMain.handle('conversation:create', (_, workspaceId: string, title?: string, model?: string, modelConfigId?: string) => {
+      const conversation = conversationService.createConversation(workspaceId, title, model, modelConfigId);
     return { success: true, conversation };
   });
 

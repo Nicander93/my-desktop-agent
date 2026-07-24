@@ -4,6 +4,7 @@ export interface Conversation {
   workspaceId: string;
   title: string;
   model: string | null;
+  modelConfigId: string | null;
   isArchived: boolean;
   createdAt: number;
   updatedAt: number;

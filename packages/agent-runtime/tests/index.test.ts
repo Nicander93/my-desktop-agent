@@ -66,6 +66,25 @@ describe('AgentRuntime', () => {
     expect(runtime.getSessionWorkspaceId('session-1')).toBe('ws-1');
   });
 
+  it('can omit host environment context for an isolated workspace', () => {
+    const runtime = new AgentRuntime({ includeEnvironmentContext: false });
+    runtime.createAgent('session-1');
+
+    expect(createAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ includeEnvironmentContext: false }),
+    );
+  });
+
+  it('binds a session to its model config and rebuilds it when the config changes', () => {
+    const runtime = new AgentRuntime({ model: 'fallback', baseURL: 'https://fallback.example/v1', apiKey: 'fallback-key' });
+    runtime.createAgent('session-1', { modelConfig: { id: 'local-1', model: 'qwen2.5-coder:7b', baseURL: 'http://127.0.0.1:11434/v1', apiKey: null } });
+    runtime.createAgent('session-1', { modelConfig: { id: 'local-2', model: 'qwen3:8b', baseURL: 'http://127.0.0.1:11434/v1', apiKey: null } });
+
+    expect(createAgent).toHaveBeenNthCalledWith(1, expect.objectContaining({ model: 'qwen2.5-coder:7b', baseURL: 'http://127.0.0.1:11434/v1', apiKey: '' }));
+    expect(createAgent).toHaveBeenNthCalledWith(2, expect.objectContaining({ model: 'qwen3:8b', baseURL: 'http://127.0.0.1:11434/v1', apiKey: '' }));
+    expect(mockAgent.close).toHaveBeenCalledTimes(1);
+  });
+
   it('should apply office profile query overrides', async () => {
     const runtime = new AgentRuntime({
       maxTurns: 50,

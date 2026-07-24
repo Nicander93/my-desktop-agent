@@ -11,6 +11,7 @@ import type { AgentSendMessageOptions } from '@desktop-agent/shared';
 import { parseSkillMentions } from '@desktop-agent/shared';
 import * as conversationService from '../services/conversationService';
 import * as workspaceService from '../services/workspaceService';
+import * as modelConfigService from '../services/modelConfigService';
 import { getEnabledMcpServersForWorkspace } from './mcpHandlers';
 import { getRuntimeSkillDefinitions } from './skillHandlers';
 import { BinaryManager, isRuntimeReady, getRuntimeInitError } from '../runtime/manager';
@@ -44,12 +45,8 @@ function getAgentErrorFromMessages(messages: any[]): string | undefined {
     return result.errors.join('；');
   }
 
-  if (!readEnv('CODEANY_API_KEY')) {
-    return '未读取到 CODEANY_API_KEY，请确认项目根目录 .env 存在并已重启 pnpm dev';
-  }
-
   if (result.subtype === 'error') {
-    return 'DeepSeek API 请求失败，请检查模型名称（如 deepseek-v4-flash）、API Key 和 Base URL（https://api.deepseek.com）';
+    return '模型请求失败，请检查所选模型配置的模型名称、Base URL 与 API Key';
   }
 
   return `Agent 请求失败（${result.subtype || 'unknown'}）`;
@@ -100,6 +97,13 @@ export function registerAgentHandlers(
     if (!context) return undefined;
 
     const binaryManager = getBinaryManager();
+    const conversation = conversationService.getConversation(conversationId);
+    const modelConfig = conversation?.modelConfigId
+      ? modelConfigService.getModelConfig(conversation.modelConfigId)
+      : modelConfigService.getDefaultModelConfig();
+    if (conversation?.modelConfigId && !modelConfig) {
+      throw new Error('对话绑定的模型配置不存在，请在设置中重新选择模型');
+    }
     const subprocessEnv = buildSubprocessEnv('general', binaryManager.getPaths());
     const mcpServers = mergeRuntimeEnvIntoMcpServers(
       getEnabledMcpServersForWorkspace(context.cwd),
@@ -112,6 +116,7 @@ export function registerAgentHandlers(
       mcpServers,
       skills: getRuntimeSkillDefinitions(),
       subprocessEnv,
+      modelConfig,
     };
   }
 

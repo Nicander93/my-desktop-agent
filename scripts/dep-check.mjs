@@ -10,6 +10,7 @@ const targets = [
   'apps/electron/src',
   'packages/shared/src',
   'packages/agent-runtime/src',
+  'packages/agent-eval/src',
   'packages/open-agent-sdk/src',
   'evals/coding',
 ];

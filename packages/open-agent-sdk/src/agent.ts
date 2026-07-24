@@ -331,6 +331,7 @@ export class Agent {
       tools,
       systemPrompt,
       appendSystemPrompt,
+      includeEnvironmentContext: overrides?.includeEnvironmentContext ?? opts.includeEnvironmentContext,
       promptCache: opts.promptCache,
       maxTurns: opts.maxTurns ?? 10,
       maxBudgetUsd: opts.maxBudgetUsd,
@@ -345,6 +346,9 @@ export class Agent {
       sessionId: this.sid,
       traceRecorder: this.traceRecorder ?? undefined,
       subprocessEnv: overrides?.subprocessEnv ?? opts.subprocessEnv,
+      toolResultTransformer: overrides?.toolResultTransformer ?? opts.toolResultTransformer,
+      traceMetadata: overrides?.traceMetadata ?? opts.traceMetadata,
+      maxSameToolRetries: overrides?.maxSameToolRetries ?? opts.maxSameToolRetries,
     })
     this.currentEngine = engine
 
@@ -360,6 +364,7 @@ export class Agent {
       model: opts.model || this.modelId,
       cwd,
       toolNames: tools.map((t) => t.name),
+      metadata: opts.traceMetadata,
     })
     if (runId) {
       const startSpan = this.traceRecorder!.getSpans().find(

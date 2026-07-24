@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-bugfix-basic",
+  "version": "1.0.0",
+  "title": "修复筛选逻辑",
+  "prompt": "修复当前项目中的筛选逻辑错误。不要删除或修改测试。完成后运行测试和构建，确保全部通过。",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "workflowId": "coding-change-verify",
+  "fixture": "fixture",
+  "verifier": {
+    "requiredFiles": ["src/filter.js"],
+    "unchangedPaths": ["test/filter.test.js", "package.json"],
+    "commands": [
+      { "command": "pnpm", "args": ["test"], "timeoutMs": 30000 },
+      { "command": "pnpm", "args": ["build"], "timeoutMs": 30000 }
+    ]
+  },
+  "limits": { "maxTurns": 12, "timeoutMs": 180000, "maxChangedFiles": 2 }
+}

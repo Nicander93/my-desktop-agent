@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "coding-mario-web",
+  "version": "1.0.0",
+  "title": "完成一个可构建的平台跳跃网页",
+  "prompt": "完成当前网页小游戏：实现左右移动、跳跃、地面或平台碰撞，以及胜利条件。不要添加依赖。完成后运行 pnpm build。",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "workflowId": "coding-build-run-verify",
+  "fixture": "fixture",
+  "verifier": {
+    "requiredFiles": ["index.html", "src/game.js"],
+    "unchangedPaths": ["package.json"],
+    "commands": [{ "command": "pnpm", "args": ["build"] }, { "command": "node", "args": ["verify.mjs"] }]
+  },
+  "limits": { "maxTurns": 20, "timeoutMs": 300000, "maxChangedFiles": 6 }
+}

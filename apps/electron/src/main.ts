@@ -45,6 +45,7 @@ import { registerAttachmentHandlers } from './ipc/attachmentHandlers';
 import { registerMcpHandlers } from './ipc/mcpHandlers';
 
 import { registerSkillHandlers } from './ipc/skillHandlers';
+import { registerModelHandlers } from './ipc/modelHandlers';
 
 import { registerAgentHandlers, parseThinkingConfig, readAgentEnv } from './ipc/agentHandlers';
 
@@ -239,6 +240,7 @@ app.whenReady().then(async () => {
   registerMcpHandlers();
 
   registerSkillHandlers();
+  registerModelHandlers();
 
   registerAgentHandlers(
 

@@ -5,10 +5,13 @@
  * 每个 session 可绑定独立 cwd 和 workspaceId，用于工作区隔离。
  */
 import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace, type ContentBlockParam } from '@codeany/open-agent-sdk';
-import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
+import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type ModelConfig, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
 import { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
 import { getRuntimeProfilePolicy, profilePolicyToAgentOptions, type RuntimeProfile } from './profiles.js';
+import type { RuntimeCapability } from './capabilities/types.js';
+import { resolveExecutionPolicy } from './policies/resolver.js';
+import { createToolResultTransformer } from './tool-results/transformer.js';
 
 /** 全局 Runtime 配置，来自环境变量 */
 export interface RuntimeOptions {
@@ -24,6 +27,8 @@ export interface RuntimeOptions {
     budgetTokens?: number;
   };
   promptCache?: AgentOptions['promptCache'];
+  /** Disable host repository metadata when the runtime operates in an isolated workspace. */
+  includeEnvironmentContext?: boolean;
 }
 
 /** 创建单个 Agent session 时的上下文 */
@@ -38,6 +43,8 @@ export interface AgentSessionOptions {
   skills?: RuntimeSkillDefinition[];
   /** 子进程环境变量（按 session/profile，不污染全局 process.env） */
   subprocessEnv?: Record<string, string>;
+  /** 当前会话绑定的模型连接；未提供时使用 Runtime 的环境变量回退配置。 */
+  modelConfig?: Pick<ModelConfig, 'id' | 'apiKey' | 'model' | 'baseURL'>;
 }
 
 /** 单轮对话的可选参数 */
@@ -46,6 +53,7 @@ export interface AgentQueryOptions {
   fileRefs?: string[];
   skillMentions?: string[];
   profile?: RuntimeProfile;
+  capabilities?: RuntimeCapability[];
   subprocessEnv?: Record<string, string>;
   allowedTools?: string[];
   disallowedTools?: string[];
@@ -66,6 +74,7 @@ export class AgentRuntime {
   private agents: Map<string, Agent> = new Map();
   /** sessionId → workspaceId，用于路径检查 */
   private sessionWorkspaceMap = new Map<string, string>();
+  private sessionModelConfigMap = new Map<string, string | undefined>();
   private options: RuntimeOptions;
   private pathAccessChecker?: PathAccessChecker;
 
@@ -97,7 +106,8 @@ export class AgentRuntime {
    */
   createAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Agent {
     const existing = this.agents.get(sessionId);
-    if (existing && this.agentHasTrace(existing)) {
+    const modelConfigId = sessionOptions?.modelConfig?.id;
+    if (existing && this.agentHasTrace(existing) && this.sessionModelConfigMap.get(sessionId) === modelConfigId) {
       return existing;
     }
     if (existing) {
@@ -108,16 +118,18 @@ export class AgentRuntime {
     if (sessionOptions?.workspaceId) {
       this.sessionWorkspaceMap.set(sessionId, sessionOptions.workspaceId);
     }
+    this.sessionModelConfigMap.set(sessionId, modelConfigId);
 
     const canUseTool = this.buildCanUseTool(sessionId, sessionOptions?.workspaceId);
 
     syncRuntimeSkills(sessionOptions?.skills ?? []);
 
     const agentOptions: AgentOptions = {
-      apiKey: this.options.apiKey,
-      model: this.options.model,
+      // Empty string intentionally suppresses legacy CODEANY_API_KEY fallback for local endpoints.
+      apiKey: sessionOptions?.modelConfig ? (sessionOptions.modelConfig.apiKey ?? '') : this.options.apiKey,
+      model: sessionOptions?.modelConfig?.model ?? this.options.model,
       apiType: this.options.apiType,
-      baseURL: this.options.baseURL,
+      baseURL: sessionOptions?.modelConfig?.baseURL ?? this.options.baseURL,
       cwd: sessionOptions?.cwd ?? this.options.cwd,
       maxTurns: this.options.maxTurns,
       permissionMode: this.options.permissionMode,
@@ -128,6 +140,7 @@ export class AgentRuntime {
       stream: true,
       trace: { enabled: true, persist: true },
       promptCache: this.options.promptCache ?? { enabled: true, ttl: '5m' },
+      includeEnvironmentContext: this.options.includeEnvironmentContext,
       ...(this.options.thinking ? { thinking: this.options.thinking } : {}),
       ...(sessionOptions?.mcpServers && Object.keys(sessionOptions.mcpServers).length > 0
         ? { mcpServers: sessionOptions.mcpServers as AgentOptions['mcpServers'] }
@@ -244,6 +257,7 @@ export class AgentRuntime {
       this.agents.delete(sessionId);
     }
     this.sessionWorkspaceMap.delete(sessionId);
+    this.sessionModelConfigMap.delete(sessionId);
   }
 
   async closeAll(): Promise<void> {
@@ -252,6 +266,7 @@ export class AgentRuntime {
     }
     this.agents.clear();
     this.sessionWorkspaceMap.clear();
+    this.sessionModelConfigMap.clear();
     clearRuntimeSkills();
   }
 
@@ -272,7 +287,8 @@ export class AgentRuntime {
 
   private async ensureAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Promise<Agent> {
     const existing = this.agents.get(sessionId);
-    if (existing && this.agentHasTrace(existing)) {
+    const modelConfigId = sessionOptions?.modelConfig?.id;
+    if (existing && this.agentHasTrace(existing) && this.sessionModelConfigMap.get(sessionId) === modelConfigId) {
       return existing;
     }
     if (existing) {
@@ -309,6 +325,7 @@ export class AgentRuntime {
     queryOptions?: AgentQueryOptions,
   ): Partial<AgentOptions> | undefined {
     const policy = getRuntimeProfilePolicy(queryOptions?.profile);
+    const resolvedPolicy = resolveExecutionPolicy({ requestedProfile: queryOptions?.profile, capabilities: queryOptions?.capabilities });
     const profileOptions = profilePolicyToAgentOptions(policy);
     const skipSkillHint = policy?.profile === 'office';
     const parts = [
@@ -319,13 +336,22 @@ export class AgentRuntime {
     ].filter(Boolean);
     const subprocessEnvOverride = queryOptions?.subprocessEnv;
     const toolOverrides = queryOptions?.allowedTools || queryOptions?.disallowedTools;
-    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride && !toolOverrides) return undefined;
+    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride && !toolOverrides && !queryOptions?.capabilities?.length) return undefined;
     return {
       ...profileOptions,
-      ...(queryOptions?.allowedTools ? { allowedTools: queryOptions.allowedTools } : {}),
+      ...(queryOptions?.allowedTools ? { allowedTools: queryOptions.allowedTools } : policy?.allowedTools ? {} : { allowedTools: resolvedPolicy.tools.allowed }),
       ...(queryOptions?.disallowedTools ? { disallowedTools: queryOptions.disallowedTools } : {}),
       ...(parts.length > 0 ? { appendSystemPrompt: parts.join('\n\n') } : {}),
       ...(subprocessEnvOverride ? { subprocessEnv: subprocessEnvOverride } : {}),
+      toolResultTransformer: createToolResultTransformer(resolvedPolicy.context.maxToolResultChars, resolvedPolicy.resolvedProfile),
+      traceMetadata: {
+        requestedProfile: resolvedPolicy.requestedProfile,
+        resolvedProfile: resolvedPolicy.resolvedProfile,
+        capabilities: resolvedPolicy.capabilities,
+        policySnapshot: resolvedPolicy,
+        resolutionReasons: resolvedPolicy.resolutionReasons,
+      },
+      maxSameToolRetries: resolvedPolicy.execution.maxSameToolRetries,
     };
   }
 
