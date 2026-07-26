@@ -14,6 +14,11 @@ pnpm --filter @desktop-agent/shared test
 
 Agent 端到端用 `packages/agent-eval` + `benchmarks/tasks`，和单元测试分开。见开发者手册第 8 节。
 
+```bash
+pnpm eval:coding:smoke -- --model <m> --base-url <url>
+pnpm eval:dwb -- --model <m> --base-url <url>
+```
+
 ## What to Test
 
 测 **逻辑**，不测 wiring。好的单测覆盖非显而易见的分支。

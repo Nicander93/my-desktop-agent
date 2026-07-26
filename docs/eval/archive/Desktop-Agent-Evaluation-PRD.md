@@ -1,3 +1,5 @@
+﻿> Historical。现行入口见 `docs/developer-guide.md` / `docs/eval/README.md` / `benchmarks/README.md`。
+
 # Desktop Agent Evaluation System PRD
 
 ## Design Philosophy

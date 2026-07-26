@@ -2,6 +2,8 @@
 
 本地桌面 AI 工作台（Electron + React + Agent SDK）。
 
+产品名 **Desktop Agent**（npm scope `@desktop-agent/*`）。Agent 引擎包名为 `@codeany/open-agent-sdk`，本地密钥环境变量前缀为 `CODEANY_*`。
+
 ## 开发
 
 ```bash
@@ -29,9 +31,10 @@ pnpm test
 
 ```bash
 pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json --model <model> --base-url <url>
+pnpm eval:dwb -- --model <model> --base-url <url>
 ```
 
-结果在 `eval-results/`。见 [开发者手册 §8](docs/developer-guide.md)、[benchmarks/README.md](benchmarks/README.md)。
+结果在 `eval-results/`。见 [开发者手册 §8](docs/developer-guide.md)、[benchmarks/README.md](benchmarks/README.md)、[DWB 设计](docs/eval/dwb/)。
 
 ## 文档
 
@@ -40,5 +43,6 @@ pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json --model <mode
 - [IPC 契约](contributing/ipc-contract.md)
 - [测试指南](contributing/testing.md)
 - [评测](docs/eval/)
+- [DWB（36 Golden Tasks）](docs/eval/dwb/)
 - [AI 贡献指引](AGENTS.md)
 - [V0 产品范围](docs/v0.md)

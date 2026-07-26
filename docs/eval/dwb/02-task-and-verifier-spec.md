@@ -1,40 +1,38 @@
 # DWB v1：Task、Fixture 与 Verifier 规范
 
+> 实现以仓库为准。36 题已落地；示例对齐 `benchmarks/tasks/DP-001`。
+
 ## 1. v1 兼容策略
 
-当前仓库的 `EvaluationTask` 使用 `schemaVersion: 1`。首批任务不立即升级 Schema，而是：
+`EvaluationTask` 使用 `schemaVersion: 1`：
 
-- 使用已有字段表达可执行部分；
-- 将扩展元数据放在任务目录中的 `metadata.yaml`；
-- 通过 `verifier.commands` 运行任务目录内的确定性测试；
-- 等 Wave 1 稳定后，再评估 `schemaVersion: 2`。
+- 可执行部分用已有字段；
+- 扩展元数据放 `metadata.yaml`（`packages/agent-eval` 旁路加载）；
+- Hard check 通过 `verifier.commands` 跑任务 `harness/verify.mjs`；
+- Structured Verifier / schema v2 仍属后续（见 `Evaluation-Roadmap-v2.md`）。
 
-这样避免在任务尚未验证前同时大改 Runner、Schema 和 Verifier。
-
-## 2. 单任务目录
+## 2. 单任务目录（当前约定）
 
 ```text
 benchmarks/tasks/<task-id>/
 ├── task.json
 ├── metadata.yaml
 ├── README.md
-├── fixture/
-│   ├── input/
-│   ├── workspace-files/
-│   └── tests/
-├── verifier/
-│   ├── verify.mjs
-│   └── assertions/
-└── expected/            # 仅在稳定快照确有价值时使用
+├── fixture/                 # Agent 可见，拷到 workspace
+├── harness/
+│   └── verify.mjs           # 判分脚本；resolveArgsFromTaskDir，不进 workspace
+├── reference/               # 参考实现，Verifier 应 PASS
+├── faults/                  # ≥2 故障实现，Verifier 应 FAIL
+└── expected/                # 可选 snapshot
 ```
 
-隐藏输入建议放在：
+隐藏输入：
 
 ```text
 benchmarks/hidden-fixtures/<task-id>/<variant-id>/
 ```
 
-Runner 在执行 Agent 后再将 hidden fixture 注入临时验证目录，Agent 工作期间不得读取该目录。
+Agent 运行期间不可读。Verifier 若发现该目录，注入环境变量 `DWB_HIDDEN_ROOT`（不拷进 workspace）。
 
 ## 3. task.json 示例
 
@@ -46,13 +44,7 @@ Runner 在执行 Agent 后再将 hidden fixture 注入临时验证目录，Agent
   "title": "Messy CSV Cleaner",
   "prompt": "客户给了你一份格式混乱的订单 CSV。请检查数据，清理后输出可复用结果和质量报告。不要修改原始输入。",
   "profile": "coding",
-  "capabilities": [
-    "filesystem-read",
-    "filesystem-write",
-    "shell",
-    "code",
-    "verification"
-  ],
+  "capabilities": ["read-project", "edit-code", "run-tests"],
   "workflowId": "inspect-implement-run-verify",
   "suite": "quality",
   "tags": ["dwb", "data-processing", "D2"],
@@ -68,14 +60,12 @@ Runner 在执行 Agent 后再将 hidden fixture 注入临时验证目录，Agent
       "output/invalid_rows.csv",
       "output/report.json"
     ],
-    "unchangedPaths": [
-      "input/orders.csv",
-      "tests/verify.mjs"
-    ],
+    "unchangedPaths": ["input/orders.csv"],
     "commands": [
       {
         "command": "node",
-        "args": ["tests/verify.mjs"],
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
         "expectedExitCode": 0,
         "stdoutIncludes": ["DWB_VERIFY_PASS"],
         "timeoutMs": 120000
@@ -85,7 +75,7 @@ Runner 在执行 Agent 后再将 hidden fixture 注入临时验证目录，Agent
 }
 ```
 
-`profile` 暂时映射现有 Runtime Profile。若仓库尚未支持 `utility`、`office` 等 profile，首批任务使用现有最接近配置，并依赖 capabilities 明确声明。
+`capabilities` 必须是现有 `RuntimeCapability` 枚举（如 `read-project`、`edit-code`、`inspect-spreadsheet`），不要写设计稿里的示意名。`profile` 用 `coding` / `office` / `file-organizing` 等已支持值。
 
 ## 4. metadata.yaml
 
@@ -177,6 +167,8 @@ diagnostics:
 - 是否在 workspace 之外写入；
 - 是否覆盖已有目标；
 - 文件管理任务是否存在不可逆操作。
+
+当前实现以 `unchangedPaths` 字节比对为主；目录级哈希 helper 可按任务在 harness 内完成。
 
 ## 8. 失败阶段
 

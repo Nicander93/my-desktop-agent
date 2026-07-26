@@ -11,6 +11,10 @@ L1 Runtime packages/agent-runtime       Desktop 策略（profile、session、路
 L2 Host    apps/electron               IPC、DB、OS、窗口
 L3 Bridge  preload + electron.d.ts      IPC转发层
 L4 UI      apps/renderer               React UI
+
+评测（不进 Electron）
+  packages/agent-eval                  隔离执行、Verifier、CLI
+  benchmarks/tasks                     任务与 fixture
 ```
 
 **设计目标**：每个需求能映射到明确的改动位置；跨层依赖由 `pnpm dep-check` 自动拦截。
@@ -106,6 +110,8 @@ renderer/src/
 | 聊天 UI / Trace 展示 | L4 | `apps/renderer/src/features/chat/` |
 | 新 shadcn 组件 | L4 | `apps/renderer/src/components/ui/` |
 | 设置页表单项 | L4 | `apps/renderer/src/features/settings/` |
+| 新评测任务 | 评测 | `benchmarks/tasks/<id>/`（见 `benchmarks/README.md`） |
+| 评测 runner / Verifier | 评测 | `packages/agent-eval` |
 
 ## Conventions
 

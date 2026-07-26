@@ -1,3 +1,5 @@
+﻿> Historical。现行入口见 `docs/developer-guide.md` / `docs/eval/README.md` / `benchmarks/README.md`。
+
 # 本地模型基线（2026-07-24）
 
 本次基线使用现有 Ollama 服务 `http://127.0.0.1:11434/v1`，未下载、替换或微调模型。评测通过与否只以 `agent-eval` 的 Verifier 结果为准，不采信 Agent 的完成声明。

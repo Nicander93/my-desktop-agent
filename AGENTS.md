@@ -8,6 +8,8 @@
 4. [contributing/testing.md](contributing/testing.md) — 测试原则
 5. [contributing/comments.md](contributing/comments.md) — 注释怎么写
 
+改评测任务看 [benchmarks/README.md](benchmarks/README.md)；评测设计看 [docs/eval/](docs/eval/)。
+
 提交前运行：
 
 ```bash

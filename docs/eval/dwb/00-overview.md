@@ -1,5 +1,7 @@
 # Desktop Workload Benchmark v1：总体设计
 
+> 36 个 Golden Tasks **已落地**。跑法见 [`benchmarks/README.md`](../../benchmarks/README.md)；本文件保留设计定位。
+
 ## 1. 定位
 
 Desktop Workload Benchmark（DWB）用于持续优化 `my-desktop-agent`，不是给语言模型做知识考试。

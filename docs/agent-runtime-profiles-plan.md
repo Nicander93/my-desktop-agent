@@ -1,4 +1,7 @@
-# Agent Runtime Profile 改造计划
+# Agent Runtime Profile 设计说明
+
+> 状态：Phase 1–3 **已落地**（Profile 骨架、Office Fast Path、工具结果压缩）。Phase 4 OfficeCliTool 仍 open。  
+> 下文保留设计意图；实现见 `packages/agent-runtime/src/profiles.ts`、`policies/`。
 
 ## 背景
 
@@ -227,9 +230,9 @@ officecli batch "MCP介绍.pptx" --input "mcp-deck-batch.json" --json
 
 ## 推荐优先级
 
-1. Profile 骨架 + Office Fast Path。
-2. 工具结果压缩。
-3. OfficeCliTool。
-4. 扩展到其他任务 Profile。
+1. ~~Profile 骨架 + Office Fast Path~~（已完成）
+2. ~~工具结果压缩~~（已完成）
+3. OfficeCliTool（未做）
+4. 扩展到其他任务 Profile / 设置页调试开关
 
-这条路径能先解决当前 PPT 任务慢的问题，同时保留桌面 Agent 的通用架构。
+这条路径已先解决常见 Office 任务发散与上下文膨胀问题；后续专注重用 wrapper 工具。

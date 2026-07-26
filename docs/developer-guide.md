@@ -252,7 +252,7 @@ pnpm --filter @desktop-agent/renderer test   # 单包
 
 ---
 
-## 8. 本地评测（agent-eval）
+﻿## 8. 本地评测（agent-eval）
 
 不启 Electron，直接跑 `benchmarks/tasks` 里的题，用 Verifier 判对错。实现在 `packages/agent-eval`。
 
@@ -260,7 +260,10 @@ pnpm --filter @desktop-agent/renderer test   # 单包
 pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json --model <model> --base-url <url>
 pnpm eval:coding:smoke -- --model <model> --base-url <url>
 pnpm eval:coding:regression -- --model <model> --base-url <url>
+pnpm eval:dwb -- --model <model> --base-url <url>
+pnpm eval -- --task-id DP-001 --model <model> --base-url <url>
 pnpm eval -- --suite smoke --model <model> --dry-run
+pnpm eval:report -- --group-by domain,difficulty
 ```
 
 - Key：`AGENT_EVAL_API_KEY`，没有就用 `.env` 里的 `CODEANY_API_KEY`
@@ -268,8 +271,9 @@ pnpm eval -- --suite smoke --model <model> --dry-run
 - 过程日志默认打 **stderr**（`[eval]` / `[agent]` / `[tool]` / `[verify]`）；最终 JSON 在 stdout。加 `--quiet` 可关掉过程输出
 - 分只看 Verifier；别改 fixture 测试刷分
 - 结果在 `eval-results/`（已 ignore）
+- DWB（36 题）：`tags` 含 `dwb`，设计见 `docs/eval/dwb/`
 
-细节：`benchmarks/README.md`，设计稿：`docs/eval/`。
+细节：`benchmarks/README.md`、`packages/agent-eval/README.md`、`docs/eval/`。
 
 ---
 
@@ -308,7 +312,7 @@ pnpm eval -- --suite smoke --model <model> --dry-run
 - [ ] session 与 workspace cwd 绑定是否正确
 - [ ] 新工具默认权限是否过宽（`bypassPermissions` vs `default` + path check）
 - [ ] Profile 变更是否误伤非目标任务（office 规则会不会误触发）
-- [ ] 流式事件：UI 是否只处理完整 `assistant`（已知限制见 [spec-streaming.md](./spec-streaming.md)）
+- [ ] 流式事件：`partial_message` / token 流是否正常；边角见 [spec-streaming.md](./spec-streaming.md)
 - [ ] tool / MCP / Skill 变更是否同步到 mention 与 system prompt
 
 ### 9.5 DB
@@ -376,7 +380,8 @@ pnpm eval -- --suite smoke --model <model> --dry-run
 
 - shared 与 open-agent-sdk 的 trace 类型仍有部分重复
 - renderer 部分依赖（如 `date-fns`、`jszip`）knip 侧已 ignore，待清理
-- 真 token 流式：Provider/协议层未闭环，UI 已监听 `agent:stream-message` 但仍偏「整段到达」——见 [spec-streaming.md](./spec-streaming.md)
+- 流式已接 SDK `stream` + `partial_message`；边角见 [spec-streaming.md](./spec-streaming.md)
+- 评测：Structured Verifier、超时 cancel 竞态等见 [Evaluation-Roadmap-v2.md](./eval/Evaluation-Roadmap-v2.md)
 
 ---
 
@@ -390,8 +395,11 @@ pnpm eval -- --suite smoke --model <model> --dry-run
 | [testing.md](../contributing/testing.md) | 测什么、放哪 |
 | [comments.md](../contributing/comments.md) | 注释怎么写 |
 | [v0.md](./v0.md) | 产品范围 |
-| [agent-runtime-profiles-plan.md](./agent-runtime-profiles-plan.md) | Profile 设计 |
-| [spec-streaming.md](./spec-streaming.md) | 流式实现讨论 |
-| [benchmarks/README.md](../benchmarks/README.md) | 评测任务与 fixture |
-| [docs/eval/](./eval/) | 评测入口；PRD / harness / 路线图 / 基线 |
+| [agent-runtime-profiles-plan.md](./agent-runtime-profiles-plan.md) | Profile 设计（Phase 1–3 已落地） |
+| [spec-streaming.md](./spec-streaming.md) | 流式：已实现 + 剩余边角 |
+| [benchmarks/README.md](../benchmarks/README.md) | 评测任务与 fixture（含 DWB） |
+| [packages/agent-eval/README.md](../packages/agent-eval/README.md) | 评测 CLI |
+| [docs/eval/](./eval/) | 评测入口 / 架构 / 路线图 |
+| [docs/eval/dwb/](./eval/dwb/) | DWB 36 Golden Tasks 设计 |
+| [docs/eval/archive/](./eval/archive/) | 评测历史稿 |
 | [open-agent-sdk README](../packages/open-agent-sdk/README.md) | SDK 独立用法 |

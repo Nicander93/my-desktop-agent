@@ -69,6 +69,23 @@
 | `mcp:*` | MCP 服务器 CRUD、catalog、连接测试 |
 | `skill:*` | Skill CRUD、catalog、导入 |
 
+### model
+
+| Channel | 说明 |
+|---------|------|
+| `model:get-all` | 列出模型配置 |
+| `model:create` / `update` / `delete` | 模型配置 CRUD |
+| `model:test-connection` | 测试连接 |
+
+### attachment
+
+| Channel | 说明 |
+|---------|------|
+| `attachment:select-images` | 选择图片附件 |
+| `attachment:create-from-bytes` | 从字节创建附件 |
+| `attachment:get-preview-url` | 预览 URL |
+| `attachment:delete-draft` | 删除草稿附件 |
+
 ## 约定
 
 - Channel 名格式：`domain:action`（kebab-case action）

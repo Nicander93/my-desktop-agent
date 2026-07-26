@@ -1,16 +1,35 @@
 # 评测文档
 
-| 文件 | 看什么 |
+## 现行（怎么跑）
+
+| 文档 | 看什么 |
 |------|--------|
-| [dwb/](./dwb/) | Desktop Workload Benchmark（36 Golden Tasks） |
-| [Evaluation-Harness-Architecture.md](./Evaluation-Harness-Architecture.md) | 现在代码落在哪 |
-| [Desktop-Agent-Evaluation-PRD.md](./Desktop-Agent-Evaluation-PRD.md) | 早期目标和阶段 |
-| [Evaluation-Roadmap-v2.md](./Evaluation-Roadmap-v2.md) | 后面要做的 M2–M5 |
-| [local-model-baseline.md](./local-model-baseline.md) | 本地模型跑过的记录 |
-| [Code-Review-v0-v1.md](./Code-Review-v0-v1.md) | 旧 harness review，当历史看 |
+| [benchmarks/README.md](../../benchmarks/README.md) | 任务目录、coding / DWB 跑法 |
+| [packages/agent-eval/README.md](../../packages/agent-eval/README.md) | 评测 CLI 一页说明 |
+| [Evaluation-Harness-Architecture.md](./Evaluation-Harness-Architecture.md) | runner 落在哪、产物结构 |
+| [Evaluation-Roadmap-v2.md](./Evaluation-Roadmap-v2.md) | 已完成与剩余债务 |
 
-怎么跑任务：`benchmarks/README.md`，或 `docs/developer-guide.md` §8。
+## 设计（DWB）
 
-DWB：`pnpm eval:dwb -- --model <m> --base-url <url>`；单任务 `pnpm eval -- --task benchmarks/tasks/DP-001/task.json ...`；报告 `pnpm eval:report -- --group-by domain,difficulty`。
+| 文档 | 看什么 |
+|------|--------|
+| [dwb/](./dwb/) | Desktop Workload Benchmark：36 Golden Tasks 设计卡与目录 |
 
-根目录不要再加 `evals/`；runner 在 `packages/agent-eval`，任务在 `benchmarks/tasks`。
+## 归档（Historical）
+
+| 文档 | 看什么 |
+|------|--------|
+| [archive/](./archive/) | 早期 PRD、旧 harness review、基线笔记、coding 接入计划 |
+
+## 常用命令
+
+```bash
+pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json --model <m> --base-url <url>
+pnpm eval:dwb -- --model <m> --base-url <url>
+pnpm eval -- --task-id DP-001 --model <m> --base-url <url>
+pnpm eval:report -- --group-by domain,difficulty
+```
+
+开发者手册：[docs/developer-guide.md](../developer-guide.md) §8。
+
+根目录不要再加 `evals/`；runner 在 `packages/agent-eval`，任务在 `benchmarks/tasks`，结果在 `eval-results/`。

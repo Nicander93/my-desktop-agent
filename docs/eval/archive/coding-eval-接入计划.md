@@ -1,3 +1,5 @@
+﻿> Historical。现行入口见 `docs/developer-guide.md` / `docs/eval/README.md` / `benchmarks/README.md`。
+
 # Desktop Agent 编程任务评测能力接入计划
 
 > 2026-07 起这是历史稿。实现在 `packages/agent-eval` + `benchmarks/tasks`，结果进 `eval-results/`。文里的 `evals/coding/` 作废，看 `docs/eval/` 和 `benchmarks/README.md`。

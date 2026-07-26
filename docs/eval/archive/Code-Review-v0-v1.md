@@ -1,6 +1,7 @@
 # v0/v1 Evaluation Harness Code Review
 
-> Historical review. The v0/v1 runner was migrated to `packages/agent-eval` and its task corpus to `benchmarks/tasks` on 2026-07-24. Links below point to their replacement components where applicable.
+> Historical。现行入口见 `docs/developer-guide.md` / `docs/eval/README.md` / `benchmarks/README.md`。  
+> 旧 runner 已迁到 `packages/agent-eval`，任务在 `benchmarks/tasks`（2026-07）。部分 finding（如 maxTurns）已修复；超时 cancel 竞态等仍见路线图。
 
 审查日期：2026-07-11
 审查范围：当前未提交的评估 harness、任务集、根级 workspace / 质量门禁配置改动。
