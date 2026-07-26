@@ -12,6 +12,8 @@ pnpm --filter @desktop-agent/shared test
 
 提交前运行 `pnpm check`（typecheck + lint + dep-check + knip + test）。
 
+Agent 端到端用 `packages/agent-eval` + `benchmarks/tasks`，和单元测试分开。见开发者手册第 8 节。
+
 ## What to Test
 
 测 **逻辑**，不测 wiring。好的单测覆盖非显而易见的分支。

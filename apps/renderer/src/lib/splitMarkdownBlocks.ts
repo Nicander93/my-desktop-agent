@@ -1,3 +1,6 @@
+/**
+ * 流式 Markdown 分块：fence 未闭合时整块标记 incomplete
+ */
 export interface MarkdownBlock {
   id: string;
   content: string;
@@ -13,6 +16,7 @@ function isClosingFence(line: string, marker: string): boolean {
   return line.startsWith(marker) && line.slice(marker.length).trim() === '';
 }
 
+/** 按空行与代码围栏切分块 */
 export function splitMarkdownBlocks(content: string, isStreaming = false): MarkdownBlock[] {
   if (!content && !isStreaming) return [];
 

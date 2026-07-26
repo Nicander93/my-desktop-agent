@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+/** 扫描 Vite 端口后启动 Electron dev，注入 ELECTRON_RENDERER_URL */
 import { spawn } from 'node:child_process';
 
 const DEFAULT_PORT = 3000;
 const MAX_PORT = 3010;
 
+/** 探测 /@vite/client 判断是否为 Vite 服务 */
 async function isViteServer(url: string): Promise<boolean> {
   try {
     const response = await fetch(`${url}/@vite/client`);
@@ -13,6 +15,7 @@ async function isViteServer(url: string): Promise<boolean> {
   }
 }
 
+/** 在端口范围内轮询直到发现 renderer */
 async function discoverRendererUrl(timeoutMs = 60_000): Promise<string> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
@@ -27,6 +30,7 @@ async function discoverRendererUrl(timeoutMs = 60_000): Promise<string> {
   throw new Error(`等待渲染进程超时（扫描 127.0.0.1:${DEFAULT_PORT}-${MAX_PORT}）`);
 }
 
+/** 解析 URL 后 spawn electron dev */
 async function main() {
   const presetUrl = process.env.ELECTRON_RENDERER_URL;
   const rendererUrl = presetUrl && (await isViteServer(presetUrl))

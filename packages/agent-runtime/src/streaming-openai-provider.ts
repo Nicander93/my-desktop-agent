@@ -1,5 +1,8 @@
-import type {
-  CreateMessageParams,
+/**
+ * OpenAI chat/completions 流式 Provider；超长按 maxChars 头尾截断，trace 保留原文。
+ * onTextDelta 供 renderer 逐字显示；tool_calls 分片拼完再 JSON.parse。
+ */
+import type {  CreateMessageParams,
   CreateMessageResponse,
   LLMProvider,
   NormalizedContentBlock,
@@ -43,6 +46,7 @@ interface OpenAIStreamChunk {
   };
 }
 
+/** 实现 LLMProvider；stream: true，finish_reason 映射到 SDK stopReason */
 export class StreamingOpenAIProvider implements LLMProvider {
   readonly apiType = 'openai-completions' as const;
   private apiKey: string;
@@ -59,6 +63,7 @@ export class StreamingOpenAIProvider implements LLMProvider {
     this.onTextDelta = handler;
   }
 
+  /** 流式读完再返回完整 content 块；非 2xx 抛带 status 的 Error */
   async createMessage(params: CreateMessageParams): Promise<CreateMessageResponse> {
     const messages = this.convertMessages(params.system, params.messages);
     const tools = params.tools ? this.convertTools(params.tools) : undefined;

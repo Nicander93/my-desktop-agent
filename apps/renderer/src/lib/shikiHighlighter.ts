@@ -1,3 +1,4 @@
+/** Shiki 单例高亮，供 CodeBlock 异步渲染 */
 import { createHighlighter, type Highlighter } from 'shiki';
 
 const LANGS = [
@@ -17,6 +18,7 @@ function getHighlighter(): Promise<Highlighter> {
   return highlighterPromise!;
 }
 
+/** 返回高亮后的 HTML 字符串 */
 export async function highlightCode(code: string, language?: string): Promise<string> {
   const highlighter = await getHighlighter();
   const lang = language && highlighter.getLoadedLanguages().includes(language)

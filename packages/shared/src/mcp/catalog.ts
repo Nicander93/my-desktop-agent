@@ -1,3 +1,7 @@
+/**
+ * 内置 MCP 目录模板；安装时复制 command/args/env，密钥走 {KEY} 占位。
+ * 改条目要同步设置页展示与 agent-runtime 预装逻辑。
+ */
 import type { McpCatalogEntry } from '../types/mcp.js';
 
 export const MCP_CATALOG: McpCatalogEntry[] = [
@@ -96,6 +100,7 @@ export const MCP_CATALOG: McpCatalogEntry[] = [
   },
 ];
 
+/** 按 catalog id 查模板，未命中返回 undefined */
 export function getCatalogEntry(id: string): McpCatalogEntry | undefined {
   return MCP_CATALOG.find((entry) => entry.id === id);
 }

@@ -1,3 +1,4 @@
+/** 工具输入中的路径字段提取 */
 import { describe, it, expect } from 'vitest';
 import { extractPathsFromToolInput } from '../src/pathUtils';
 

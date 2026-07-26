@@ -1,9 +1,11 @@
+/** 从纯文本切出可点击的文件路径片段 */
 export type TextSegment = { type: 'text'; value: string } | { type: 'path'; value: string };
 
 /** 匹配 Windows / Unix 带扩展名的文件路径 */
 export const FILE_PATH_REGEX =
   /(?:[A-Za-z]:[/\\]|\/)(?:[^\s<>"'|:*?]+[/\\])*[^\s<>"'|:*?]+\.[a-zA-Z0-9]+/g;
 
+/** 按路径正则拆分文本 */
 export function splitTextWithFilePaths(text: string): TextSegment[] {
   if (!text) return [];
 

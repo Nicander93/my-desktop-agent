@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+/** Windows 开发前释放 3000–3002 端口（杀占用 LISTENING 的进程） */
 import { execSync } from 'node:child_process';
 
+/** 按端口查找并 taskkill 监听进程 */
 function freePort(port: number): void {
   if (process.platform !== 'win32') return;
 

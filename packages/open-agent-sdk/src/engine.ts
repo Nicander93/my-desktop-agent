@@ -1,15 +1,6 @@
 /**
- * QueryEngine - Core agentic loop
- *
- * Manages the full conversation lifecycle:
- * 1. Take user prompt
- * 2. Build system prompt with context (git status, project context, tools)
- * 3. Call LLM API with tools (via provider abstraction)
- * 4. Stream response
- * 5. Execute tool calls (concurrent for read-only, serial for mutations)
- * 6. Send results back, repeat until done
- * 7. Auto-compact when context exceeds threshold
- * 8. Retry with exponential backoff on transient errors
+ * Agent 主循环：拼上下文 → 调 Provider → 跑工具 → compact / retry。
+ * 只读工具可并发，写工具串行。Desktop 策略不在这（见 agent-runtime）。
  */
 
 import type {
@@ -54,7 +45,7 @@ import { createHash } from 'crypto'
 // Tool format conversion
 // ============================================================================
 
-/** Convert a ToolDefinition to the normalized provider tool format. */
+/** 将内部 ToolDefinition 转成 Provider 统一工具格式 */
 function toProviderTool(tool: ToolDefinition): NormalizedTool {
   return {
     name: tool.name,
@@ -78,6 +69,7 @@ interface ToolUseBlock {
 // System Prompt Builder
 // ============================================================================
 
+/** 组装相对稳定的 system prompt（工具说明、项目上下文等） */
 async function buildSystemPrompt(config: QueryEngineConfig): Promise<string> {
   if (config.systemPrompt) {
     return config.systemPrompt
@@ -118,6 +110,7 @@ async function buildSystemPrompt(config: QueryEngineConfig): Promise<string> {
   return parts.join('\n')
 }
 
+/** 每轮可变上下文：日期、git/环境、cwd、appendSystemPrompt */
 async function buildRuntimeContext(config: QueryEngineConfig): Promise<string> {
   const parts: string[] = []
 
@@ -176,7 +169,12 @@ function resolvePromptCache(
 // QueryEngine
 // ============================================================================
 
+/**
+ * 持有消息历史，驱动 Provider 和工具。
+ * messages 是 Anthropic 风格；对外再映射成 SDKMessage。
+ */
 export class QueryEngine {
+  /** compact 会直接改这个数组 */
   public messages: NormalizedMessageParam[] = []
   private config: QueryEngineConfig
   private provider: LLMProvider
@@ -188,6 +186,7 @@ export class QueryEngine {
   private apiTimeMs = 0
   private hookRegistry?: HookRegistry
   private traceRecorder?: TraceRecorder
+  /** 同名工具连续失败次数 */
   private failedToolCalls = new Map<string, number>()
 
   constructor(config: QueryEngineConfig) {
@@ -199,10 +198,7 @@ export class QueryEngine {
     this.traceRecorder = config.traceRecorder
   }
 
-  /**
-   * Execute hooks for a lifecycle event.
-   * Returns hook outputs; never throws.
-   */
+  /** hook 失败吞掉，不打断主循环 */
   private async executeHooks(
     event: import('./hooks.js').HookEvent,
     extra?: Partial<HookInput>,
@@ -220,10 +216,7 @@ export class QueryEngine {
     }
   }
 
-  /**
-   * Submit a user message and run the agentic loop.
-   * Yields SDKMessage events as the agent works.
-   */
+  /** 用户消息进主循环，流式 yield SDKMessage */
   async *submitMessage(
     prompt: string | any[],
   ): AsyncGenerator<SDKMessage> {
@@ -620,10 +613,8 @@ export class QueryEngine {
   }
 
   /**
-   * Execute tool calls with concurrency control.
-   *
-   * Read-only tools run concurrently (up to 10 at a time).
-   * Mutation tools run sequentially.
+   * 跑本轮工具。
+   * 只读最多并发 AGENT_SDK_MAX_TOOL_CONCURRENCY（默认 10）；写/Bash 串行。
    */
   private async executeTools(
     toolUseBlocks: ToolUseBlock[],
@@ -677,9 +668,7 @@ export class QueryEngine {
     return results
   }
 
-  /**
-   * Execute a single tool with permission checking.
-   */
+  /** 权限 → hook → execute；未知工具或拒绝时 is_error */
   private async executeSingleTool(
     block: ToolUseBlock,
     tool: ToolDefinition | undefined,
@@ -848,23 +837,17 @@ export class QueryEngine {
     }
   }
 
-  /**
-   * Get current messages for session persistence.
-   */
+  /** 当前消息副本，供 session 持久化 */
   getMessages(): NormalizedMessageParam[] {
     return [...this.messages]
   }
 
-  /**
-   * Get total usage across all turns.
-   */
+  /** 累计 token 用量快照 */
   getUsage(): TokenUsage {
     return { ...this.totalUsage }
   }
 
-  /**
-   * Get total cost.
-   */
+  /** 累计估算成本 */
   getCost(): number {
     return this.totalCost
   }

@@ -1,9 +1,11 @@
+/** 消息内可点击路径，打开右侧编辑器 */
 import { useEditorStore } from '@/stores/editorStore';
 
 interface FilePathLinkProps {
   path: string;
 }
 
+/** 文件路径链接按钮 */
 export function FilePathLink({ path }: FilePathLinkProps) {
   const openFile = useEditorStore((s) => s.openFile);
 

@@ -1,3 +1,6 @@
+/**
+ * Agent 流式消息解析：thinking/正文/工具调用的合并与去重
+ */
 import type { ToolCall } from '@/stores/chatStore';
 
 export interface StreamToolUpdate {

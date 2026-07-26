@@ -1,3 +1,4 @@
+/** tool_call / tool_result span 的输入输出展示 */
 import type { TraceSpan } from '@desktop-agent/shared';
 import {
   formatToolInputValue,
@@ -12,6 +13,7 @@ interface ToolSpanDetailProps {
   span: TraceSpan;
 }
 
+/** 工具 span 详情面板 */
 export function ToolSpanDetail({ span }: ToolSpanDetailProps) {
   const payload = span.payload;
   const summary = summarizeToolPayload(payload, span.type);

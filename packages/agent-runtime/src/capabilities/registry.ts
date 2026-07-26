@@ -1,3 +1,7 @@
+/**
+ * capability → 工具白名单与 tool result 上限；resolver 按 task/profile 合并。
+ * 改条目要同步 agent-eval task capabilities 与 profiles。
+ */
 import type { CapabilityFragment, RuntimeCapability } from './types.js';
 
 export const CAPABILITY_REGISTRY: Record<RuntimeCapability, CapabilityFragment> = {

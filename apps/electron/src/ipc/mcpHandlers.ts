@@ -1,3 +1,8 @@
+/**
+ * MCP 服务器 IPC Handler
+ *
+ * 安装/导入时会拉起子进程验证连通性，失败则回滚记录；Win32 需 runtime 就绪
+ */
 import { ipcMain } from 'electron';
 import {
   parseMcpImportJson,
@@ -12,6 +17,7 @@ import type { McpServerRecord } from '@desktop-agent/shared';
 import { createBundledCommandResolver, buildSubprocessEnv } from '../runtime/policy';
 import { getBinaryManagerPaths, isRuntimeReady, getRuntimeInitError } from '../runtime/manager';
 
+/** Win32 下 runtime 未就绪时返回提示文案 */
 function getRuntimeBlockedMessage(): string | undefined {
   if (process.platform === 'win32' && !isRuntimeReady()) {
     return getRuntimeInitError() ?? '运行时未就绪，请先运行 pnpm setup:binaries';
@@ -19,6 +25,7 @@ function getRuntimeBlockedMessage(): string | undefined {
   return undefined;
 }
 
+/** 合并 bundled 命令解析与子进程 env，供 SDK 启动 MCP */
 function buildSdkConfig(server: McpServerRecord, workspacePath?: string): Record<string, unknown> | undefined {
   const config = buildSessionMcpServers([server], workspacePath, {
     commandResolver: createBundledCommandResolver(getBinaryManagerPaths()),
@@ -44,6 +51,7 @@ function resolveWorkspacePath(conversationId?: string): string | undefined {
   return workspace?.path;
 }
 
+/** 安装后拉起 MCP 子进程拉工具列表，失败不写库 */
 async function prepareInstalledMcpServer(
   server: McpServerRecord,
   workspacePath?: string,
@@ -57,6 +65,7 @@ async function prepareInstalledMcpServer(
   });
 }
 
+/** 注册 mcp:* IPC 通道 */
 export function registerMcpHandlers(): void {
   ipcMain.handle('mcp:get-all', () => {
     try {
@@ -192,6 +201,7 @@ export function registerMcpHandlers(): void {
   });
 }
 
+/** 按工作区路径组装已启用 MCP 的 SDK 配置，供 agentHandlers 发消息时使用 */
 export function getEnabledMcpServersForWorkspace(workspacePath?: string): Record<string, unknown> {
   return buildSessionMcpServers(mcpService.getEnabledMcpServers(), workspacePath, {
     commandResolver: createBundledCommandResolver(getBinaryManagerPaths()),

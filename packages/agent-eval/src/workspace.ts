@@ -1,6 +1,11 @@
+/**
+ * 评测 workspace：fixture 复制到 baseline 与 workspace，跑完写简易 diff。
+ * 单文件超 1MB 在 diff 里标为 <binary>。
+ */
 import { cp, readdir, readFile, mkdir, stat, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
+/** baseline 与 workspace 各一份 fixture 快照，供 verifier 对比 */
 export async function prepareWorkspace(fixturePath: string, baselinePath: string, workspacePath: string): Promise<void> {
   await mkdir(baselinePath, { recursive: true });
   await mkdir(workspacePath, { recursive: true });
@@ -8,6 +13,7 @@ export async function prepareWorkspace(fixturePath: string, baselinePath: string
   await cp(fixturePath, workspacePath, { recursive: true, force: true });
 }
 
+/** 简易 unified diff 文本，返回变更文件数 */
 export async function writeDiff(before: string, after: string, destination: string): Promise<number> {
   const beforeFiles = await listFiles(before);
   const afterFiles = await listFiles(after);

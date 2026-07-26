@@ -1,3 +1,4 @@
+/** @ 触发的文件选择浮层 */
 import { Folder, File } from 'lucide-react';
 import type { FileSearchResult } from '@desktop-agent/shared';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ interface FileMentionPickerProps {
   onSelect: (relativePath: string) => void;
 }
 
+/** 工作区文件搜索结果列表 */
 export function FileMentionPicker({ results, selectedIndex, loading, onSelect }: FileMentionPickerProps) {
   if (loading && results.length === 0) {
     return (

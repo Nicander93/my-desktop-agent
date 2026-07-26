@@ -1,8 +1,10 @@
+/** 路由表：聊天首页、设置及占位页 */
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ChatPage } from '@/pages/ChatPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 
+/** 应用路由实例 */
 export const router = createBrowserRouter([
   {
     path: '/',

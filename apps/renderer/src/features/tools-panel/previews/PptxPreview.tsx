@@ -1,3 +1,4 @@
+/** pptx-preview 渲染幻灯片 */
 import { useEffect, useRef, useState } from 'react';
 import { init } from 'pptx-preview';
 import { base64ToArrayBuffer } from '@/lib/binaryUtils';
@@ -6,6 +7,7 @@ interface PptxPreviewProps {
   content: string;
 }
 
+/** .pptx 内联预览 */
 export function PptxPreview({ content }: PptxPreviewProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);

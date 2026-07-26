@@ -1,3 +1,4 @@
+/** Skill 提及、markdown 解析与 catalog 内置内容 */
 import { describe, it, expect } from 'vitest';
 import {
   parseSkillMentions,

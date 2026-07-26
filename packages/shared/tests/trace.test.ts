@@ -1,3 +1,4 @@
+/** trace span 分组、去重与摘要 */
 import { describe, expect, it } from 'vitest';
 import {
   appendTraceSpan,

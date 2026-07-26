@@ -1,10 +1,6 @@
 /**
- * OpenAI Chat Completions API Provider
- *
- * Converts between the SDK's internal Anthropic-like message format
- * and OpenAI's Chat Completions API format.
- *
- * Uses native fetch (no openai SDK dependency required).
+ * OpenAI Chat Completions（native fetch，无 openai 包）。
+ * 兼容 reasoning_content / reasoning，以及把 tool_call 写进文本的本地服务。
  */
 
 import type {
@@ -25,9 +21,9 @@ import type {
 interface OpenAIChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool'
   content?: string | OpenAIContentPart[] | null
-  /** DeepSeek reasoner and compatible APIs */
+  /** DeepSeek reasoner 等：思考内容，需在多轮里回传 */
   reasoning_content?: string | null
-  /** Ollama-compatible reasoning field. */
+  /** Ollama 兼容思考字段 */
   reasoning?: string | null
   tool_calls?: OpenAIToolCall[]
   tool_call_id?: string
@@ -117,6 +113,9 @@ interface OpenAIStreamChunk {
 // Provider
 // --------------------------------------------------------------------------
 
+/**
+ * apiKey 允许空（本地无鉴权）；baseURL 去尾斜杠。
+ */
 export class OpenAIProvider implements LLMProvider {
   readonly apiType = 'openai-completions' as const
   private apiKey: string
@@ -127,6 +126,7 @@ export class OpenAIProvider implements LLMProvider {
     this.baseURL = (opts.baseURL || 'https://api.openai.com/v1').replace(/\/$/, '')
   }
 
+  /** 非流式调用 Chat Completions，返回规范化后的 CreateMessageResponse */
   async createMessage(params: CreateMessageParams): Promise<CreateMessageResponse> {
     // Convert to OpenAI format
     const messages = this.convertMessages(params.system, params.messages)
@@ -360,6 +360,7 @@ export class OpenAIProvider implements LLMProvider {
   // Message Conversion: Internal → OpenAI
   // --------------------------------------------------------------------------
 
+  /** system + 历史消息 → OpenAI messages 数组 */
   private convertMessages(
     system: string,
     messages: NormalizedMessageParam[],
@@ -525,6 +526,7 @@ export class OpenAIProvider implements LLMProvider {
   // Response Conversion: OpenAI → Internal
   // --------------------------------------------------------------------------
 
+  /** 把响应转回 SDK NormalizedResponseBlock（含 reasoning / 文本 tool_call 兼容） */
   private convertResponse(data: OpenAIChatResponse, tools?: OpenAITool[]): CreateMessageResponse {
     const choice = data.choices[0]
     if (!choice) {
@@ -621,9 +623,8 @@ export class OpenAIProvider implements LLMProvider {
 }
 
 /**
- * Some OpenAI-compatible local servers return a requested tool call as a JSON
- * text block instead of `message.tool_calls`. Accept only a complete JSON
- * object whose name matches one of the tools sent with this request.
+ * 部分本地兼容服务把 tool_call 写成文本 JSON，而不是 message.tool_calls。
+ * 仅当整段是完整 JSON 且 name 落在本次请求的 tools 里才采纳，避免误解析。
  */
 function parseTextToolCall(content: string, tools?: OpenAITool[]): OpenAIToolCall | undefined {
   if (!tools?.length) return undefined
@@ -646,7 +647,7 @@ function parseTextToolCall(content: string, tools?: OpenAITool[]): OpenAIToolCal
 
 }
 
-/** Conservative repair for common OpenAI-compatible tool argument formatting faults. */
+/** 宽松解析 tool arguments：支持裸 JSON 或 markdown code fence 包一层 */
 function parseToolArguments(argumentsText: string): unknown {
   const candidates = [
     argumentsText,

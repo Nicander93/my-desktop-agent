@@ -1,3 +1,4 @@
+/** LLM 请求 span 详情：消息列表与 token 摘要 */
 import { useState } from 'react';
 import type { LlmRequestPayload } from '@desktop-agent/shared';
 import {
@@ -55,6 +56,7 @@ interface LlmRequestDetailProps {
   payload: LlmRequestPayload;
 }
 
+/** llm_request payload 展示 */
 export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
   const summary = summarizeLlmRequest(payload);
   const toolNames = extractToolNames(payload.tools);

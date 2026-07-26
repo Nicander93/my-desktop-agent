@@ -1,7 +1,5 @@
 /**
- * 聊天消息状态管理
- *
- * 内存中维护当前对话的消息列表，通过 IPC 同步到 SQLite
+ * 当前对话消息的内存态，经 IPC 落 SQLite。
  */
 import { create } from 'zustand';
 import type { AgentTrace, ImageAttachment, MessagePart } from '@desktop-agent/shared';

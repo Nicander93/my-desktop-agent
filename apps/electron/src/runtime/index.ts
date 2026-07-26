@@ -1,3 +1,4 @@
+/** runtime 子模块统一导出，install / manager / policy 见各源文件 */
 export {
   ensureBinariesInstalled,
   getBinariesRoot,

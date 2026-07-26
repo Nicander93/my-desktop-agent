@@ -1,3 +1,4 @@
+/** Monaco 文本编辑器封装，语言按路径推断 */
 import Editor from '@monaco-editor/react';
 import { getLanguageFromPath } from '@/lib/fileTypeUtils';
 
@@ -7,6 +8,7 @@ interface MonacoCodeEditorProps {
   onChange: (value: string) => void;
 }
 
+/** Monaco 代码编辑区 */
 export function MonacoCodeEditor({ path, value, onChange }: MonacoCodeEditorProps) {
   const language = getLanguageFromPath(path);
 

@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+/**
+ * agent-eval 入口。
+ * Key：AGENT_EVAL_API_KEY → CODEANY_API_KEY；模型：--model 或 CODEANY_MODEL。
+ * 见 benchmarks/README.md。
+ */
 import { resolve } from 'node:path';
 import { loadTaskCollection } from './collection.js';
 import { loadTask } from './task.js';

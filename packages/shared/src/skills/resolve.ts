@@ -1,5 +1,10 @@
+/**
+ * Skill markdown 解析与 prompt 拼装；frontmatter 只支持简单 key: value。
+ * 完整 Skill 注册在 agent-runtime/skills.ts。
+ */
 import type { ParsedSkillMarkdown } from '../types/skill.js';
 
+/** 无 --- 包裹时整段当 body，frontmatter 为空 */
 export function parseSkillMarkdown(raw: string): ParsedSkillMarkdown {
   const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
   if (!match) {
@@ -26,16 +31,19 @@ export function parseSkillMarkdown(raw: string): ParsedSkillMarkdown {
   return { frontmatter, body: match[2].trim() };
 }
 
+/** 只取 markdown body，忽略 frontmatter */
 export function getSkillPromptBody(contentCache: string): string {
   return parseSkillMarkdown(contentCache).body;
 }
 
+/** 拼进 prompt 的 Skill 块：name + 正文 */
 export interface SkillPromptSection {
   name: string;
   displayName?: string;
   body: string;
 }
 
+/** 短提示：引导走 Skill 工具按需加载，不内联全文 */
 export function buildSkillMentionHint(names: string[]): string {
   if (names.length === 0) return '';
 
@@ -45,6 +53,7 @@ export function buildSkillMentionHint(names: string[]): string {
   ].join('\n');
 }
 
+/** 已启用 Skill 的全文注入 system prompt */
 export function buildEnabledSkillsPrompt(sections: SkillPromptSection[]): string {
   if (sections.length === 0) return '';
 
@@ -60,6 +69,7 @@ export function buildEnabledSkillsPrompt(sections: SkillPromptSection[]): string
   ].join('\n');
 }
 
+/** / 提及时内联对应 Skill 全文 */
 export function buildSkillMentionPrompt(sections: SkillPromptSection[]): string {
   if (sections.length === 0) return '';
 

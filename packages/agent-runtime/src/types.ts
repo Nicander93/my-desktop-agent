@@ -1,3 +1,7 @@
+/**
+ * agent-runtime 对外类型；实际 Agent 实现在 runtime.ts 与 open-agent-sdk。
+ * 部分字段为历史 IPC 形状，新逻辑优先用 shared 类型。
+ */
 import { Session, Message, ToolCall, ToolResult } from '@desktop-agent/shared';
 
 export interface AgentConfig {

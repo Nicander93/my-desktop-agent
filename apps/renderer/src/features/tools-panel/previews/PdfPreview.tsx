@@ -1,3 +1,4 @@
+/** object URL 嵌入 PDF */
 import { useEffect, useState } from 'react';
 import { base64ToBlob } from '@/lib/binaryUtils';
 
@@ -6,6 +7,7 @@ interface PdfPreviewProps {
   mimeType: string;
 }
 
+/** PDF 预览 */
 export function PdfPreview({ content, mimeType }: PdfPreviewProps) {
   const [url, setUrl] = useState<string | null>(null);
 

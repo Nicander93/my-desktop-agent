@@ -1,3 +1,4 @@
+/** electron-vite 构建配置：main/preload 入口与 env 前缀 */
 import { resolve } from 'path';
 import { defineConfig } from 'electron-vite';
 

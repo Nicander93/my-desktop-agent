@@ -1,8 +1,13 @@
+/**
+ * 递归扫描 benchmarks 下的 task.json，按 suite / taskId 筛选。
+ * 无匹配时抛错，避免空跑。
+ */
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { LoadedEvaluationTask } from './task.js';
 import { loadTask } from './task.js';
 
+/** 返回按 id 排序的已加载 task 列表 */
 export async function loadTaskCollection(root: string, options: { suite?: string; taskIds?: string[] } = {}): Promise<LoadedEvaluationTask[]> {
   const taskPaths = await findTaskPaths(root);
   const tasks = await Promise.all(taskPaths.map(loadTask));

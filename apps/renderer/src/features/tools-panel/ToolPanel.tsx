@@ -1,3 +1,6 @@
+/**
+ * 右侧工具面板：Trace/目录/预览/历史/Diff 多 Tab
+ */
 import { X, FileText, History, GitCompare, FolderTree, Wrench } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { Button } from '@/components/ui/button';
@@ -17,6 +20,7 @@ const tabs = [
   { id: 'diff' as const, label: 'Diff', icon: GitCompare },
 ];
 
+/** 可拖拽宽度的右侧工具面板 */
 export function ToolPanel() {
   const { toolPanelVisible, toolPanelWidth, toolPanelTab, setToolPanelTab, toggleToolPanel } = useUIStore();
 

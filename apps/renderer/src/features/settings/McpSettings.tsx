@@ -1,3 +1,6 @@
+/**
+ * MCP 设置：已安装、目录安装、JSON 导入与连通测试
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Server, Download, Upload, PlugZap, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -11,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 type TabId = 'installed' | 'catalog' | 'import';
 
+/** MCP 配置页 */
 export function McpSettings() {
   const [tab, setTab] = useState<TabId>('installed');
   const [importText, setImportText] = useState('');

@@ -1,3 +1,6 @@
+/**
+ * 消息输入：@文件、$MCP、/skill 提及与图片附件
+ */
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { ArrowUp, Plus, X } from 'lucide-react';
 import type { ImageAttachment } from '@desktop-agent/shared';
@@ -45,6 +48,7 @@ function pickLatestMention(
   return { kind: candidates[0].kind, query: candidates[0].query };
 }
 
+/** 聊天输入区主组件 */
 export function ChatInput({ onSend }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);

@@ -1,3 +1,4 @@
+/** 工作区文件树 + 右侧编辑区 */
 import { useEffect } from 'react';
 import { FolderTree, RefreshCw, Loader2 } from 'lucide-react';
 import { useFileExplorerStore } from '@/stores/fileExplorerStore';
@@ -11,6 +12,7 @@ function getDirName(path: string): string {
   return parts[parts.length - 1] || path;
 }
 
+/** 目录浏览与文件打开 */
 export function FileExplorer() {
   const { currentWorkspaceId, workspaces } = useWorkspaceStore();
   const workspace = workspaces.find((w) => w.id === currentWorkspaceId);

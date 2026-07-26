@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * 扫描 eval-results 目录，合并 result.json 写出 summary.md。
+ * --since 按 startedAt ISO 过滤。
+ */
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import type { EvaluationResult } from '@desktop-agent/shared';

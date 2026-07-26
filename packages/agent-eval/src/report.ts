@@ -1,5 +1,10 @@
+/**
+ * 汇总 eval-results 下的 result.json，生成 Markdown 报告。
+ * 只统计 verifier 结论，不把 agent 自述当通过。
+ */
 import type { EvaluationResult } from '@desktop-agent/shared';
 
+/** 聚合数字，供 CLI 与 CI 摘要 */
 export interface EvaluationReportSummary {
   totalRuns: number;
   passedRuns: number;
@@ -11,6 +16,7 @@ export interface EvaluationReportSummary {
   failures: Record<string, number>;
 }
 
+/** 按 taskId 分组统计通过数与中位耗时 */
 export function summarizeResults(results: EvaluationResult[]): EvaluationReportSummary {
   const durations = results.map((result) => result.durationMs).sort((a, b) => a - b);
   const grouped = new Map<string, EvaluationResult[]>();
@@ -27,6 +33,7 @@ export function summarizeResults(results: EvaluationResult[]): EvaluationReportS
   };
 }
 
+/** 输出 Markdown 字符串，不写盘 */
 export function renderReport(results: EvaluationResult[]): string {
   const summary = summarizeResults(results);
   return [

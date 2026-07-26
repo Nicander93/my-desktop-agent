@@ -1,3 +1,8 @@
+/**
+ * MCP 类型，以及 AgentRuntimeProfile / AgentSendMessageOptions。
+ * 后两个历史原因放这文件，IPC 和 renderer 都从这里 import。
+ * 引擎 trace 在 open-agent-sdk；UI 扩展在 types/trace.ts。
+ */
 import type { AgentMessageAttachmentRef } from './attachment.js';
 
 export type McpTransport = 'stdio' | 'sse' | 'http';
@@ -69,13 +74,16 @@ export interface McpToolInfo {
   description: string;
 }
 
+/** 影响工具策略、subprocess env、office 提示等 */
 export type AgentRuntimeProfile = 'general' | 'office' | 'coding' | 'file-organizing' | 'mcp';
 
+/** renderer → main 发消息可选参数；profile 空则 Host 按文案猜 */
 export interface AgentSendMessageOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
   skillMentions?: string[];
   profile?: AgentRuntimeProfile;
   attachments?: AgentMessageAttachmentRef[];
+  /** 把附件挂到这条用户消息上 */
   messageId?: string;
 }

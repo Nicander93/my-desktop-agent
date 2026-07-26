@@ -1,3 +1,7 @@
+/**
+ * 内置 Skill 目录；bundledContent 安装时直接写入，避免拉远程官方包。
+ * 新增条目要同步 skill 设置页与 syncRuntimeSkills。
+ */
 import type { SkillCatalogEntry } from '../types/skill.js';
 import { OFFICECLI_PPTX_AGENT_SKILL } from './officecliPptxAgentSkill.js';
 
@@ -13,6 +17,7 @@ export const SKILL_CATALOG: SkillCatalogEntry[] = [
   },
 ];
 
+/** 按 catalog id 查条目 */
 export function getSkillCatalogEntry(id: string): SkillCatalogEntry | undefined {
   return SKILL_CATALOG.find((entry) => entry.id === id);
 }

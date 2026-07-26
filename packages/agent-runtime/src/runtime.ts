@@ -1,8 +1,6 @@
 /**
- * Agent 运行时封装
- *
- * 基于 @codeany/open-agent-sdk，支持多 session 管理。
- * 每个 session 可绑定独立 cwd 和 workspaceId，用于工作区隔离。
+ * 按 sessionId 缓存 Agent，合并 profile/capability 后再调 open-agent-sdk。
+ * IPC / DB / UI 不在这。有 modelConfig 时 apiKey 传空串，避免回退到 CODEANY_API_KEY。
  */
 import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace, type ContentBlockParam } from '@codeany/open-agent-sdk';
 import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type ModelConfig, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
@@ -13,7 +11,7 @@ import type { RuntimeCapability } from './capabilities/types.js';
 import { resolveExecutionPolicy } from './policies/resolver.js';
 import { createToolResultTransformer } from './tool-results/transformer.js';
 
-/** 全局 Runtime 配置，来自环境变量 */
+/** 主进程环境变量带来的默认项 */
 export interface RuntimeOptions {
   apiKey?: string;
   model?: string;
@@ -27,11 +25,11 @@ export interface RuntimeOptions {
     budgetTokens?: number;
   };
   promptCache?: AgentOptions['promptCache'];
-  /** Disable host repository metadata when the runtime operates in an isolated workspace. */
+  /** 隔离评测 workspace 时应为 false，避免注入宿主仓库 git/环境上下文 */
   includeEnvironmentContext?: boolean;
 }
 
-/** 创建单个 Agent session 时的上下文 */
+/** 单个 session：cwd、模型、MCP、skills 等 */
 export interface AgentSessionOptions {
   /** 工作区目录，作为 Agent 工具执行的 cwd */
   cwd?: string;
@@ -43,11 +41,11 @@ export interface AgentSessionOptions {
   skills?: RuntimeSkillDefinition[];
   /** 子进程环境变量（按 session/profile，不污染全局 process.env） */
   subprocessEnv?: Record<string, string>;
-  /** 当前会话绑定的模型连接；未提供时使用 Runtime 的环境变量回退配置。 */
+  /** 会话绑定的模型；未提供时回退 Runtime 环境变量配置 */
   modelConfig?: Pick<ModelConfig, 'id' | 'apiKey' | 'model' | 'baseURL'>;
 }
 
-/** 单轮对话的可选参数 */
+/** 单轮覆盖：mention、profile、临时工具名单 */
 export interface AgentQueryOptions {
   mcpMentions?: string[];
   fileRefs?: string[];
@@ -59,7 +57,7 @@ export interface AgentQueryOptions {
   disallowedTools?: string[];
 }
 
-/** 路径访问检查请求，由主进程 pathGuard 处理 */
+/** 给 pathGuard 用的检查参数 */
 export interface PathAccessCheckRequest {
   sessionId: string;
   workspaceId: string;
@@ -69,11 +67,11 @@ export interface PathAccessCheckRequest {
 
 export type PathAccessChecker = (request: PathAccessCheckRequest) => Promise<{ allowed: boolean }>;
 
+/** session → Agent；模型一变就重建 */
 export class AgentRuntime {
-  /** sessionId → Agent 实例 */
   private agents: Map<string, Agent> = new Map();
-  /** sessionId → workspaceId，用于路径检查 */
   private sessionWorkspaceMap = new Map<string, string>();
+  /** 用来判断要不要因换模型重建 */
   private sessionModelConfigMap = new Map<string, string | undefined>();
   private options: RuntimeOptions;
   private pathAccessChecker?: PathAccessChecker;
@@ -86,7 +84,7 @@ export class AgentRuntime {
     };
   }
 
-  /** 注入路径检查器，由 agentPathInterceptor 在 main 进程调用 */
+  /** main 注入 pathGuard */
   setPathAccessChecker(checker: PathAccessChecker): void {
     this.pathAccessChecker = checker;
   }
@@ -95,14 +93,14 @@ export class AgentRuntime {
     return this.sessionWorkspaceMap.get(sessionId);
   }
 
-  /** permissionMode 非 bypassPermissions 时启用路径检查 */
+  /** bypassPermissions 时不做路径检查 */
   shouldCheckPaths(): boolean {
     return this.options.permissionMode !== 'bypassPermissions';
   }
 
   /**
-   * 创建 Agent 实例并缓存
-   * 若已有实例但未启用 trace，会先关闭并重建
+   * 缓存 Agent。无 trace 或 modelConfigId 变了会先关掉再建。
+   * 带 modelConfig 时 apiKey 用 ''，挡住 SDK 读 CODEANY_API_KEY。
    */
   createAgent(sessionId: string, sessionOptions?: AgentSessionOptions): Agent {
     const existing = this.agents.get(sessionId);
@@ -125,7 +123,7 @@ export class AgentRuntime {
     syncRuntimeSkills(sessionOptions?.skills ?? []);
 
     const agentOptions: AgentOptions = {
-      // Empty string intentionally suppresses legacy CODEANY_API_KEY fallback for local endpoints.
+      // 有 modelConfig 时用 '' 抑制遗留 CODEANY_API_KEY 回退，避免打到错误端点
       apiKey: sessionOptions?.modelConfig ? (sessionOptions.modelConfig.apiKey ?? '') : this.options.apiKey,
       model: sessionOptions?.modelConfig?.model ?? this.options.model,
       apiType: this.options.apiType,
@@ -157,7 +155,6 @@ export class AgentRuntime {
     return this.agents.get(sessionId);
   }
 
-  /** 流式发送消息，确保 Agent 已启用 trace */
   async sendMessage(
     sessionId: string,
     content: string | ContentBlockParam[],
@@ -189,7 +186,7 @@ export class AgentRuntime {
     return result.text;
   }
 
-  /** 手动执行工具，执行前同样走路径检查 */
+  /** 走路径检查后，用 prompt 间接调工具（没有独立 tool RPC） */
   async executeTool(sessionId: string, toolName: string, input: unknown): Promise<ToolResult> {
     const check = await this.checkToolPathAccess(sessionId, toolName, input);
     if (!check.allowed) {
@@ -212,7 +209,7 @@ export class AgentRuntime {
     }
   }
 
-  /** 将 SDK 内部消息格式转换为前端 Message 格式 */
+  /** SDK 消息粗转 UI Message；流式别依赖这个 */
   getMessages(sessionId: string): Message[] {
     const agent = this.agents.get(sessionId);
     if (!agent) return [];
@@ -270,12 +267,10 @@ export class AgentRuntime {
     clearRuntimeSkills();
   }
 
-  /** 从 SDK 持久化的 trace.jsonl 加载单次 run 的完整 trace */
   async getTraceRun(sessionId: string, runId: string): Promise<TraceRun | null> {
     return replayRunTrace(sessionId, runId);
   }
 
-  /** 加载 session 最近一次 run 的 trace */
   async getLatestTraceRun(sessionId: string): Promise<TraceRun | null> {
     const runs = await replaySessionTrace(sessionId);
     return runs.length > 0 ? runs[runs.length - 1]! : null;
@@ -298,7 +293,7 @@ export class AgentRuntime {
     return this.createAgent(sessionId, sessionOptions);
   }
 
-  /** 构建 SDK canUseTool 回调，在每次工具调用前检查路径 */
+  /** 工具调用前抽路径问 pathGuard */
   private buildCanUseTool(sessionId: string, workspaceId?: string) {
     if (!this.shouldCheckPaths() || !workspaceId || !this.pathAccessChecker) {
       return undefined;
@@ -321,6 +316,11 @@ export class AgentRuntime {
     };
   }
 
+  /**
+   * 拼本轮 AgentOptions。
+   * 工具名单：显式覆盖 > profile > capability 默认表。
+   * office 不加 skill hint，免得和 OFFICE_FAST_PATH 打架。
+   */
   private buildQueryOverrides(
     queryOptions?: AgentQueryOptions,
   ): Partial<AgentOptions> | undefined {
@@ -355,7 +355,6 @@ export class AgentRuntime {
     };
   }
 
-  /** executeTool 使用的路径检查，逻辑与 canUseTool 一致 */
   private async checkToolPathAccess(
     sessionId: string,
     toolName: string,

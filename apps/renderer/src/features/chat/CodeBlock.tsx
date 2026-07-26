@@ -1,3 +1,4 @@
+/** Shiki 高亮代码块，带复制按钮 */
 import { useEffect, useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { highlightCode } from '@/lib/shikiHighlighter';
@@ -7,6 +8,7 @@ interface CodeBlockProps {
   children: string;
 }
 
+/** Markdown 内嵌代码块 */
 export function CodeBlock({ language, children }: CodeBlockProps) {
   const code = children.replace(/\n$/, '');
   const [html, setHtml] = useState<string | null>(null);

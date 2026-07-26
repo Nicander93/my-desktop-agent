@@ -1,5 +1,7 @@
 /**
- * 依赖安装策略：办公场景 App 级 store，Coding 场景允许项目内 install。
+ * 子进程依赖落盘策略。
+ * office / file-organizing / mcp / general → App 目录；coding → 工作区，并删掉 App 级 npm/uv 变量。
+ * 默认只改 spawn 用的 env 副本；applyBaseRuntimeEnv 才会动全局 PATH。
  */
 import {
   buildAppLevelEnv,
@@ -20,7 +22,7 @@ const APP_SCOPED_PROFILES: AgentRuntimeProfile[] = [
   'general',
 ];
 
-/** coding profile 下需要从子进程 env 中移除的 App 级 key */
+/** coding 时必须删掉，否则 install 还是进 App store */
 const APP_LEVEL_ONLY_KEYS = [
   'NPM_CONFIG_PREFIX',
   'NPM_CONFIG_CACHE',
@@ -48,9 +50,7 @@ export function getAgentEnv(
   return buildAppLevelEnv(paths);
 }
 
-/**
- * 构建单次 spawn 使用的完整 env，按 profile 隔离，不修改全局 process.env。
- */
+/** process.env + profile 片段；coding 会 strip APP_LEVEL_ONLY_KEYS */
 export function buildSubprocessEnv(
   profile?: AgentRuntimeProfile,
   paths: AppRuntimePaths = getAppRuntimePaths(),
@@ -73,6 +73,7 @@ export function buildSubprocessEnv(
   return merged;
 }
 
+/** 启动时把 bundled node/git/uv 写进全局 PATH */
 export function applyBaseRuntimeEnv(
   paths: AppRuntimePaths = getAppRuntimePaths(),
 ): Record<string, string> {
@@ -81,6 +82,7 @@ export function applyBaseRuntimeEnv(
   return { PATH: pathValue };
 }
 
+/** stdio MCP 合并进 subprocessEnv；sse/http 原样返回 */
 export function mergeRuntimeEnvIntoMcpServers(
   servers: Record<string, unknown>,
   subprocessEnv: Record<string, string>,

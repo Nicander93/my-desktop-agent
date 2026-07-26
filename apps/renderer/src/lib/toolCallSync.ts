@@ -1,3 +1,6 @@
+/**
+ * ToolCall 与 trace span 双向同步：状态、耗时、流式结果
+ */
 import type { ToolCallPayload, ToolResultPayload, TraceSpan } from '@desktop-agent/shared';
 import type { ToolCall } from '@/stores/chatStore';
 
@@ -142,6 +145,7 @@ export function enrichToolCallsWithTraceDurations(
   });
 }
 
+/** 用 trace spans 批量更新 toolCalls */
 export function syncToolCallsFromTrace(toolCalls: ToolCall[], spans: TraceSpan[]): ToolCall[] {
   let synced = toolCalls;
   for (const span of spans) {

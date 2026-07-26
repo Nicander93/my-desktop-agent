@@ -1,36 +1,12 @@
 /**
- * @codeany/open-agent-sdk
- *
- * Open-source Agent SDK by CodeAny (https://codeany.ai).
- * Runs the full agent loop in-process without spawning subprocesses.
- *
- * Features:
- * - 30+ built-in tools (file I/O, shell, web, agents, tasks, teams, etc.)
- * - Skill system (reusable prompt templates with bundled skills)
- * - MCP server integration (stdio, SSE, HTTP)
- * - Context compression (auto-compact, micro-compact)
- * - Retry with exponential backoff
- * - Git status & project context injection
- * - Multi-turn session persistence
- * - Permission system (allow/deny/bypass modes)
- * - Subagent spawning & team coordination
- * - Task management & scheduling
- * - Hook system with lifecycle integration (pre/post tool use, session, compact)
- * - Token estimation & cost tracking
- * - File state LRU caching
- * - Plan mode for structured workflows
+ * @codeany/open-agent-sdk：进程内 Agent loop（工具、MCP、Skill、compact、权限）。
+ * 不依赖 Electron；Desktop 策略在 agent-runtime。
  */
 
-// --------------------------------------------------------------------------
 // High-level Agent API
-// --------------------------------------------------------------------------
-
 export { Agent, createAgent, query } from './agent.js'
 
-// --------------------------------------------------------------------------
 // Tool Helper (Zod-based tool creation, compatible with official SDK)
-// --------------------------------------------------------------------------
-
 export { tool, sdkToolToToolDefinition } from './tool-helper.js'
 export type {
   ToolAnnotations,

@@ -1,3 +1,4 @@
+/** LLM 响应 span：content block 分类展示 */
 import type { LlmResponsePayload } from '@desktop-agent/shared';
 import { parseContentBlocks, summarizeLlmResponse } from '@/lib/llmTraceFormat';
 import { formatTokenCount } from '@/lib/traceUtils';
@@ -10,6 +11,7 @@ interface LlmResponseDetailProps {
   payload: LlmResponsePayload;
 }
 
+/** llm_response payload 展示 */
 export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
   const summary = summarizeLlmResponse(payload);
   const content = Array.isArray(payload.content) ? payload.content : [];

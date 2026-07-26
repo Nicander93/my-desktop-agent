@@ -1,3 +1,4 @@
+/** shadcn 原语，无业务。导出 Textarea */
 import * as React from "react"
 import { cn } from "@/lib/utils"
 

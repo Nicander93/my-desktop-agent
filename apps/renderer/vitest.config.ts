@@ -1,3 +1,4 @@
+/** renderer 单测配置 */
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 

@@ -1,7 +1,13 @@
+/**
+ * Skill IPC Handler
+ *
+ * Skill CRUD、目录安装与 URL/本地导入；运行时定义由 getRuntimeSkillDefinitions 提供
+ */
 import { ipcMain } from 'electron';
 import * as skillService from '../services/skillService';
 import type { SkillInput } from '@desktop-agent/shared';
 
+/** 注册 skill:* IPC 通道 */
 export function registerSkillHandlers(): void {
   ipcMain.handle('skill:get-all', () => {
     try {
@@ -93,6 +99,7 @@ export function registerSkillHandlers(): void {
   });
 }
 
+/** 供 agentHandlers 组装 Agent 可用 Skill 列表 */
 export function getRuntimeSkillDefinitions() {
   return skillService.getRuntimeSkillDefinitions();
 }

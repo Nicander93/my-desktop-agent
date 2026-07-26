@@ -1,5 +1,7 @@
 /**
- * Agent 相关 IPC Handler
+ * agent:* IPC。conversationId 当 sessionId 用。
+ * 组装 cwd/MCP/Skill/模型/env，调 AgentRuntime，流式事件推 agent:stream-message。
+ * 改 channel 同步改 preload 和 electron.d.ts。
  */
 import { ipcMain, BrowserWindow } from 'electron';
 import {
@@ -22,6 +24,7 @@ import {
   readAttachmentBase64,
 } from '../services/attachmentService';
 
+/** 也认 MAIN_VITE_ 前缀（electron-vite） */
 function readEnv(name: string): string | undefined {
   return process.env[name] || process.env[`MAIN_VITE_${name}`];
 }
@@ -34,6 +37,10 @@ function resolveWorkspaceContext(conversationId: string): { cwd: string; workspa
   return { cwd: workspace.path, workspaceId: workspace.id };
 }
 
+/**
+ * 从消息流抽错误文案。
+ * 已经有 assistant 就当成功；否则看 result.errors / subtype。
+ */
 function getAgentErrorFromMessages(messages: any[]): string | undefined {
   const hasAssistant = messages.some((msg) => msg?.type === 'assistant');
   if (hasAssistant) return undefined;
@@ -52,6 +59,7 @@ function getAgentErrorFromMessages(messages: any[]): string | undefined {
   return `Agent 请求失败（${result.subtype || 'unknown'}）`;
 }
 
+/** Windows 且 bundled runtime 没装好时的提示 */
 function getRuntimeBlockedMessage(): string | undefined {
   if (process.platform === 'win32' && !isRuntimeReady()) {
     return getRuntimeInitError() ?? '运行时未就绪，请先运行 pnpm setup:binaries';
@@ -59,6 +67,7 @@ function getRuntimeBlockedMessage(): string | undefined {
   return undefined;
 }
 
+/** 文本 + 图片附件 → SDK content；无附件就返回字符串 */
 function buildPromptContent(sessionId: string, content: string, options?: AgentSendMessageOptions): string | any[] {
   const refs = options?.attachments ?? [];
   if (refs.length === 0) return content;
@@ -87,6 +96,7 @@ function buildPromptContent(sessionId: string, content: string, options?: AgentS
   return blocks;
 }
 
+/** getRuntime 等由 main 注入，避免循环初始化 */
 export function registerAgentHandlers(
   getRuntime: () => AgentRuntime,
   getMainWindow: () => BrowserWindow | null,
@@ -104,6 +114,7 @@ export function registerAgentHandlers(
     if (conversation?.modelConfigId && !modelConfig) {
       throw new Error('对话绑定的模型配置不存在，请在设置中重新选择模型');
     }
+    // create 时先 general；真正发消息再按推断 profile 换 env
     const subprocessEnv = buildSubprocessEnv('general', binaryManager.getPaths());
     const mcpServers = mergeRuntimeEnvIntoMcpServers(
       getEnabledMcpServersForWorkspace(context.cwd),
@@ -120,6 +131,7 @@ export function registerAgentHandlers(
     };
   }
 
+  /** 推断 profile，并按它重建 subprocessEnv */
   function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
     const profile = inferRuntimeProfile(content, options?.profile);
     return {
@@ -251,6 +263,7 @@ export function registerAgentHandlers(
   });
 }
 
+/** CODEANY_THINKING / BUDGET；默认 enabled + 8000 */
 export function parseThinkingConfig(): RuntimeOptions['thinking'] {
   const mode = (readEnv('CODEANY_THINKING') || 'enabled').toLowerCase();
   if (mode === 'disabled' || mode === 'off' || mode === 'false') {

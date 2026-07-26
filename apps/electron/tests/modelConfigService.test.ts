@@ -1,3 +1,4 @@
+/** modelConfigService：OpenAI 兼容端点连通性测试 */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../src/db', () => ({ getDatabase: vi.fn(), saveDatabase: vi.fn() }));

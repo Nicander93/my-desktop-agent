@@ -1,3 +1,4 @@
+/** shadcn 原语，无业务。导出 Button、buttonVariants */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"

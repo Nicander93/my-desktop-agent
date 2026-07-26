@@ -1,3 +1,6 @@
+/**
+ * 工作区文件树：懒加载目录、展开/选中、联动编辑器
+ */
 import { create } from 'zustand';
 import type { FileEntry } from '@desktop-agent/shared';
 import { useWorkspaceStore } from './workspaceStore';
@@ -19,6 +22,7 @@ interface FileExplorerState {
   reset: () => void;
 }
 
+/** 文件树状态与 IPC 目录读取 */
 export const useFileExplorerStore = create<FileExplorerState>((set, get) => ({
   rootPath: null,
   childrenMap: {},

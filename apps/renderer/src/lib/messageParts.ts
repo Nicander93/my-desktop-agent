@@ -1,3 +1,6 @@
+/**
+ * 流式 MessagePart 组装：thinking、正文、tool_group 顺序
+ */
 import type { MessagePart } from '@desktop-agent/shared';
 import type { ToolCall } from '@/stores/chatStore';
 import { reconcileStreamThinking } from '@/lib/agentMessage';
@@ -283,6 +286,7 @@ export function syncDerivedFields(state: MessagePartState): MessagePartState & {
   };
 }
 
+/** 把 SSE 事件增量写入 parts 与 toolCalls */
 export function applyStreamEvent(message: unknown, state: MessagePartState): MessagePartState & {
   content: string;
   thinking: string;

@@ -1,3 +1,4 @@
+/** SheetJS 把首个工作表转成 HTML 表格 */
 import { useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { base64ToArrayBuffer } from '@/lib/binaryUtils';
@@ -6,6 +7,7 @@ interface XlsxPreviewProps {
   content: string;
 }
 
+/** .xlsx 表格预览 */
 export function XlsxPreview({ content }: XlsxPreviewProps) {
   const { html, sheetNames, error } = useMemo(() => {
     try {

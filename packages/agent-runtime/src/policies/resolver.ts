@@ -1,8 +1,14 @@
+/**
+ * 合成 ResolvedExecutionPolicy。
+ * 叠加顺序：profile → capabilities → model → taskOverrides → userOverrides。
+ * 模型不支持 tool_calls 时清空工具表。
+ */
 import { CAPABILITY_REGISTRY } from '../capabilities/registry.js';
 import type { RuntimeCapability } from '../capabilities/types.js';
 import type { RuntimeProfile } from '../profiles.js';
 import type { ResolvedExecutionPolicy, RuntimeExecutionRequest } from './types.js';
 
+/** profile → 默认工具 / maxTurns / 结果截断长度 */
 const PROFILE_DEFAULTS: Record<RuntimeProfile, { tools: string[]; maxTurns: number; maxToolResultChars: number }> = {
   general: { tools: [], maxTurns: 30, maxToolResultChars: 8000 },
   coding: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'TodoWrite'], maxTurns: 20, maxToolResultChars: 6000 },
@@ -11,6 +17,7 @@ const PROFILE_DEFAULTS: Record<RuntimeProfile, { tools: string[]; maxTurns: numb
   mcp: { tools: ['Read', 'Glob', 'Grep'], maxTurns: 16, maxToolResultChars: 6000 },
 };
 
+/** resolutionReasons 记下叠加来源，方便看 trace */
 export function resolveExecutionPolicy(request: RuntimeExecutionRequest = {}): ResolvedExecutionPolicy {
   const profile = request.requestedProfile ?? 'general';
   const defaults = PROFILE_DEFAULTS[profile];
@@ -27,6 +34,7 @@ export function resolveExecutionPolicy(request: RuntimeExecutionRequest = {}): R
   const model = request.model;
   let maxTurns = defaults.maxTurns;
   if (model?.recommendedMaxTurns) { maxTurns = Math.min(maxTurns, model.recommendedMaxTurns); reasons.push('model:max-turns'); }
+  // 本地小模型经常没有 tool_calls
   if (model && !model.supportsToolCalls) { allowed.clear(); reasons.push('model:no-tool-calls'); }
   const apply = (overrides: Partial<NonNullable<RuntimeExecutionRequest['taskOverrides']>> | undefined, source: string) => {
     if (!overrides) return;

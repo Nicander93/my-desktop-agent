@@ -1,3 +1,4 @@
+/** 消息内工具调用折叠列表与耗时 */
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import type { TraceSpan } from '@desktop-agent/shared';
@@ -47,6 +48,7 @@ function ToolCallRow({ toolCall }: { toolCall: ToolCall }) {
   );
 }
 
+/** 工具活动日志主组件 */
 export function ToolActivityLog({ toolCalls, traceSpans, isStreaming }: ToolActivityLogProps) {
   const [open, setOpen] = useState(false);
   const displayToolCalls = useMemo(

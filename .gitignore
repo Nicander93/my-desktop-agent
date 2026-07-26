@@ -140,6 +140,7 @@ apps/electron/resources/binaries/archives/*
 
 # Headless evaluation artifacts
 eval-results/
+# Legacy path (removed); keep ignore in case local leftovers remain
 evals/coding/
 
 # Local pnpm store created by isolated evaluation fixtures

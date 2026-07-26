@@ -1,3 +1,4 @@
+/** 结构化视图与原始 JSON 切换 */
 import { useState, type ReactNode } from 'react';
 import { stringifyTracePayload } from '@/lib/traceUtils';
 import { cn } from '@/lib/utils';
@@ -7,6 +8,7 @@ interface TraceRawToggleProps {
   children: ReactNode;
 }
 
+/** trace payload 结构化/原始切换容器 */
 export function TraceRawToggle({ payload, children }: TraceRawToggleProps) {
   const [view, setView] = useState<'structured' | 'raw'>('structured');
 

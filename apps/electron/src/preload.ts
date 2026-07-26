@@ -1,13 +1,7 @@
 /**
- * Preload 脚本：通过 contextBridge 暴露安全的 IPC API 给渲染进程
- *
- * 命名空间：
- * - agent: Agent session 生命周期与消息
- * - workspace: 工作区 CRUD
- * - conversation: 对话 CRUD
- * - message: 消息 CRUD
- * - dialog: 系统对话框（选目录、路径确认）
- * - workspaceFs: 工作区文件读写
+ * Preload：contextBridge 暴露 IPC 给渲染进程。
+ * 命名空间 agent / workspace / conversation / message / dialog / workspaceFs 等。
+ * 只做转发，不写业务。
  */
 import { contextBridge, ipcRenderer } from 'electron';
 

@@ -1,3 +1,4 @@
+/** iframe 加载工作区 HTML 文件预览 */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -7,6 +8,7 @@ interface HtmlPreviewProps {
   filePath: string;
 }
 
+/** HTML 文件预览 */
 export function HtmlPreview({ filePath }: HtmlPreviewProps) {
   const workspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const iframeRef = useRef<HTMLIFrameElement>(null);

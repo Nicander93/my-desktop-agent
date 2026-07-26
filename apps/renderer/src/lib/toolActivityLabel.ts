@@ -1,3 +1,4 @@
+/** 工具调用在 UI 上的单行标签（Read/Write/Bash 等） */
 function basename(path: string): string {
   const parts = path.split(/[/\\]/);
   return parts[parts.length - 1] || path;
@@ -25,6 +26,7 @@ function formatPathAction(action: string, inp: Record<string, unknown>): string 
   return path ? `${action} ${basename(path)}` : action;
 }
 
+/** 根据工具名和 input 生成展示文案 */
 export function getToolActivityLabel(toolName: string, input: unknown): string {
   const inp = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
 
@@ -54,6 +56,7 @@ export function getToolActivityLabel(toolName: string, input: unknown): string {
   }
 }
 
+/** 多条已完成工具的标签拼接 */
 export function summarizeCompletedTools(
   toolCalls: Array<{ toolName: string; input: unknown }>,
 ): string {

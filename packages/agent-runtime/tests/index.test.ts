@@ -1,3 +1,4 @@
+/** AgentRuntime 创建、profile 覆盖与 modelConfig 重建 */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockAgent = {

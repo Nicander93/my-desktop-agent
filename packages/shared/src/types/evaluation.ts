@@ -1,6 +1,10 @@
+/**
+ * 无头评测 task/result 契约；schemaVersion 固定为 1，改字段要迁 benchmarks。
+ * 执行与校验在 packages/agent-eval，见 benchmarks/README.md。
+ */
 import type { AgentRuntimeProfile } from './mcp.js';
 
-/** Immutable, versioned description of a headless evaluation task. */
+/** 不可变 task 定义；capabilities 在 runner 里解析成策略 */
 export interface EvaluationTask {
   schemaVersion: 1;
   id: string;
@@ -8,10 +12,9 @@ export interface EvaluationTask {
   title: string;
   prompt: string;
   profile: AgentRuntimeProfile;
-  /** Runtime capabilities requested by the task. Resolution begins in PR 3. */
   capabilities: string[];
   workflowId?: string;
-  /** Optional collection metadata used by headless benchmark suites. */
+  /** benchmark 套件标签，collection 按 suite 筛选 */
   suite?: 'smoke' | 'regression' | 'quality';
   tags?: string[];
   fixture: string;
@@ -25,6 +28,7 @@ export interface EvaluationLimits {
   maxChangedFiles?: number;
 }
 
+/** 通过后才算 task 成功；agent 自述完成不算 */
 export interface EvaluationVerifier {
   commands?: EvaluationCommand[];
   requiredFiles?: string[];
@@ -57,6 +61,7 @@ export interface EvaluationCheck {
   durationMs: number;
 }
 
+/** 单次 run 落盘结构；artifacts 路径相对 outputRoot */
 export interface EvaluationResult {
   schemaVersion: 1;
   runId: string;

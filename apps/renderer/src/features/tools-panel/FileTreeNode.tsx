@@ -1,3 +1,4 @@
+/** 文件树递归节点：展开目录或打开文件 */
 import { ChevronRight, ChevronDown, Folder, FolderOpen, File, Loader2 } from 'lucide-react';
 import type { FileEntry } from '@desktop-agent/shared';
 import { useFileExplorerStore } from '@/stores/fileExplorerStore';
@@ -9,6 +10,7 @@ interface FileTreeNodeProps {
   depth: number;
 }
 
+/** 单级目录/文件树节点 */
 export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
   const {
     expandedPaths,

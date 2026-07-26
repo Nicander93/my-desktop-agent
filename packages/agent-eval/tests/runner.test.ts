@@ -1,3 +1,4 @@
+/** runTask 全流程与 verifier、子进程执行 */
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

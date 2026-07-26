@@ -1,3 +1,8 @@
+/**
+ * MCP 服务器持久化
+ *
+ * 记录存 mcp_servers 表；name 全局唯一，目录安装用 catalogId 作 name
+ */
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import {
@@ -52,6 +57,7 @@ function validateName(name: string): void {
   }
 }
 
+/** 全部 MCP 记录，按 sortOrder、创建时间排序 */
 export function getAllMcpServers(): McpServerRecord[] {
   const rows = queryAll<Record<string, unknown>>(
     'SELECT * FROM mcp_servers ORDER BY sortOrder ASC, createdAt ASC',
@@ -59,6 +65,7 @@ export function getAllMcpServers(): McpServerRecord[] {
   return rows.map(rowToRecord);
 }
 
+/** 仅 enabled 的 MCP，发消息时组装 SDK 配置用 */
 export function getEnabledMcpServers(): McpServerRecord[] {
   return getAllMcpServers().filter((server) => server.enabled);
 }
@@ -73,6 +80,7 @@ export function getMcpServerByName(name: string): McpServerRecord | undefined {
   return row ? rowToRecord(row) : undefined;
 }
 
+/** name 冲突或格式不合法时抛错 */
 export function createMcpServer(input: McpServerInput): McpServerRecord {
   validateName(input.name);
   if (getMcpServerByName(input.name)) {
@@ -169,6 +177,7 @@ export function deleteMcpServer(id: string): boolean {
   return true;
 }
 
+/** 按内置目录模板创建记录，secrets 替换 env 中的 {key} 占位符 */
 export function installFromCatalog(catalogId: string, secrets?: Record<string, string>): McpServerRecord {
   const entry = getCatalogEntry(catalogId);
   if (!entry) {
@@ -212,6 +221,7 @@ function resolveTemplateEnv(
   return env;
 }
 
+/** 从 Cursor/Claude 风格 JSON 导入一条 MCP */
 export function importMcpServer(name: string, config: McpImportServerConfig): McpServerRecord {
   const parsed = importConfigToServerInput(name, config);
   return createMcpServer({
@@ -228,6 +238,7 @@ export function importMcpServer(name: string, config: McpImportServerConfig): Mc
   });
 }
 
+/** @ 提及下拉：已启用 MCP 的 name / displayName */
 export function listMentionableServers(): Array<{ name: string; displayName: string }> {
   return getEnabledMcpServers().map((server) => ({
     name: server.name,
@@ -235,6 +246,7 @@ export function listMentionableServers(): Array<{ name: string; displayName: str
   }));
 }
 
+/** 内置目录 + 是否已安装标记 */
 export function getCatalog(): Array<McpCatalogEntry & { installed: boolean }> {
   const installed = new Set(getAllMcpServers().map((server) => server.name));
   return MCP_CATALOG.map((entry) => ({

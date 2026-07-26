@@ -1,3 +1,4 @@
+/** MCP 提及解析、SDK 配置构建与命令行拆分 */
 import { describe, it, expect } from 'vitest';
 import {
   buildMcpMentionPrompt,

@@ -1,3 +1,7 @@
+/**
+ * resolveExecutionPolicy 的输入输出类型。
+ * ResolvedExecutionPolicy 会塞进 traceMetadata。
+ */
 import type { RuntimeCapability } from '../capabilities/types.js';
 import type { RuntimeProfile } from '../profiles.js';
 
@@ -37,5 +41,6 @@ export interface ResolvedExecutionPolicy {
   context: { maxEstimatedTokens: number; maxToolResultChars: number; injectProjectContext: 'once' | 'each-run'; injectGitStatus: 'never' | 'on-change' | 'each-run' };
   execution: { maxTurns: number; maxInvalidToolRetries: number; maxSameToolRetries: number; allowProfileFallback: boolean };
   risk: { allowNetwork: boolean; allowedWritePaths: string[]; destructiveActions: 'deny' | 'confirm' | 'allow' };
+  /** 例如 profile:coding、model:no-tool-calls */
   resolutionReasons: string[];
 }

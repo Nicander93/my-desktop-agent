@@ -1,3 +1,8 @@
+/**
+ * profile 推断 + office 专用策略。
+ * 文案里带 excel/ppt 会误判成 office；显式 profile 优先。
+ * coding 的依赖隔离在 electron/runtime/policy，不在这。
+ */
 import type { AgentOptions } from '@codeany/open-agent-sdk';
 import { getSkillPromptBody, OFFICECLI_PPTX_AGENT_SKILL } from '@desktop-agent/shared';
 import type { AgentRuntimeProfile } from '@desktop-agent/shared';
@@ -11,6 +16,7 @@ export interface ToolResultPolicy {
   preserveHeadTail?: boolean;
 }
 
+/** 转成 AgentOptions 局部覆盖的那一块 */
 export interface RuntimeProfilePolicy {
   profile: RuntimeProfile;
   maxTurns?: number;
@@ -21,6 +27,7 @@ export interface RuntimeProfilePolicy {
   toolResultPolicy?: ToolResultPolicy;
 }
 
+/** 命中 → office（officecli 批处理约束） */
 const OFFICE_KEYWORDS = [
   'officecli',
   'ppt',
@@ -35,8 +42,8 @@ const OFFICE_KEYWORDS = [
   '表格',
 ];
 
+/** 命中 → coding（允许项目里 npm/pnpm install） */
 const CODING_KEYWORDS = [
-  // 命中后走 workspace 依赖策略，允许项目内 npm install
   'bug',
   'fix',
   'refactor',
@@ -54,6 +61,10 @@ const CODING_KEYWORDS = [
   '单元测试',
 ];
 
+/**
+ * office 系统提示：禁 open/save/load_skill，逼走 batch。
+ * 盖过 skill 文档里的 Quick Start。
+ */
 export const OFFICE_FAST_PATH_PROMPT = [
   '你正在处理 Office 文档任务（Desktop Agent）。以下 Agent 执行约束 **优先于** officecli 官方 load_skill / 交互式 shell 文档中的 open、save、Quick Start。',
   '',
@@ -70,6 +81,7 @@ export const OFFICE_FAST_PATH_PROMPT = [
   getSkillPromptBody(OFFICECLI_PPTX_AGENT_SKILL),
 ].join('\n');
 
+/** explicit 优先；否则 office 关键词 > coding 关键词 > general */
 export function inferRuntimeProfile(content: string, explicit?: RuntimeProfile): RuntimeProfile {
   if (explicit) return explicit;
 
@@ -85,6 +97,7 @@ export function inferRuntimeProfile(content: string, explicit?: RuntimeProfile):
   return 'general';
 }
 
+/** 目前只有 office 返回策略；coding 差异在 Host 的 env */
 export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfilePolicy | undefined {
   if (profile !== 'office') return undefined;
 
@@ -102,6 +115,7 @@ export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfil
   };
 }
 
+/** 不含 appendSystemPrompt，那块由 runtime 自己拼 */
 export function profilePolicyToAgentOptions(
   policy?: RuntimeProfilePolicy,
 ): Partial<AgentOptions> {

@@ -1,3 +1,4 @@
+/** 垂直拖拽条，调侧栏或工具面板宽度 */
 import { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -6,6 +7,7 @@ interface ResizeHandleProps {
   className?: string;
 }
 
+/** 鼠标拖拽时把水平位移传给 onResize */
 export function ResizeHandle({ onResize, className }: ResizeHandleProps) {
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();

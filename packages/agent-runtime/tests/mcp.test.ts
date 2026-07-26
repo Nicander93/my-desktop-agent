@@ -1,3 +1,4 @@
+/** MCP spawn 命令名解析 */
 import { describe, it, expect } from 'vitest';
 import { resolveSpawnCommandName } from '../src/mcp.js';
 

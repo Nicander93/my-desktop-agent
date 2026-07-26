@@ -1,3 +1,4 @@
+/** 单条工具调用卡片（状态图标 + 名称） */
 import { Loader2, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
 import { ToolCall } from '@/stores/chatStore';
 
@@ -6,6 +7,7 @@ interface ToolCallCardProps {
   onClick?: () => void;
 }
 
+/** 工具调用摘要卡片 */
 export function ToolCallCard({ toolCall, onClick }: ToolCallCardProps) {
   const getStatusIcon = () => {
     switch (toolCall.status) {

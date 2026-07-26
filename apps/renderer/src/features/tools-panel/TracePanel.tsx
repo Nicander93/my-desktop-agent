@@ -1,3 +1,4 @@
+/** 右侧 Trace Tab：展示当前会话最新 trace 时间线 */
 import { useMemo } from 'react';
 import { Copy, Loader2, Wrench } from 'lucide-react';
 import type { AgentTrace } from '@desktop-agent/shared';
@@ -20,6 +21,7 @@ function getActiveTrace(messages: ReturnType<typeof useChatStore.getState>['mess
   return null;
 }
 
+/** 独立 trace 面板 */
 export function TracePanel() {
   const messages = useChatStore((s) => s.messages);
   const isProcessing = useChatStore((s) => s.isProcessing);

@@ -1,6 +1,10 @@
+/**
+ * Skill 持久化与运行时形状；catalog 安装走 SkillCatalogEntry，自定义走 url/local。
+ */
 export type SkillSource = 'catalog' | 'url' | 'local';
 export type SkillCatalogCategory = 'office' | 'dev' | 'writing' | 'other';
 
+/** 设置页与 DB 中的 Skill 记录 */
 export interface SkillRecord {
   id: string;
   name: string;
@@ -27,6 +31,7 @@ export interface SkillCatalogEntry {
   bundledContent?: string;
 }
 
+/** 新建或导入 Skill 时的输入 */
 export interface SkillInput {
   name: string;
   displayName?: string;
@@ -43,6 +48,7 @@ export interface ParsedSkillMarkdown {
   body: string;
 }
 
+/** 传给 agent-runtime syncRuntimeSkills 的精简定义 */
 export interface RuntimeSkillDefinition {
   name: string;
   displayName?: string;

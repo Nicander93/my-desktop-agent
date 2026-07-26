@@ -1,3 +1,4 @@
+/** runtime/install：manifest 加载与运行时安装检测 */
 import { describe, it, expect } from 'vitest';
 import { join } from 'node:path';
 import {

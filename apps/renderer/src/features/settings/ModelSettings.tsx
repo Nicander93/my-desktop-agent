@@ -1,3 +1,6 @@
+/**
+ * 模型配置：OpenAI 兼容端点增删改
+ */
 import { useEffect, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -14,6 +17,7 @@ const emptyConfig = (): ModelConfigInput => ({
   enabled: true,
 });
 
+/** 模型配置页 */
 export function ModelSettings() {
   const [configs, setConfigs] = useState<ModelConfig[]>([]);
   const [draft, setDraft] = useState<ModelConfigInput | null>(null);

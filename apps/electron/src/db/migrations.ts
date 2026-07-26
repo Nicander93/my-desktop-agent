@@ -1,7 +1,5 @@
 /**
- * 数据库版本化迁移
- *
- * 通过 _migrations 表记录已执行版本，新增迁移只需追加 version 递增的条目
+ * SQLite 迁移：_migrations 记版本，只追加、不改旧 version 正文。
  */
 import { Database as SqlJsDatabase } from 'sql.js';
 

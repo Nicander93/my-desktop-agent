@@ -1,3 +1,4 @@
+/** task.json 加载、benchmark 契约与 collection 筛选 */
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';

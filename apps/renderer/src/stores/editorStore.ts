@@ -1,9 +1,13 @@
+/**
+ * 文件编辑器状态：打开/保存/脏标记，经 IPC 读写工作区
+ */
 import { create } from 'zustand';
 import { useWorkspaceStore } from './workspaceStore';
 import { useUIStore } from './uiStore';
 import { useFileExplorerStore } from './fileExplorerStore';
 import { resolveEditorFileType } from '@/lib/fileTypeUtils';
 
+/** 编辑器可展示的文件类型 */
 export type EditorFileType = 'text' | 'image' | 'docx' | 'pptx' | 'xlsx' | 'pdf' | 'html' | 'binary';
 
 interface EditorState {
@@ -22,6 +26,7 @@ interface EditorState {
   closeFile: () => void;
 }
 
+/** 当前打开文件的 Zustand store */
 export const useEditorStore = create<EditorState>((set, get) => ({
   activeFile: null,
   content: null,

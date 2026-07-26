@@ -1,3 +1,4 @@
+/** @ 文件提及解析与 prompt 拼装 */
 import { describe, expect, it } from 'vitest';
 import { parseFileMentions, buildFileMentionPrompt } from '../src/files/mentions.js';
 

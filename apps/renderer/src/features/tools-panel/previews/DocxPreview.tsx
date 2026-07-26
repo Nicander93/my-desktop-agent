@@ -1,3 +1,4 @@
+/** docx-preview 渲染 Word 文档 */
 import { useEffect, useRef, useState } from 'react';
 import { renderAsync } from 'docx-preview';
 import { base64ToArrayBuffer } from '@/lib/binaryUtils';
@@ -6,6 +7,7 @@ interface DocxPreviewProps {
   content: string;
 }
 
+/** .docx 内联预览 */
 export function DocxPreview({ content }: DocxPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);

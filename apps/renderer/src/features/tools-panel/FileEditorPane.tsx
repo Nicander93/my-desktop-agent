@@ -1,3 +1,6 @@
+/**
+ * 文件编辑/预览主区：Monaco 或 Office/PDF 预览
+ */
 import { useEffect, useState } from 'react';
 import { File, Code, FileText, Image, Save, X, Loader2, FileSpreadsheet, Presentation, Globe } from 'lucide-react';
 import { useEditorStore, type EditorFileType } from '@/stores/editorStore';
@@ -40,6 +43,7 @@ interface FileEditorPaneProps {
   emptyHint?: string;
 }
 
+/** 当前打开文件的编辑或预览面板 */
 export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }: FileEditorPaneProps) {
   const {
     activeFile,

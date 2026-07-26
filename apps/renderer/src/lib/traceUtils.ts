@@ -1,6 +1,10 @@
+/**
+ * AgentTrace 展示：时长、token、span 标签与 JSON 预览
+ */
 import type { AgentTrace, TraceRun, TraceSpan, TraceSummary } from '@desktop-agent/shared';
 import { buildTraceRunFromSpans, summarizeTraceRun } from '@desktop-agent/shared';
 
+/** spans 组装为 TraceRun */
 export function getTraceRunFromAgentTrace(trace: AgentTrace): TraceRun | null {
   return buildTraceRunFromSpans(trace.spans, trace.runId);
 }

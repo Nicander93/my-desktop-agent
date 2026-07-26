@@ -1,3 +1,8 @@
+/**
+ * 图片附件 IPC Handler
+ *
+ * 草稿图片选文件/粘贴字节、预览 data URL；已 linked 的附件不能单独删
+ */
 import { dialog, ipcMain, type BrowserWindow, type OpenDialogOptions } from 'electron';
 import type { CreateAttachmentFromBytesInput, ImageAttachmentVariant } from '@desktop-agent/shared';
 import {
@@ -8,6 +13,7 @@ import {
   MAX_IMAGE_ATTACHMENTS,
 } from '../services/attachmentService';
 
+/** 注册 attachment:* IPC 通道 */
 export function registerAttachmentHandlers(getMainWindow: () => BrowserWindow | null): void {
   ipcMain.handle('attachment:select-images', async (_, conversationId: string) => {
     try {

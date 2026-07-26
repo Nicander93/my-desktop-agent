@@ -1,3 +1,6 @@
+/**
+ * UI 侧 trace 类型；原始 span 流在 open-agent-sdk，分组逻辑在 trace/groupTrace.ts。
+ */
 export type TraceSpanType =
   | 'run_start'
   | 'run_end'
@@ -88,6 +91,7 @@ export type TraceSpanPayload =
   | CompactPayload
   | Record<string, unknown>;
 
+/** 单轮：一次 LLM 往返 + 本轮工具调用对 */
 export interface TraceTurn {
   turn: number;
   startedAt: string;
@@ -100,6 +104,7 @@ export interface TraceTurn {
   }>;
 }
 
+/** 一次 agent run，含多轮 turn */
 export interface TraceRun {
   runId: string;
   sessionId: string;
@@ -111,12 +116,14 @@ export interface TraceRun {
   endSpan?: TraceSpan;
 }
 
+/** 扁平 span 列表，isLive 表示流式未结束 */
 export interface AgentTrace {
   runId: string;
   spans: TraceSpan[];
   isLive?: boolean;
 }
 
+/** TracePanel 顶部摘要数字 */
 export interface TraceSummary {
   turnCount: number;
   durationMs?: number;

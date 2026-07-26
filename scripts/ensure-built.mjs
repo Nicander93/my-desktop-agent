@@ -1,3 +1,6 @@
+/**
+ * 开发前确保 open-agent-sdk 与 workspace 包已 tsc 构建
+ */
 import { existsSync, realpathSync, rmSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
@@ -27,6 +30,7 @@ function cleanupNpmPollution(sdkReal) {
   }
 }
 
+/** 缺 dist 时编译 SDK */
 function ensureSdk() {
   if (!force && existsSync(sdkDist)) {
     console.log('[build] SDK already built, skipping');
@@ -41,6 +45,7 @@ function ensureSdk() {
   run(`pnpm --dir "${sdkReal}" exec tsc`);
 }
 
+/** 缺 dist 时编译 agent-runtime 等 workspace 包 */
 function ensurePackages() {
   if (!force && existsSync(agentDist)) {
     console.log('[build] workspace packages already built, skipping');

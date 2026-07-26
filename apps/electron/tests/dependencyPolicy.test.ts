@@ -1,3 +1,4 @@
+/** runtime/policy：profile 依赖范围与子进程环境 */
 import { describe, it, expect } from 'vitest';
 import {
   getDependencyScope,

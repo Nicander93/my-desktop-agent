@@ -1,3 +1,7 @@
+/**
+ * 解析 $mcp 提及，生成优先使用对应 MCP 工具的 prompt 片段。
+ * 名称对应 McpServerRecord.name，工具前缀 mcp__{name}__。
+ */
 const MCP_MENTION_REGEX = /\$([a-zA-Z][a-zA-Z0-9_-]*)/g;
 
 export function parseMcpMentions(content: string): string[] {
@@ -8,6 +12,7 @@ export function parseMcpMentions(content: string): string[] {
   return Array.from(mentions);
 }
 
+/** 空列表返回空串 */
 export function buildMcpMentionPrompt(mcpMentions: string[]): string {
   if (mcpMentions.length === 0) return '';
 

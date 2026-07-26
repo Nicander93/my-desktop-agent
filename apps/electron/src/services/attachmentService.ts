@@ -1,3 +1,8 @@
+/**
+ * 图片附件存储与草稿管理
+ *
+ * 文件落在 userData/attachments；发送前 status 为 draft，link 后不可单独删
+ */
 import { app } from 'electron';
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, copyFileSync, writeFileSync } from 'fs';
 import { basename, extname, join } from 'path';
@@ -12,7 +17,9 @@ interface AttachmentRow extends ImageAttachment {
   updatedAt: number;
 }
 
+/** 单条消息最多附带的图片数 */
 export const MAX_IMAGE_ATTACHMENTS = 4;
+/** 单张图片体积上限（字节） */
 export const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const MIME_BY_EXT: Record<string, SupportedMimeType | undefined> = {
@@ -138,6 +145,7 @@ function createDraftFromBuffer(
   };
 }
 
+/** 从渲染进程粘贴的字节创建草稿，落盘并写 attachments 表 */
 export function createDraftFromBytes(input: {
   conversationId: string;
   fileName: string;
@@ -148,6 +156,7 @@ export function createDraftFromBytes(input: {
   return createDraftFromBuffer(input.conversationId, input.fileName, input.mimeType, buffer);
 }
 
+/** 从本地路径复制为草稿（选文件对话框走此路径） */
 export function createDraftFromPath(conversationId: string, filePath: string): ImageAttachment {
   if (!existsSync(filePath)) {
     throw new Error('图片文件不存在');
@@ -197,6 +206,7 @@ export function createDraftFromPath(conversationId: string, filePath: string): I
   };
 }
 
+/** 读取原图并返回 data URL，供渲染进程 img src */
 export function getPreviewUrl(id: string): string {
   const row = rowById(id);
   if (!row) {
@@ -209,6 +219,7 @@ export function getPreviewUrl(id: string): string {
   return `data:${row.mimeType};base64,${data}`;
 }
 
+/** 仅 draft 可删，同时清磁盘目录 */
 export function deleteDraft(id: string): boolean {
   const row = rowById(id);
   if (!row) {
@@ -229,6 +240,7 @@ export function deleteDraft(id: string): boolean {
   return true;
 }
 
+/** 发消息前校验 refs 归属与文件存在，附带 storagePath 供编码 */
 export function getAttachmentsForMessage(
   refs: AgentMessageAttachmentRef[],
   conversationId: string,
@@ -249,6 +261,7 @@ export function getAttachmentsForMessage(
   });
 }
 
+/** 消息落库后将 draft 标为 linked 并写入 messageId */
 export function linkAttachments(refs: AgentMessageAttachmentRef[], conversationId: string, messageId: string): ImageAttachment[] {
   if (refs.length === 0) return [];
   const attachments = getAttachmentsForMessage(refs, conversationId);
@@ -275,6 +288,7 @@ export function linkAttachments(refs: AgentMessageAttachmentRef[], conversationI
   }));
 }
 
+/** 读附件原图 base64，供多模态消息组装 */
 export function readAttachmentBase64(attachment: { storagePath: string }): string {
   return readFileSync(attachment.storagePath).toString('base64');
 }

@@ -1,3 +1,4 @@
+/** TraceRecorder 默认不截断 raw 工具结果。 */
 import { describe, expect, it } from 'vitest';
 import { TraceRecorder } from '../src/trace.js';
 

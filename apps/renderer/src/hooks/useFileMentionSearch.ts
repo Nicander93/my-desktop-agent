@@ -1,7 +1,11 @@
+/**
+ * @ 文件提及：防抖调 workspaceFs.search
+ */
 import { useEffect, useState } from 'react';
 import type { FileSearchResult } from '@desktop-agent/shared';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+/** 工作区文件模糊搜索结果 */
 export function useFileMentionSearch(query: string, enabled: boolean) {
   const workspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const [results, setResults] = useState<FileSearchResult[]>([]);

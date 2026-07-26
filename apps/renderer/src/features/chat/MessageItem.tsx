@@ -1,3 +1,6 @@
+/**
+ * 单条消息：parts 驱动 thinking、工具日志与正文
+ */
 import { useEffect, useState } from 'react';
 import { Check, Copy, ExternalLink, Pencil, X } from 'lucide-react';
 import type { ImageAttachment, MessagePart } from '@desktop-agent/shared';
@@ -90,6 +93,7 @@ function getToolCallsForGroup(group: Extract<MessagePart, { type: 'tool_group' }
     .filter((t): t is ToolCall => !!t);
 }
 
+/** 用户/助手消息气泡 */
 export function MessageItem({ message }: MessageItemProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);

@@ -1,3 +1,4 @@
+/** OpenAIProvider：图片块、prompt cache、本地兼容端点的 tool call 解析。 */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { OpenAIProvider } from '../src/providers/openai';
 

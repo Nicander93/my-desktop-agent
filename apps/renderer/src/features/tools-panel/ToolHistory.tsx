@@ -1,6 +1,8 @@
+/** 当前会话全部工具调用历史列表 */
 import { Clock, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { useChatStore } from '@/stores/chatStore';
 
+/** 工具调用历史 Tab */
 export function ToolHistory() {
   const { messages } = useChatStore();
   

@@ -1,5 +1,7 @@
 # Desktop Agent 编程任务评测能力接入计划
 
+> 2026-07 起这是历史稿。实现在 `packages/agent-eval` + `benchmarks/tasks`，结果进 `eval-results/`。文里的 `evals/coding/` 作废，看 `docs/eval/` 和 `benchmarks/README.md`。
+
 ## 1. 目标
 
 为 Desktop Agent 增加一套可重复运行、可对比、可定位问题的编程任务评测能力，用于持续发现 Agent 在真实编程任务中的短板，并为后续 runtime、prompt、tool、UI、trace、provider 策略优化提供依据。

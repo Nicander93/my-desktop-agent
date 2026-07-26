@@ -1,3 +1,7 @@
+/**
+ * Verifier：必存文件 → 保护文件未改 → 命令 → 声明式 checks。
+ * 路径都走 resolveInside，不许逃出 workspace。
+ */
 import { access, readFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
@@ -24,6 +28,7 @@ async function requiredFileCheck(path: string, workspacePath: string): Promise<E
   }
 }
 
+/** 和 baseline 比字节，防改测试 / package.json */
 async function unchangedFileCheck(path: string, workspacePath: string, baselinePath: string): Promise<EvaluationCheck> {
   const started = performance.now();
   try {
@@ -37,6 +42,7 @@ async function unchangedFileCheck(path: string, workspacePath: string, baselineP
   }
 }
 
+/** pnpm 自动加 --ignore-workspace */
 async function commandCheck(command: NonNullable<EvaluationTask['verifier']['commands']>[number], workspacePath: string): Promise<EvaluationCheck> {
   const started = performance.now();
   try {

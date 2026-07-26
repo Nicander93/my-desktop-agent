@@ -1,4 +1,4 @@
-// Agent Runtime - 基于 @codeany/open-agent-sdk
+/** Desktop Agent Runtime：session、profile、MCP/skills、策略解析。别从这 re-export shared。 */
 export { AgentRuntime } from './runtime.js';
 export { inferRuntimeProfile, getRuntimeProfilePolicy, profilePolicyToAgentOptions, OFFICE_FAST_PATH_PROMPT } from './profiles.js';
 export { extractPathsFromToolInput } from './pathUtils.js';

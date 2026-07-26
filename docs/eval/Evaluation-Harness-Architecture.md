@@ -1,136 +1,48 @@
-# Evaluation Harness 建议工程结构
+# Evaluation Harness 目录
 
-## 设计说明
+2026-07 起，旧的 `evals/coding/` 已去掉。
 
-以下结构不是强制实现，而是建议参考。
+| 东西 | 位置 |
+|------|------|
+| runner / CLI / verifier | `packages/agent-eval` |
+| 任务和 fixture | `benchmarks/tasks/` |
+| 类型 | `packages/shared/src/types/evaluation.ts` |
+| 跑出来的 trace、diff、result | `eval-results/`（gitignore） |
+| 设计稿 | `docs/eval/` |
 
-Evaluation 应尽量作为独立模块，避免与 Agent Runtime 强耦合。
+真正跑 Agent 还是 `agent-runtime` → `open-agent-sdk`。`agent-eval` 只负责隔离目录、超时和判分，不进 Electron。
 
-``` text
-project-root/
-│
-├── agent/
-├── runtime/
-├── tools/
-├── desktop/
-│
-├── evaluation/
-│   ├── tasks/
-│   │   ├── coding/
-│   │   ├── office/
-│   │   ├── filesystem/
-│   │   └── shell/
-│   │
-│   ├── runner/
-│   ├── workspace/
-│   ├── trace/
-│   ├── reports/
-│   ├── checkers/
-│   ├── datasets/
-│   └── runs/
-│
-└── docs/
+```
+packages/agent-eval/
+packages/agent-runtime/
+packages/open-agent-sdk/
+packages/shared/
+benchmarks/tasks/
+eval-results/          # 不入库
+docs/eval/
 ```
 
-## 建议职责
+一次 run 大概长这样：
 
-### tasks
-
-维护所有 Benchmark Task。
-
-### runner
-
-统一运行入口。
-
-负责：
-
--   初始化 Workspace
--   启动 Agent
--   收集结果
--   执行 Checks
-
-### workspace
-
-保证每次运行环境一致。
-
-### trace
-
-统一事件模型。
-
-建议记录：
-
--   llm_call
--   tool_call
--   tool_result
--   file_change
--   error
--   run_start
--   run_end
-
-采用 JSONL。
-
-### reports
-
-生成 Markdown 报告。
-
-同时支持未来 Dashboard。
-
-### checkers
-
-实现各种 Check。
-
-例如：
-
--   file_exists
--   file_contains
--   command
--   snapshot
-
-### datasets
-
-维护 Benchmark 数据集。
-
-### runs
-
-保存每一次运行。
-
-建议：
-
-``` text
-runs/
-    20260710_001/
-        task.yaml
-        trace.jsonl
-        result.json
-        report.md
-        diff.patch
-        workspace/
+```
+eval-results/<label>/<task-id>/<timestamp>/
+  workspace/
+  baseline/
+  trace.json
+  diff.patch
+  result.json
 ```
 
-## 长期演进
+## 谁干什么
 
-``` text
-Task
-    ↓
-Runner
-    ↓
-Trace
-    ↓
-Check
-    ↓
-Diagnostics
-    ↓
-Comparison
-    ↓
-Benchmark
-```
+- `benchmarks/tasks`：prompt、verifier、limits
+- `agent-eval`：拷 fixture、调 Runtime、写 diff、跑 Verifier、落 result
+- `eval-results`：现场，方便复盘
 
-整个系统最终应形成：
+## 注意
 
--   可运行
--   可观测
--   可诊断
--   可比较
--   可持续优化
+- 分只认 Verifier
+- 别把 API key 写进 fixture
+- 超时后 cancel 与收证的竞态还在，见 `Code-Review-v0-v1.md`
 
-而不仅仅是生成一个最终分数。
+产品目标见 [Desktop-Agent-Evaluation-PRD.md](./Desktop-Agent-Evaluation-PRD.md)，后续计划见 [Evaluation-Roadmap-v2.md](./Evaluation-Roadmap-v2.md)。

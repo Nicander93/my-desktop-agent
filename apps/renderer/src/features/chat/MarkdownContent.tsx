@@ -1,3 +1,4 @@
+/** 流式 Markdown：按块渲染，尾块可带光标 */
 import { useMemo } from 'react';
 import { splitMarkdownBlocks } from '@/lib/splitMarkdownBlocks';
 import { MarkdownBlock } from './MarkdownBlock';
@@ -9,6 +10,7 @@ interface MarkdownContentProps {
   className?: string;
 }
 
+/** 多块 Markdown 容器 */
 export function MarkdownContent({ content, isStreaming, className }: MarkdownContentProps) {
   const blocks = useMemo(
     () => splitMarkdownBlocks(content, !!isStreaming),

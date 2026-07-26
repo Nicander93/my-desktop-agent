@@ -1,3 +1,4 @@
+/** runtime profile 推断与 office 策略映射 */
 import { describe, expect, it } from 'vitest';
 import { getRuntimeProfilePolicy, inferRuntimeProfile, profilePolicyToAgentOptions } from '../src/profiles.js';
 

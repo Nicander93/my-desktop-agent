@@ -1,3 +1,4 @@
+/** 可折叠 thinking 区块，流式时默认展开 */
 import { useEffect, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { formatThoughtDuration } from '@/lib/toolActivitySummary';
@@ -9,6 +10,7 @@ interface ThoughtSectionProps {
   isStreaming?: boolean;
 }
 
+/** 思考过程展示 */
 export function ThoughtSection({ thinking, durationMs, isStreaming }: ThoughtSectionProps) {
   const [open, setOpen] = useState(false);
 

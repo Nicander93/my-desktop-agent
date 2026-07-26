@@ -1,10 +1,7 @@
 /**
- * Agent 通信 Hook
- *
- * 桥接 chatStore 与主进程 AgentRuntime：
- * - 校验工作区和对话是否已选
- * - 发送消息并处理流式响应
- * - 同步持久化到 SQLite
+ * Chat 发消息：校验工作区 → IPC → 订 agent:stream-message → 落库。
+ * profile/MCP 组装在 electron agentHandlers。
+ * activeSessionRef 用来丢掉切对话之后的迟到事件。
  */
 import { useCallback, useEffect, useRef } from 'react';
 import { useChatStore, Message } from '@/stores/chatStore';
@@ -20,10 +17,12 @@ import { finalizeToolCalls, syncToolCallsFromTrace, applyTraceSpanToToolCalls } 
 import { parseMcpMentions, parseFileMentions, parseSkillMentions, appendTraceSpan, isTraceMessage, collectTraceFromMessages, mergeAgentTrace, traceRunToAgentTrace } from '@desktop-agent/shared';
 import type { ImageAttachment } from '@desktop-agent/shared';
 
+/** 前端临时 id，不是 DB 策略 */
 function createId(): string {
   return Math.random().toString(36).substring(2, 15);
 }
 
+/** thinking 和 content 一样时丢掉，避免重复显示 */
 function normalizeAssistantFields(message: Message): Partial<Message> {
   const thinking = message.thinking?.trim();
   const content = message.content?.trim();
@@ -37,6 +36,7 @@ function normalizeAssistantFields(message: Message): Partial<Message> {
   return {};
 }
 
+/** 只留元数据，不带二进制 */
 function snapshotAttachment(attachment: ImageAttachment): ImageAttachment {
   return {
     id: attachment.id,
@@ -52,6 +52,7 @@ function snapshotAttachment(attachment: ImageAttachment): ImageAttachment {
   };
 }
 
+/** 合并流里的 trace；还空就 getLatestTraceRun。返回时 isLive=false */
 async function resolveFinalTrace(
   sessionId: string,
   current: Message | undefined,
@@ -73,6 +74,7 @@ async function resolveFinalTrace(
   return { ...trace, isLive: false };
 }
 
+/** 失败时把 live trace 关掉，免得面板一直转 */
 function finalizeStreamingTrace(messageId: string): void {
   const current = useChatStore.getState().messages.find((m) => m.id === messageId);
   if (current?.trace?.isLive) {
@@ -83,7 +85,7 @@ function finalizeStreamingTrace(messageId: string): void {
 }
 
 export function useAgent() {
-  const { addMessage, updateMessage, persistMessage, persistMessageUpdate, setProcessing } = useChatStore();
+  const { addMessage, updateMessage, persistMessage, setProcessing } = useChatStore();
 
   const saveAssistantMessage = async (
     assistantId: string,
@@ -109,14 +111,11 @@ export function useAgent() {
     });
   };
 
-  /** 当前正在流式输出的 session，用于过滤 stream 事件 */
+  /** 丢掉切对话后迟到的 stream */
   const activeSessionRef = useRef<string | null>(null);
-  /** 当前流式 assistant 消息的 id */
   const streamingMessageIdRef = useRef<string | null>(null);
-  /** 思考阶段开始时间 */
   const thinkingStartedAtRef = useRef<number | null>(null);
 
-  /** 订阅主进程 agent:stream-message，增量更新 assistant 内容 */
   useEffect(() => {
     if (!window.electronAPI?.agent) return;
 
@@ -175,6 +174,7 @@ export function useAgent() {
     };
   }, [updateMessage]);
 
+  /** 占位 assistant → IPC → 收尾落库；没有 electronAPI 时走假回复 */
   const sendMessage = useCallback(async (content: string, attachments: ImageAttachment[] = []) => {
     const workspaceId = useWorkspaceStore.getState().currentWorkspaceId;
     const sessionId = useSessionStore.getState().currentSessionId;

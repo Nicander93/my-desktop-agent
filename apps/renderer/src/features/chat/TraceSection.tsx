@@ -1,3 +1,6 @@
+/**
+ * 消息内 Agent trace：摘要、时间线与 span 详情
+ */
 import { type MouseEvent, useEffect, useMemo, useState } from 'react';
 import {
   AlertCircle,
@@ -168,6 +171,7 @@ function TurnBlock({
   );
 }
 
+/** 按 turn 展开的 trace 时间线 */
 export function TraceTimeline({ trace }: { trace: AgentTrace }) {
   const run = useMemo(() => getTraceRunFromAgentTrace(trace), [trace]);
   const [openTurns, setOpenTurns] = useState<Record<number, boolean>>({});
@@ -261,6 +265,7 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
   );
 }
 
+/** 消息气泡内的 trace 折叠区 */
 export function TraceSection({ trace }: TraceSectionProps) {
   const [open, setOpen] = useState(!!trace.isLive);
   const [detailOpen, setDetailOpen] = useState(false);

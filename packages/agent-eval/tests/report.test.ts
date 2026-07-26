@@ -1,3 +1,4 @@
+/** 评测报告汇总与 Markdown 渲染 */
 import { describe, expect, it } from 'vitest';
 import { renderReport, summarizeResults } from '../src/report.js';
 

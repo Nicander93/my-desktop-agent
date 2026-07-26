@@ -1,3 +1,4 @@
+/** 根组件，挂载 React Router */
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router';
 import './styles/globals.css';

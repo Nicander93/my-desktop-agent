@@ -1,9 +1,11 @@
+/** 消息列表，接近底部时自动跟随新消息 */
 import { useEffect, useMemo, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { MessageItem } from './MessageItem';
 
 const STICKY_THRESHOLD = 80;
 
+/** 聊天消息滚动列表 */
 export function MessageList() {
   const { messages, isProcessing } = useChatStore();
   const containerRef = useRef<HTMLDivElement>(null);

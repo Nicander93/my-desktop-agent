@@ -1,7 +1,13 @@
+/**
+ * 模型配置 IPC Handler
+ *
+ * 模型 CRUD 与连通性测试，数据落 model_configs 表
+ */
 import { ipcMain } from 'electron';
 import type { ModelConfigInput } from '@desktop-agent/shared';
 import * as modelConfigService from '../services/modelConfigService';
 
+/** 注册 model:* IPC 通道 */
 export function registerModelHandlers(): void {
   ipcMain.handle('model:get-all', () => {
     try { return { success: true, configs: modelConfigService.getAllModelConfigs() }; }

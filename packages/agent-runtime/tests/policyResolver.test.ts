@@ -1,3 +1,4 @@
+/** profile+capability 策略合并与 tool result 截断 */
 import { describe, expect, it } from 'vitest';
 import { resolveExecutionPolicy } from '../src/policies/resolver.js';
 import { createToolResultTransformer } from '../src/tool-results/transformer.js';

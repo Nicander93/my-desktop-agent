@@ -1,3 +1,8 @@
+/**
+ * 手动加载 .env 到 process.env
+ *
+ * 已存在的变量不覆盖；main 启动前调用，见 loadProjectEnv
+ */
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -22,6 +27,7 @@ function parseEnvLine(line: string): [string, string] | null {
   return [key, value];
 }
 
+/** 按路径顺序读取，跳过不存在文件 */
 export function loadEnvFile(...paths: string[]): void {
   for (const envPath of paths) {
     if (!existsSync(envPath)) continue;
@@ -39,6 +45,7 @@ export function loadEnvFile(...paths: string[]): void {
   }
 }
 
+/** 从仓库根、electron 包、cwd 三处尝试加载 .env */
 export function loadProjectEnv(): void {
   loadEnvFile(
     join(__dirname, '../../../.env'),

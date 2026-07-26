@@ -1,5 +1,10 @@
+/**
+ * 解析用户消息里的 @ 文件引用，拼进 system prompt。
+ * 只抽路径字符串，不读盘；读文件交给 agent 工具。
+ */
 const FILE_MENTION_REGEX = /@([^\s@]+)/g;
 
+/** 去重返回 @ 后的路径片段，顺序不保证 */
 export function parseFileMentions(content: string): string[] {
   const mentions = new Set<string>();
   for (const match of content.matchAll(FILE_MENTION_REGEX)) {
@@ -8,6 +13,7 @@ export function parseFileMentions(content: string): string[] {
   return Array.from(mentions);
 }
 
+/** 无引用时返回空串，避免往 prompt 塞空段落 */
 export function buildFileMentionPrompt(fileRefs: string[]): string {
   if (fileRefs.length === 0) return '';
 

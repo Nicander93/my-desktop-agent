@@ -1,3 +1,6 @@
+/**
+ * Skill 配置：列表、目录安装、URL/本地导入
+ */
 import { create } from 'zustand';
 import type { SkillCatalogEntry, SkillRecord } from '@desktop-agent/shared';
 
@@ -18,6 +21,7 @@ interface SkillStore {
   refreshSkill: (id: string) => Promise<{ error?: string }>;
 }
 
+/** Skill 配置 Zustand store */
 export const useSkillStore = create<SkillStore>((set, get) => ({
   skills: [],
   catalog: [],

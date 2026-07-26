@@ -1,3 +1,4 @@
+/** 应用运行时路径与 bundled 命令解析 */
 import { describe, it, expect } from 'vitest';
 import { normalize } from 'path';
 import {

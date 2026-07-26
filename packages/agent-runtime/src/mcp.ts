@@ -1,3 +1,7 @@
+/**
+ * MCP 子进程预装、连通性测试、session 配置构建。
+ * Record → SDK 配置在 shared/buildConfig；设置页测连接走 testMcpConnection。
+ */
 import { spawn } from 'node:child_process';
 import { basename } from 'node:path';
 import { buildMcpServersForSdk, type McpServerRecord, type McpToolInfo } from '@desktop-agent/shared';
@@ -14,6 +18,7 @@ export type McpConnectionTestOptions = {
 
 type SdkConfig = Record<string, unknown>;
 
+/** 从绝对路径提取 npx/uvx 等命令名，预装分支判断用 */
 export function resolveSpawnCommandName(command: string): string {
   return basename(command).replace(/\.(exe|cmd)$/i, '').toLowerCase();
 }
@@ -68,6 +73,7 @@ function runProcess(
   });
 }
 
+/** uvx 拉包、npx 预热；非 stdio 或未知命令直接跳过 */
 export async function preinstallMcpDependencies(
   config: SdkConfig,
   subprocessEnv?: Record<string, string>,
@@ -122,6 +128,7 @@ async function createTransport(config: SdkConfig, subprocessEnv?: Record<string,
   throw new Error(`Unsupported MCP transport type: ${type}`);
 }
 
+/** 连上后 listTools；失败返回 error 字符串，不关进程泄漏由 SDK 处理 */
 export async function testMcpConnection(
   name: string,
   config: SdkConfig,
@@ -160,6 +167,7 @@ export async function testMcpConnection(
   }
 }
 
+/** 设置页「启用」：先预装再测通，返回工具列表 */
 export async function setupMcpServer(
   name: string,
   config: SdkConfig,
@@ -172,6 +180,7 @@ export async function setupMcpServer(
   return testMcpConnection(name, config, { skipPreinstall: true, subprocessEnv: options?.subprocessEnv });
 }
 
+/** 会话启动时把已启用 McpServerRecord 转成 SDK servers 字段 */
 export function buildSessionMcpServers(
   servers: McpServerRecord[],
   workspacePath?: string,

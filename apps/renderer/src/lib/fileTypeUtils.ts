@@ -1,3 +1,6 @@
+/**
+ * 按扩展名/MIME 决定编辑器展示模式与 Monaco 语言
+ */
 import type { EditorFileType } from '@/stores/editorStore';
 
 function getExtFromPath(path: string): string {
@@ -10,6 +13,7 @@ function getExtFromPath(path: string): string {
   return name.slice(dot + 1).toLowerCase();
 }
 
+/** 决定用文本/图片/Office 等哪种预览 */
 export function resolveEditorFileType(
   path: string,
   mimeType: string,
@@ -71,6 +75,7 @@ const EXT_TO_MONACO_LANG: Record<string, string> = {
   editorconfig: 'ini',
 };
 
+/** 路径扩展名映射 Monaco language id */
 export function getLanguageFromPath(path: string): string {
   const ext = getExtFromPath(path);
   if (!ext) return 'plaintext';

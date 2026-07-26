@@ -1,3 +1,8 @@
+/**
+ * 模型配置持久化
+ *
+ * OpenAI 兼容端点，provider 固定 openai-compatible；同时只能有一个 isDefault
+ */
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
 import type { ModelConfig, ModelConfigInput, ModelConnectionTestResult } from '@desktop-agent/shared';
@@ -46,6 +51,7 @@ function clearDefault(): void {
   getDatabase().run('UPDATE model_configs SET isDefault = 0 WHERE isDefault = 1');
 }
 
+/** 默认配置排最前 */
 export function getAllModelConfigs(): ModelConfig[] {
   return queryAll<Record<string, unknown>>('SELECT * FROM model_configs ORDER BY isDefault DESC, createdAt ASC').map(rowToRecord);
 }
@@ -55,11 +61,13 @@ export function getModelConfig(id: string): ModelConfig | undefined {
   return row ? rowToRecord(row) : undefined;
 }
 
+/** 取 enabled 且优先 isDefault 的一条，无配置时 undefined */
 export function getDefaultModelConfig(): ModelConfig | undefined {
   const row = queryOne<Record<string, unknown>>('SELECT * FROM model_configs WHERE enabled = 1 ORDER BY isDefault DESC, createdAt ASC LIMIT 1');
   return row ? rowToRecord(row) : undefined;
 }
 
+/** 首条记录或显式 isDefault 时自动设为默认 */
 export function createModelConfig(input: ModelConfigInput): ModelConfig {
   const next = validateInput(input);
   if (queryOne('SELECT id FROM model_configs WHERE name = ?', [next.name])) throw new Error(`模型配置 "${next.name}" 已存在`);
@@ -100,6 +108,7 @@ export function deleteModelConfig(id: string): boolean {
   return true;
 }
 
+/** GET /models 探测连通性，10s 超时；apiKey 为空时不带 Authorization */
 export async function testModelConnection(config: Pick<ModelConfig, 'baseURL' | 'apiKey'>): Promise<ModelConnectionTestResult> {
   const headers: HeadersInit = { Accept: 'application/json' };
   if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;

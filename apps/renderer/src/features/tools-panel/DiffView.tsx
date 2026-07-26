@@ -1,5 +1,7 @@
+/** 文件 diff 占位页，尚无数据时展示提示 */
 import { GitCompare } from 'lucide-react';
 
+/** Diff 面板占位 */
 export function DiffView() {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">

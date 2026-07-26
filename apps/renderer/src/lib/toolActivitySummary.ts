@@ -1,3 +1,6 @@
+/**
+ * 工具活动汇总：探索/编辑计数、耗时与等待模型文案
+ */
 import type { ToolCall } from '@/stores/chatStore';
 import { formatTraceDuration } from '@/lib/traceUtils';
 
@@ -25,6 +28,7 @@ export interface ToolActivitySummaryTiming {
   waitingForModel?: boolean;
 }
 
+/** 汇总行文案，可拼活跃工具或等待模型耗时 */
 export function buildToolActivitySummaryLabel(
   toolCalls: ToolCall[],
   timing: ToolActivitySummaryTiming = {},

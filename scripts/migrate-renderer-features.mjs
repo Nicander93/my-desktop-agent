@@ -1,3 +1,6 @@
+/**
+ * 一次性迁移：components/* 挪到 features/* 并批量改 import 路径
+ */
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

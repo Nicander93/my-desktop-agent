@@ -1,3 +1,4 @@
+/** trace 详情里的可折叠小节 */
 import { useState, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,7 @@ interface TraceCollapsibleSectionProps {
   className?: string;
 }
 
+/** 带标题与摘要的折叠块 */
 export function TraceCollapsibleSection({
   title,
   summary,

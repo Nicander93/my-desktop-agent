@@ -1,3 +1,6 @@
+/**
+ * 单块 Markdown 渲染：GFM、代码高亮、路径链接
+ */
 import { Fragment, isValidElement, cloneElement, memo, type MouseEvent, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -45,6 +48,7 @@ function withFilePathLinks(Tag: 'p' | 'li' | 'td') {
   };
 }
 
+/** react-markdown 自定义组件映射 */
 export const markdownComponents: Components = {
   pre({ children }) {
     return <>{children}</>;
@@ -80,6 +84,7 @@ export const markdownComponents: Components = {
   td: withFilePathLinks('td'),
 };
 
+/** 单段 Markdown 内容（memo 避免流式重绘） */
 export const MarkdownBlock = memo(function MarkdownBlock({ content }: { content: string }) {
   return (
     <div className={proseClass}>

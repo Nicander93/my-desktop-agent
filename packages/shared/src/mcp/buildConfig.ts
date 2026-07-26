@@ -1,5 +1,10 @@
+/**
+ * McpServerRecord → open-agent-sdk 可消费的 MCP 配置。
+ * 占位符替换、导入 JSON 解析也在这；连子进程测通见 agent-runtime/mcp.ts。
+ */
 import type { McpImportFile, McpImportServerConfig, McpServerRecord } from '../types/mcp.js';
 
+/** workspace / secrets 注入；commandResolver 把 npx/uvx 换成 bundled 绝对路径 */
 export interface McpBuildContext {
   workspacePath?: string;
   secrets?: Record<string, string>;
@@ -7,6 +12,7 @@ export interface McpBuildContext {
   commandResolver?: McpCommandResolver;
 }
 
+/** 返回替换后的可执行路径，未识别则原样返回 */
 export type McpCommandResolver = (command: string) => string;
 
 function replacePlaceholders(value: string, ctx: McpBuildContext): string {
@@ -34,6 +40,7 @@ function resolveEnv(
   return resolved;
 }
 
+/** 跳过 disabled 或缺 command/url 的项；stdio 与 sse/http 字段形状不同 */
 export function buildMcpServersForSdk(
   servers: McpServerRecord[],
   ctx: McpBuildContext = {},
@@ -68,6 +75,7 @@ export function buildMcpServersForSdk(
   return out;
 }
 
+/** 支持双引号包裹的参数，导入 UI 粘贴整行命令时用 */
 export function parseCommandLine(commandLine: string): { command: string; args: string[] } {
   const parts = commandLine.trim().match(/(?:[^\s"]+|"[^"]*")+/g) ?? [];
   const normalized = parts.map((part) => part.replace(/^"|"$/g, ''));
@@ -77,6 +85,7 @@ export function parseCommandLine(commandLine: string): { command: string; args: 
   };
 }
 
+/** 缺 mcpServers 或 JSON 非法时抛错 */
 export function parseMcpImportJson(raw: string): Array<{ name: string; config: McpImportServerConfig }> {
   const parsed = JSON.parse(raw) as McpImportFile;
   if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') {
@@ -86,6 +95,7 @@ export function parseMcpImportJson(raw: string): Array<{ name: string; config: M
   return Object.entries(parsed.mcpServers).map(([name, config]) => ({ name, config }));
 }
 
+/** 导入配置 → 落库前的 McpServerRecord 字段；stdio 无 command 时抛错 */
 export function importConfigToServerInput(
   name: string,
   config: McpImportServerConfig,

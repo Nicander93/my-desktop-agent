@@ -1,3 +1,6 @@
+/**
+ * 对各 src 目录跑 dependency-cruiser，校验分层与依赖规则
+ */
 import { execSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';

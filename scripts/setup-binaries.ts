@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/** CLI：下载/校验 Windows 运行时二进制（Node 等） */
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -21,6 +22,7 @@ function logProgress(event: { stage?: string; runtime?: string; message?: string
   }
 }
 
+/** 安装或 --check 校验二进制 */
 async function main() {
   const homeDir = getDefaultHomeDir();
   if (!homeDir) {

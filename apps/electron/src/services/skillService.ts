@@ -1,3 +1,8 @@
+/**
+ * Skill 持久化与内容缓存
+ *
+ * 正文缓存在 contentCache；URL/本地源支持 refresh 重拉
+ */
 import { readFileSync, existsSync } from 'fs';
 import { getDatabase, saveDatabase } from '../db';
 import { v4 as uuidv4 } from 'uuid';
@@ -200,6 +205,7 @@ export function deleteSkill(id: string): boolean {
   return true;
 }
 
+/** 按内置目录安装，优先用 bundledContent 避免网络请求 */
 export async function installFromCatalog(catalogId: string): Promise<SkillRecord> {
   const entry = getSkillCatalogEntry(catalogId);
   if (!entry) {
@@ -222,6 +228,7 @@ export async function installFromCatalog(catalogId: string): Promise<SkillRecord
   });
 }
 
+/** 从 URL 拉取 SKILL.md 正文并入库 */
 export async function importFromUrl(name: string, url: string): Promise<SkillRecord> {
   validateName(name);
   if (getSkillByName(name)) {
@@ -240,6 +247,7 @@ export async function importFromUrl(name: string, url: string): Promise<SkillRec
   });
 }
 
+/** 从本地路径读取 SKILL.md */
 export async function importFromLocalPath(name: string, localPath: string): Promise<SkillRecord> {
   validateName(name);
   if (getSkillByName(name)) {
@@ -258,6 +266,7 @@ export async function importFromLocalPath(name: string, localPath: string): Prom
   });
 }
 
+/** 按 sourcePath 重拉正文；仅 URL 或 local 源支持 */
 export async function refreshSkillContent(id: string): Promise<SkillRecord | undefined> {
   const existing = getSkill(id);
   if (!existing) return undefined;
@@ -279,6 +288,7 @@ export function listMentionableSkills(): Array<{ name: string; displayName: stri
   }));
 }
 
+/** 内置目录 + 是否已安装标记 */
 export function getCatalog(): Array<SkillCatalogEntry & { installed: boolean }> {
   const installed = new Set(getAllSkills().map((skill) => skill.name));
   return SKILL_CATALOG.map((entry) => ({
@@ -287,6 +297,7 @@ export function getCatalog(): Array<SkillCatalogEntry & { installed: boolean }> 
   }));
 }
 
+/** 供 Agent 运行时注入的 Skill 定义（含 contentCache） */
 export function getRuntimeSkillDefinitions(): RuntimeSkillDefinition[] {
   return getAllSkills().map((skill) => ({
     name: skill.name,

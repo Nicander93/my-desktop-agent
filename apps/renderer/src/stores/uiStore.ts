@@ -1,3 +1,6 @@
+/**
+ * 布局 UI 状态：侧栏/工具面板显隐与宽度、Tab
+ */
 import { create } from 'zustand';
 
 const SIDEBAR_MIN_WIDTH = 180;
@@ -19,6 +22,7 @@ interface UIState {
   openTracePanel: () => void;
 }
 
+/** 布局相关 Zustand store */
 export const useUIStore = create<UIState>((set) => ({
   sidebarCollapsed: false,
   sidebarWidth: 240,

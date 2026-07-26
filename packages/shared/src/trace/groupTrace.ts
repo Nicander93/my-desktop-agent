@@ -1,3 +1,7 @@
+/**
+ * Trace span 按 turn/run 分组、汇总 token 与工具调用。
+ * 原始 span 由 open-agent-sdk 产出；UI 展示结构见 types/trace.ts。
+ */
 import type {
   RunEndPayload,
   TraceRun,
@@ -13,6 +17,7 @@ function sumDuration(spans: (TraceSpan | undefined)[]): number | undefined {
   return total > 0 ? total : undefined;
 }
 
+/** 按 turn 字段分组；无 turn 的 span 不进结果 */
 export function groupTraceByTurn(spans: TraceSpan[]): TraceTurn[] {
   const turnNumbers = [
     ...new Set(spans.filter((s) => s.turn != null).map((s) => s.turn!)),
@@ -71,11 +76,13 @@ function buildTraceRun(spans: TraceSpan[]): TraceRun {
   };
 }
 
+/** 按 runId 拆成多条 TraceRun */
 export function groupTraceByRun(spans: TraceSpan[]): TraceRun[] {
   const runIds = [...new Set(spans.map((s) => s.runId))];
   return runIds.map((runId) => buildTraceRun(spans.filter((s) => s.runId === runId)));
 }
 
+/** 可选 runId 过滤；无 span 时返回 null */
 export function buildTraceRunFromSpans(spans: TraceSpan[], runId?: string): TraceRun | null {
   const filtered = runId ? spans.filter((s) => s.runId === runId) : spans;
   if (filtered.length === 0) return null;
@@ -97,6 +104,7 @@ function addUsage(total: TokenUsage | undefined, usage?: TokenUsage): TokenUsage
   };
 }
 
+/** 汇总轮次、耗时、token、工具次数；isError 取自 run_end */
 export function summarizeTraceRun(run: TraceRun): TraceSummary {
   let usage: TokenUsage | undefined;
   let toolCallCount = 0;
@@ -122,6 +130,7 @@ export function summarizeTraceRun(run: TraceRun): TraceSummary {
   };
 }
 
+/** 同 id 覆盖更新，避免流式重复追加 */
 export function appendTraceSpan(spans: TraceSpan[], span: TraceSpan): TraceSpan[] {
   const idx = spans.findIndex((s) => s.id === span.id);
   if (idx >= 0) {
@@ -132,6 +141,7 @@ export function appendTraceSpan(spans: TraceSpan[], span: TraceSpan): TraceSpan[
   return [...spans, span];
 }
 
+/** 判断 IPC/流消息是否为 trace span 包裹 */
 export function isTraceMessage(message: unknown): message is { type: 'trace'; span: TraceSpan } {
   return (
     message != null &&
@@ -141,6 +151,7 @@ export function isTraceMessage(message: unknown): message is { type: 'trace'; sp
   );
 }
 
+/** 从消息数组提取并合并 trace；无 span 返回 undefined */
 export function collectTraceFromMessages(messages: unknown[]): AgentTrace | undefined {
   let runId = '';
   let spans: TraceSpan[] = [];
@@ -154,6 +165,7 @@ export function collectTraceFromMessages(messages: unknown[]): AgentTrace | unde
   return { runId, spans, isLive: false };
 }
 
+/** 合并两段 trace，按 span id 去重 */
 export function mergeAgentTrace(current?: AgentTrace, incoming?: AgentTrace): AgentTrace | undefined {
   if (!current && !incoming) return undefined;
   const runId = incoming?.runId || current?.runId || '';
@@ -168,6 +180,7 @@ export function mergeAgentTrace(current?: AgentTrace, incoming?: AgentTrace): Ag
   };
 }
 
+/** TraceRun 树展平回 AgentTrace.span 列表 */
 export function traceRunToAgentTrace(run: TraceRun): AgentTrace {
   const spans: TraceSpan[] = [];
   const push = (span?: TraceSpan) => {

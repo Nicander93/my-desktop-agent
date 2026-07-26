@@ -1,3 +1,4 @@
+/** syncRuntimeSkills 注册/注销与 / 提及 */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { registerSkill, unregisterSkill } = vi.hoisted(() => ({

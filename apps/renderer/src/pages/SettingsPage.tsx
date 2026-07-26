@@ -1,3 +1,4 @@
+/** 设置页：左侧 Tab + 通用/模型/Skill/MCP 子页 */
 import { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ const settingsTabs = [
   { id: 'mcp', label: 'MCP' },
 ];
 
+/** 设置页壳层 */
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
 

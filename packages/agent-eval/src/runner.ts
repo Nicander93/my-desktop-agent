@@ -1,3 +1,8 @@
+/**
+ * 评测：拷 fixture → 跑 Agent → diff → Verifier → 写 result。
+ * 不依赖 Electron。隔离约定在 evaluationPrompt（含 pnpm --ignore-workspace）。
+ * 超时 cancel 和收证有竞态，见 docs/eval/Code-Review-v0-v1.md。
+ */
 import { randomUUID } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
@@ -18,7 +23,7 @@ export interface AgentExecutor {
   cancel?(sessionId: string): Promise<void>;
 }
 
-/** Runtime adapter deliberately imports no Electron or renderer code. */
+/** includeEnvironmentContext=false，免得宿主 git 状态漏进隔离目录 */
 export class RuntimeAgentExecutor implements AgentExecutor {
   private readonly sessions = new Map<string, AgentRuntime>();
 
@@ -54,6 +59,7 @@ export class RuntimeAgentExecutor implements AgentExecutor {
   }
 }
 
+/** status 以 Verifier 为准，不看模型嘴上说没说完成 */
 export async function runTask(task: LoadedEvaluationTask, options: {
   outputRoot: string;
   executor: AgentExecutor;
@@ -133,6 +139,7 @@ function classifyFailure(timedOut: boolean, error: string | undefined, trace: un
 
 class EvaluationTimeoutError extends Error {}
 
+/** 超时后调 cancel；目前不等 cancel 结束就往下抛 */
 async function withTimeout<T>(run: () => Promise<T>, timeoutMs: number | undefined, cancel: () => Promise<void> | undefined): Promise<T> {
   if (!timeoutMs) return run();
   const execution = run();

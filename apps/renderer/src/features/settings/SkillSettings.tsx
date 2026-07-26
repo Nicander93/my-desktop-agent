@@ -1,3 +1,6 @@
+/**
+ * Skill 设置：已安装、目录、URL/本地导入
+ */
 import { useEffect, useState } from 'react';
 import { BookOpen, Download, RefreshCw, Trash2, Upload } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 type TabId = 'installed' | 'catalog' | 'import';
 
+/** Skill 配置页 */
 export function SkillSettings() {
   const [tab, setTab] = useState<TabId>('installed');
   const [message, setMessage] = useState('');

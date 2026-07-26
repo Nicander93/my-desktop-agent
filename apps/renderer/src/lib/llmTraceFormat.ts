@@ -1,3 +1,6 @@
+/**
+ * Trace 面板：LLM 请求/响应与工具 span 的摘要与格式化
+ */
 import type {
   LlmRequestPayload,
   LlmResponsePayload,

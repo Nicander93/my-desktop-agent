@@ -1,3 +1,6 @@
+/**
+ * MCP 服务配置：列表、目录安装、导入与连通测试
+ */
 import { create } from 'zustand';
 import type { McpCatalogEntry, McpServerRecord } from '@desktop-agent/shared';
 
@@ -17,6 +20,7 @@ interface McpStore {
   testConnection: (id: string, conversationId?: string) => Promise<{ success: boolean; tools?: Array<{ name: string; description: string }>; error?: string }>;
 }
 
+/** MCP 配置 Zustand store */
 export const useMcpStore = create<McpStore>((set, get) => ({
   servers: [],
   catalog: [],

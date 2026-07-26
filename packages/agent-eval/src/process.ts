@@ -1,3 +1,7 @@
+/**
+ * 子进程执行封装；stdout/stderr 各截断 50k，超时强杀子树（Windows 用 taskkill）。
+ * verifier 跑测试命令、runner 调 agent 都走这。
+ */
 import { spawn } from 'node:child_process';
 
 const MAX_OUTPUT_CHARS = 50_000;
@@ -9,6 +13,7 @@ export interface ProcessResult {
   timedOut: boolean;
 }
 
+/** Windows 下 pnpm/npx 自动补 .cmd；支持 AbortSignal 提前终止 */
 export function runProcess(command: string, args: string[], cwd: string, timeoutMs = 60_000, signal?: AbortSignal): Promise<ProcessResult> {
   return new Promise((resolveResult, reject) => {
     const resolvedCommand = resolveCommand(command);

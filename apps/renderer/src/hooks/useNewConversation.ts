@@ -1,9 +1,13 @@
+/**
+ * 新建会话：切工作区、清空消息、createSession
+ */
 import { useCallback } from 'react';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useChatStore } from '@/stores/chatStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useGoToChat } from './useGoToChat';
 
+/** 创建并选中新会话，空会话已存在则跳过 */
 export function useNewConversation() {
   const goToChat = useGoToChat();
 

@@ -1,8 +1,13 @@
+/**
+ * 把 DB/设置里的 Skill 注册进 open-agent-sdk；enabled 或本轮 / 提及才注册。
+ * managedSkillNames 跟踪本 runtime 注册过的名字，禁用或切 session 时 unregister。
+ */
 import { registerSkill, unregisterSkill } from '@codeany/open-agent-sdk';
 import { getSkillPromptBody, type RuntimeSkillDefinition } from '@desktop-agent/shared';
 
 const managedSkillNames = new Set<string>();
 
+/** 与 mentionNames 合并决定本轮活跃 Skill；离开集合的会 unregister */
 export function syncRuntimeSkills(
   skills: RuntimeSkillDefinition[],
   mentionNames: string[] = [],
@@ -38,6 +43,7 @@ export function syncRuntimeSkills(
   }
 }
 
+/** session 结束或 runtime 销毁时清空注册 */
 export function clearRuntimeSkills(): void {
   for (const name of managedSkillNames) {
     unregisterSkill(name);
