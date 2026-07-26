@@ -11,7 +11,7 @@ import type { ResolvedExecutionPolicy, RuntimeExecutionRequest } from './types.j
 /** profile → 默认工具 / maxTurns / 结果截断长度 */
 const PROFILE_DEFAULTS: Record<RuntimeProfile, { tools: string[]; maxTurns: number; maxToolResultChars: number }> = {
   general: { tools: [], maxTurns: 30, maxToolResultChars: 8000 },
-  coding: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'TodoWrite'], maxTurns: 20, maxToolResultChars: 6000 },
+  coding: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'TodoWrite'], maxTurns: 40, maxToolResultChars: 6000 },
   office: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 8, maxToolResultChars: 4000 },
   'file-organizing': { tools: ['Read', 'Glob', 'Grep'], maxTurns: 12, maxToolResultChars: 4000 },
   mcp: { tools: ['Read', 'Glob', 'Grep'], maxTurns: 16, maxToolResultChars: 6000 },

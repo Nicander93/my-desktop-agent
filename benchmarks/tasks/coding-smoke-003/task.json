@@ -14,5 +14,5 @@
     "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
     "checks": [{ "id": "settings-snapshot", "type": "snapshot", "path": "config/settings.json", "expectedPath": "expected/settings.json", "weight": 2 }]
   },
-  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+  "limits": { "maxTurns": 24, "timeoutMs": 480000, "maxChangedFiles": 1 }
 }

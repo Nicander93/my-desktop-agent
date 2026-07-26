@@ -9,6 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { AgentRuntime, type RuntimeCapability, type RuntimeOptions } from '@desktop-agent/agent-runtime';
 import type { EvaluationResult, EvaluationTask } from '@desktop-agent/shared';
+import { formatSdkEvent, type ProgressSink } from './progress.js';
 import type { LoadedEvaluationTask } from './task.js';
 import { verifyTask } from './verifier.js';
 import { prepareWorkspace, writeDiff } from './workspace.js';
@@ -19,7 +20,7 @@ export interface AgentExecution {
 }
 
 export interface AgentExecutor {
-  execute(task: EvaluationTask, workspacePath: string, sessionId: string): Promise<AgentExecution>;
+  execute(task: EvaluationTask, workspacePath: string, sessionId: string, onProgress?: ProgressSink): Promise<AgentExecution>;
   cancel?(sessionId: string): Promise<void>;
 }
 
@@ -29,7 +30,8 @@ export class RuntimeAgentExecutor implements AgentExecutor {
 
   constructor(private readonly runtimeOptions: RuntimeOptions) {}
 
-  async execute(task: EvaluationTask, workspacePath: string, sessionId: string): Promise<AgentExecution> {
+  async execute(task: EvaluationTask, workspacePath: string, sessionId: string, onProgress?: ProgressSink): Promise<AgentExecution> {
+    const log = onProgress ?? (() => undefined);
     const runtime = new AgentRuntime({
       ...this.runtimeOptions,
       maxTurns: task.limits?.maxTurns ?? this.runtimeOptions.maxTurns,
@@ -43,7 +45,30 @@ export class RuntimeAgentExecutor implements AgentExecutor {
         'When this fixture uses pnpm, run its scripts as `pnpm --ignore-workspace <script>` so it stays isolated from the host repository.',
         task.prompt,
       ].join('\n\n');
-      const text = await runtime.prompt(sessionId, evaluationPrompt, { cwd: workspacePath }, { profile: task.profile, capabilities: task.capabilities as RuntimeCapability[] });
+      const stream = await runtime.sendMessage(
+        sessionId,
+        evaluationPrompt,
+        { cwd: workspacePath },
+        { profile: task.profile, capabilities: task.capabilities as RuntimeCapability[] },
+      );
+      let text = '';
+      let executionError: string | undefined;
+      for await (const event of stream) {
+        const line = formatSdkEvent(event);
+        if (line) log(line);
+        if (event.type === 'assistant') {
+          const fragments = (Array.isArray(event.message?.content) ? event.message.content : [])
+            .filter((block): block is { type: 'text'; text: string } => !!block && typeof block === 'object' && 'type' in block && block.type === 'text' && 'text' in block && typeof block.text === 'string')
+            .map((block) => block.text);
+          if (fragments.length > 0) text = fragments.join('');
+        }
+        if (event.type === 'result') {
+          if (event.is_error || event.subtype === 'error' || event.subtype === 'error_during_execution' || event.subtype === 'error_max_turns') {
+            executionError = event.errors?.join('; ') || `Agent execution failed (${event.subtype}).`;
+          }
+        }
+      }
+      if (executionError) throw new Error(executionError);
       return { text, trace: runtime.getAgent(sessionId)?.getTrace() ?? [] };
     } finally {
       this.sessions.delete(sessionId);
@@ -64,7 +89,9 @@ export async function runTask(task: LoadedEvaluationTask, options: {
   outputRoot: string;
   executor: AgentExecutor;
   model: { model: string; baseURL?: string };
+  onProgress?: ProgressSink;
 }): Promise<EvaluationResult> {
+  const log = options.onProgress ?? (() => undefined);
   const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}-${randomUUID().slice(0, 8)}`;
   const runDirectory = join(options.outputRoot, task.id, runId);
   const workspacePath = join(runDirectory, 'workspace');
@@ -74,8 +101,11 @@ export async function runTask(task: LoadedEvaluationTask, options: {
   const diffPath = join(runDirectory, 'diff.patch');
   const startedAt = new Date().toISOString();
   const started = performance.now();
+  log(`[eval] start ${task.id}@${task.version} model=${options.model.model}${options.model.baseURL ? ` baseURL=${options.model.baseURL}` : ''}`);
+  log(`[eval] limits maxTurns=${task.limits?.maxTurns ?? 'default'} timeoutMs=${task.limits?.timeoutMs ?? 'none'}`);
   await mkdir(runDirectory, { recursive: true });
   const fixturePath = resolve(dirname(task.definitionPath), task.fixture);
+  log(`[eval] prepare workspace → ${workspacePath}`);
   await prepareWorkspace(fixturePath, baselinePath, workspacePath);
 
   let execution: AgentExecution | undefined;
@@ -83,17 +113,20 @@ export async function runTask(task: LoadedEvaluationTask, options: {
   let timedOut = false;
   const sessionId = `agent-eval-${task.id}-${randomUUID()}`;
   try {
+    log('[eval] agent running…');
     execution = await withTimeout(
-      () => options.executor.execute(task, workspacePath, sessionId),
+      () => options.executor.execute(task, workspacePath, sessionId, log),
       task.limits?.timeoutMs,
       () => options.executor.cancel?.(sessionId),
     );
   } catch (cause) {
     timedOut = cause instanceof EvaluationTimeoutError;
     error = cause instanceof Error ? cause.message : String(cause);
+    log(`[eval] agent error: ${error}`);
   }
 
   if (execution) await writeFile(tracePath, `${JSON.stringify(execution.trace, null, 2)}\n`, 'utf8');
+  log('[eval] write diff + verify');
   const changedFiles = await writeDiff(baselinePath, workspacePath, diffPath);
   const verifier = await verifyTask(task, workspacePath, baselinePath);
   if (task.limits?.maxChangedFiles !== undefined) {
@@ -104,6 +137,9 @@ export async function runTask(task: LoadedEvaluationTask, options: {
       durationMs: 0,
     });
     verifier.passed = verifier.checks.every((check) => check.passed);
+  }
+  for (const check of verifier.checks) {
+    log(`[verify] ${check.passed ? 'pass' : 'FAIL'} ${check.id}${check.evidence ? ` — ${truncateEvidence(check.evidence)}` : ''}`);
   }
   const endedAt = new Date().toISOString();
   const result: EvaluationResult = {
@@ -124,7 +160,13 @@ export async function runTask(task: LoadedEvaluationTask, options: {
     failure: classifyFailure(timedOut, error, execution?.trace, verifier.passed),
   };
   await writeFile(resultPath, `${JSON.stringify(result, null, 2)}\n`, 'utf8');
+  log(`[eval] ${result.status} in ${result.durationMs}ms → ${resultPath}`);
   return result;
+}
+
+function truncateEvidence(evidence: string): string {
+  const flat = evidence.replace(/\s+/g, ' ').trim();
+  return flat.length > 160 ? `${flat.slice(0, 159)}…` : flat;
 }
 
 function classifyFailure(timedOut: boolean, error: string | undefined, trace: unknown[] | undefined, verifierPassed: boolean): EvaluationResult['failure'] {

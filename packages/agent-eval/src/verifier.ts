@@ -11,9 +11,12 @@ import { runProcess } from './process.js';
 
 export async function verifyTask(task: EvaluationTask, workspacePath: string, baselinePath: string): Promise<EvaluationVerification> {
   const checks: EvaluationCheck[] = [];
+  const taskDir = (task as EvaluationTask & { definitionPath?: string }).definitionPath
+    ? dirname((task as EvaluationTask & { definitionPath: string }).definitionPath)
+    : undefined;
   for (const path of task.verifier.requiredFiles ?? []) checks.push(await requiredFileCheck(path, workspacePath));
   for (const path of task.verifier.unchangedPaths ?? []) checks.push(await unchangedFileCheck(path, workspacePath, baselinePath));
-  for (const command of task.verifier.commands ?? []) checks.push(await commandCheck(command, workspacePath));
+  for (const command of task.verifier.commands ?? []) checks.push(await commandCheck(command, workspacePath, taskDir));
   for (const check of task.verifier.checks ?? []) checks.push(await declarativeCheck(check, task, workspacePath));
   return { passed: checks.every((check) => check.passed), checks };
 }
@@ -42,11 +45,16 @@ async function unchangedFileCheck(path: string, workspacePath: string, baselineP
   }
 }
 
-/** pnpm 自动加 --ignore-workspace */
-async function commandCheck(command: NonNullable<EvaluationTask['verifier']['commands']>[number], workspacePath: string): Promise<EvaluationCheck> {
+/** pnpm 自动加 --ignore-workspace；resolveArgsFromTaskDir 把相对 args 锚到 task 目录 */
+async function commandCheck(
+  command: NonNullable<EvaluationTask['verifier']['commands']>[number],
+  workspacePath: string,
+  taskDir?: string,
+): Promise<EvaluationCheck> {
   const started = performance.now();
   try {
-    const args = isolatedCommandArgs(command.command, command.args ?? []);
+    const rawArgs = resolveCommandArgs(command, taskDir);
+    const args = isolatedCommandArgs(command.command, rawArgs);
     const output = await runProcess(command.command, args, workspacePath, command.timeoutMs);
     const expected = command.expectedExitCode ?? 0;
     const requiredOutput = command.stdoutIncludes === undefined ? [] : (Array.isArray(command.stdoutIncludes) ? command.stdoutIncludes : [command.stdoutIncludes]);
@@ -56,6 +64,19 @@ async function commandCheck(command: NonNullable<EvaluationTask['verifier']['com
   } catch (error) {
     return result(`command:${command.command}`, false, error instanceof Error ? error.message : String(error), started);
   }
+}
+
+function resolveCommandArgs(
+  command: NonNullable<EvaluationTask['verifier']['commands']>[number],
+  taskDir?: string,
+): string[] {
+  const args = command.args ?? [];
+  if (!command.resolveArgsFromTaskDir) return args;
+  if (!taskDir) throw new Error('resolveArgsFromTaskDir requires task.definitionPath');
+  return args.map((arg) => {
+    if (!arg || arg.startsWith('-') || /^[A-Za-z]:[\\/]/.test(arg) || arg.startsWith('/')) return arg;
+    return resolve(taskDir, arg);
+  });
 }
 
 async function declarativeCheck(check: NonNullable<EvaluationTask['verifier']['checks']>[number], task: EvaluationTask, workspacePath: string): Promise<EvaluationCheck> {

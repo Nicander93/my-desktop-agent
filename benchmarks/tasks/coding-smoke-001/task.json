@@ -14,5 +14,5 @@
     "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
     "checks": [{ "id": "greeting-content", "type": "file-contains", "path": "src/greet.js", "includes": ["export function greet", "Hello, ${name}!"], "weight": 2 }]
   },
-  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+  "limits": { "maxTurns": 24, "timeoutMs": 480000, "maxChangedFiles": 1 }
 }

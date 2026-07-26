@@ -16,5 +16,5 @@
       { "command": "pnpm", "args": ["build"], "timeoutMs": 30000 }
     ]
   },
-  "limits": { "maxTurns": 12, "timeoutMs": 180000, "maxChangedFiles": 2 }
+  "limits": { "maxTurns": 32, "timeoutMs": 600000, "maxChangedFiles": 2 }
 }

@@ -42,6 +42,8 @@ export interface EvaluationCommand {
   expectedExitCode?: number;
   timeoutMs?: number;
   stdoutIncludes?: string | string[];
+  /** 为 true 时，相对路径 args 相对 task.json 所在目录解析（用于 harness 判分脚本，不进 Agent workspace） */
+  resolveArgsFromTaskDir?: boolean;
 }
 
 export type EvaluationVerifierCheck =

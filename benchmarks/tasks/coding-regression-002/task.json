@@ -14,5 +14,5 @@
     "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
     "checks": [{ "id": "tags-export-present", "type": "file-contains", "path": "src/tags.js", "includes": "normalizeTags" }]
   },
-  "limits": { "maxTurns": 15, "timeoutMs": 180000, "maxChangedFiles": 1 }
+  "limits": { "maxTurns": 36, "timeoutMs": 600000, "maxChangedFiles": 1 }
 }

@@ -265,6 +265,7 @@ pnpm eval -- --suite smoke --model <model> --dry-run
 
 - Key：`AGENT_EVAL_API_KEY`，没有就用 `.env` 里的 `CODEANY_API_KEY`
 - 模型：`--model` / `--base-url`，或 `CODEANY_MODEL` / `CODEANY_BASE_URL`
+- 过程日志默认打 **stderr**（`[eval]` / `[agent]` / `[tool]` / `[verify]`）；最终 JSON 在 stdout。加 `--quiet` 可关掉过程输出
 - 分只看 Verifier；别改 fixture 测试刷分
 - 结果在 `eval-results/`（已 ignore）
 

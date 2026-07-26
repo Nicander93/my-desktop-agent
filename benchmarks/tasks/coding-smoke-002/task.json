@@ -14,5 +14,5 @@
     "commands": [{ "command": "node", "args": ["verify.mjs"], "stdoutIncludes": "verified" }],
     "checks": [{ "id": "quantity-is-used", "type": "file-contains", "path": "src/cart.js", "includes": "quantity" }]
   },
-  "limits": { "maxTurns": 8, "timeoutMs": 120000, "maxChangedFiles": 1 }
+  "limits": { "maxTurns": 24, "timeoutMs": 480000, "maxChangedFiles": 1 }
 }

@@ -1,6 +1,7 @@
 /** agent-eval 公共 API 再导出 */
 export { loadTask, type LoadedEvaluationTask } from './task.js';
 export { RuntimeAgentExecutor, runTask, type AgentExecution, type AgentExecutor } from './runner.js';
+export { createProgressSink, formatSdkEvent, type ProgressSink } from './progress.js';
 export { verifyTask } from './verifier.js';
 export { renderReport, summarizeResults, type EvaluationReportSummary } from './report.js';
 export { loadTaskCollection } from './collection.js';

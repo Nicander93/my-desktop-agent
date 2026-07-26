@@ -1,10 +1,8 @@
 /**
- * 手动加载 .env 到 process.env
- *
- * 已存在的变量不覆盖；main 启动前调用，见 loadProjectEnv
+ * 手动加载 .env 到 process.env；已存在的变量不覆盖。
  */
-import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
 function parseEnvLine(line: string): [string, string] | null {
   const trimmed = line.trim();
@@ -45,11 +43,19 @@ export function loadEnvFile(...paths: string[]): void {
   }
 }
 
-/** 从仓库根、electron 包、cwd 三处尝试加载 .env */
-export function loadProjectEnv(): void {
-  loadEnvFile(
-    join(__dirname, '../../../.env'),
-    join(__dirname, '../../.env'),
-    join(process.cwd(), '.env')
-  );
+/** 从 startDir 向上找 pnpm-workspace.yaml，定位 monorepo 根目录 */
+export function findProjectRoot(startDir = process.cwd()): string {
+  let dir = resolve(startDir);
+  while (true) {
+    if (existsSync(join(dir, 'pnpm-workspace.yaml'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return resolve(startDir);
+    dir = parent;
+  }
+}
+
+/** 加载仓库根、apps/、cwd 下的 .env */
+export function loadProjectEnv(startDir?: string): void {
+  const root = findProjectRoot(startDir);
+  loadEnvFile(join(root, '.env'), join(root, 'apps', '.env'), join(process.cwd(), '.env'));
 }

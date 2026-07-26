@@ -10,7 +10,7 @@ import {
 } from './services/workspacePreviewProtocol';
 import { AgentRuntime, RuntimeOptions } from '@desktop-agent/agent-runtime';
 import { join } from 'path';
-import { loadProjectEnv } from './loadEnvFile';
+import { loadProjectEnv } from '@desktop-agent/shared';
 import { getDatabaseAsync, closeDatabase } from './db';
 import { registerWorkspaceHandlers } from './ipc/workspaceHandlers';
 import { registerConversationHandlers } from './ipc/conversationHandlers';

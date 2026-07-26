@@ -1,4 +1,5 @@
 /** 契约层 re-export：类型、Skill/MCP/trace 工具、runtime 路径助手 */
+export { findProjectRoot, loadEnvFile, loadProjectEnv } from './env/loadEnvFile.js';
 export type { MessagePart } from './types/message.js';
 export type { Workspace, WorkspaceSettings } from './types/workspace.js';
 export type { Conversation, Message as ConversationMessage } from './types/conversation.js';
