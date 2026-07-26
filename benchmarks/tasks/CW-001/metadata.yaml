@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: cross-application
+difficulty:
+  level: D3
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/sales-report.xlsx
+  - output/sales-review.pptx
+  - output/consistency.json
+diagnostics:
+  - CW-001-D0
+  - CW-001-D1A
+  - CW-001-D1B

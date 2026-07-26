@@ -1,0 +1,28 @@
+{
+  "operations": [
+    {
+      "from": "2024-03-12_001_invoice_draft.pdf",
+      "to": "Invoice MAR 12 2024 draft.pdf"
+    },
+    {
+      "from": "2024-01-01_002_notes-v2_copy.txt",
+      "to": "notes-v2 (copy).txt"
+    },
+    {
+      "from": "2024-01-01_003_notes-v2.txt",
+      "to": "notes-v2.txt"
+    },
+    {
+      "from": "2024-01-05_004_photo_1.jpg",
+      "to": "photo jan 5 2024 (1).jpg"
+    },
+    {
+      "from": "2024-01-05_005_photo.jpg",
+      "to": "photo jan 5 2024.jpg"
+    },
+    {
+      "from": "2024-01-01_006_scan_report_final.pdf",
+      "to": "scan_report_final.pdf"
+    }
+  ]
+}

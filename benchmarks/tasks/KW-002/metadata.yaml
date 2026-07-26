@@ -1,0 +1,20 @@
+benchmark: dwb
+domain: knowledge-work
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 2
+  stateDependency: 2
+  inputAmbiguity: 4
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: low
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/minutes.md
+  - output/actions.csv
+diagnostics:
+  - KW-002-D0
+  - KW-002-D1A
+  - KW-002-D1B

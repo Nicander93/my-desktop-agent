@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "PP-001",
+  "version": "1.0.0",
+  "title": "Downloads Organizer",
+  "prompt": "整理 fixture/downloads/ 中的杂乱文件：按类型分类复制到 organized/（不移动、不删除原文件），并生成 manifest.json 与 duplicates.json。\n\n分类规则：pdf→documents；jpg/jpeg/png/gif→images；csv/json→data；txt/md→text；zip→archives；其余→other。\n\nmanifest.json 含 dryRun:true、fileCount、files（name/category/sha256/organizedPath）。\n\nduplicates.json 含 duplicateGroups 与 groups（sha256+files 列表，仅内容完全相同）。\n\n不要修改 downloads/ 内任何文件。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "personal-productivity",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 25
+  },
+  "verifier": {
+    "requiredFiles": [
+      "organized/",
+      "manifest.json",
+      "duplicates.json"
+    ],
+    "unchangedPaths": [
+      "downloads/"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

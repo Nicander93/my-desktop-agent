@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "PP-002",
+  "version": "1.0.0",
+  "title": "Photo Library Organizer",
+  "prompt": "input/photos/ 有照片及 input/photo-index.json。按 dateTaken 复制到 output/photos-by-date/YYYY-MM-DD/；缺失 EXIF 用 unknown-date/；重名加 _2；非图片记入 warnings。输出 manifest.csv 与 warnings.json。不修改 input/。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "personal-productivity",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/manifest.csv",
+      "output/warnings.json"
+    ],
+    "unchangedPaths": [
+      "input/photo-index.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

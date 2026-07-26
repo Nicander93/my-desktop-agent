@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "CW-002",
+  "version": "1.0.0",
+  "title": "Research to Presentation",
+  "prompt": "从 input/sources/ 生成 research-brief.md、presentation.pptx（≥4 页）、speaker-notes.md、evidence.json。结论需有证据，PPT 与摘要一致。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data",
+    "create-pptx",
+    "validate-pptx"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "cross-application",
+    "D3"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/research-brief.md",
+      "output/presentation.pptx",
+      "output/speaker-notes.md",
+      "output/evidence.json"
+    ],
+    "unchangedPaths": [
+      "input/sources/study.md"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

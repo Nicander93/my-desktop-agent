@@ -1,0 +1,20 @@
+benchmark: dwb
+domain: software-development
+difficulty:
+  level: D2
+  planningDepth: 4
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 2
+  verificationDifficulty: 4
+  recoveryDemand: 3
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - src patch
+  - test results
+diagnostics:
+  - SD-001-D0
+  - SD-001-D1A
+  - SD-001-D1B

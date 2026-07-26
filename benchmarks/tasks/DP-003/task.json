@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "DP-003",
+  "version": "1.0.0",
+  "title": "Reusable Format Converter",
+  "prompt": "实现 converter/convert.mjs 支持 JSON→CSV（dot 键降维）。批量处理 input/batch/，输出 converted/ 与 report.json（含 failed）。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "run-tests",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "data-processing",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/converted/valid.csv",
+      "output/report.json",
+      "converter/convert.mjs"
+    ],
+    "unchangedPaths": [
+      "input/batch/valid.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

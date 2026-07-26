@@ -1,0 +1,3 @@
+Task SA-003
+Goal: 分析磁盘清单，识别大文件、缓存和可归档内容，只输出风险分级清理计划。
+Domain: system-administration

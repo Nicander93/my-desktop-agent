@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "id": "BW-003",
+  "version": "1.0.0",
+  "title": "Contract Obligation Register",
+  "prompt": "从 input/contracts/*.txt 提取字段到 output/contract-register.xlsx、output/evidence.json（字段→文件:行号）、output/review-notes.md。缺失不补造。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data",
+    "inspect-spreadsheet",
+    "validate-spreadsheet"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "business-workflow",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/contract-register.xlsx",
+      "output/evidence.json",
+      "output/review-notes.md"
+    ],
+    "unchangedPaths": [
+      "input/contracts/c1.txt"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

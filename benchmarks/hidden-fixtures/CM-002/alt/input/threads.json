@@ -1,0 +1,10 @@
+{
+  "threads": [
+    {
+      "id": "t9",
+      "customer": "X",
+      "lastMessage": "Status?",
+      "needsDate": true
+    }
+  ]
+}

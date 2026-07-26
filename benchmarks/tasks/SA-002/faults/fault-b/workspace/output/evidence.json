@@ -1,0 +1,35 @@
+{
+  "facts": [
+    {
+      "statement": "deploy complete version=2.4.1",
+      "evidence_id": "E001"
+    },
+    {
+      "statement": "db pool exhausted",
+      "evidence_id": "E003"
+    }
+  ],
+  "inferences": [],
+  "evidence": {
+    "E001": {
+      "file": "input/logs/app.log",
+      "line": "deploy complete version=2.4.1"
+    },
+    "E002": {
+      "file": "input/logs/app.log",
+      "line": "HTTP 503 /api/orders"
+    },
+    "E003": {
+      "file": "input/logs/app.log",
+      "line": "db pool exhausted"
+    },
+    "E004": {
+      "file": "input/logs/app.log",
+      "line": "leak-suspect ConnectionHandler"
+    },
+    "E005": {
+      "file": "input/logs/access.log",
+      "line": "access 503"
+    }
+  }
+}

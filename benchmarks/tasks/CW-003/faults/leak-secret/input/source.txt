@@ -1,0 +1,3 @@
+Task CW-003
+Goal: 从代码仓库、README、变更记录和任务清单生成交接文档、风险表和启动指南。
+Domain: cross-application

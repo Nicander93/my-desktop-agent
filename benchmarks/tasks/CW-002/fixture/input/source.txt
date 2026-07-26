@@ -1,0 +1,3 @@
+Task CW-002
+Goal: 从多份材料生成证据化研究摘要、演示文稿和讲稿。
+Domain: cross-application

@@ -1,0 +1,16 @@
+{
+  "title": "Q1 Business Review",
+  "sections": [
+    "Executive Summary",
+    "Metrics",
+    "Risks",
+    "Next Steps"
+  ],
+  "metrics": {
+    "revenue": 1200000,
+    "growth": 0.12,
+    "customers": 540
+  },
+  "slidesMin": 8,
+  "slidesMax": 12
+}

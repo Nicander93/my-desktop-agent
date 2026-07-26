@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "IW-003",
+  "version": "1.0.0",
+  "title": "Resumable Download Plan",
+  "prompt": "根据 input/urls.txt 与 input/existing/ 已有文件，生成 output/download-plan.json、output/naming-map.csv、output/README.md。合并重复 URL，处理命名冲突，标记已下载项。不联网。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "internet-workflow",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/download-plan.json",
+      "output/naming-map.csv",
+      "output/README.md"
+    ],
+    "unchangedPaths": [
+      "input/urls.txt"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "processed": 1,
+  "failed": [
+    {
+      "file": "broken.json",
+      "reason": "parse"
+    }
+  ],
+  "formats": [
+    "json",
+    "csv"
+  ]
+}

@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: business-workflow
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/contract-register.xlsx
+  - output/evidence.json
+  - output/review-notes.md
+diagnostics:
+  - BW-003-D0
+  - BW-003-D1A
+  - BW-003-D1B

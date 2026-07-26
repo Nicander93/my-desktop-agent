@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "SA-003",
+  "version": "1.0.0",
+  "title": "Disk Cleanup Plan",
+  "prompt": "分析 input/inventory.json，输出 cleanup-plan.csv（path,size_bytes,risk,action）与 summary.md。risk=high 含 protected/；不删除文件。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "system-administration",
+    "D1"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/cleanup-plan.csv",
+      "output/summary.md"
+    ],
+    "unchangedPaths": [
+      "input/inventory.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

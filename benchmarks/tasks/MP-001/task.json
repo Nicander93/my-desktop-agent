@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "MP-001",
+  "version": "1.0.0",
+  "title": "Image Batch Optimization",
+  "prompt": "按 input/rules.json（maxWidth 800, maxHeight 600）处理 input/images/ 下 PNG，输出 optimized/、manifest.csv、report.json。\n\nmanifest.csv 列：source,optimized,sourceWidth,sourceHeight,targetWidth,targetHeight,sha256。\n\nreport.json：processed/skipped/errors。超大图片 target 尺寸应不超过规则（可 copy 若未缩放，但 manifest 尺寸字段须正确）。不要修改 input/。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "media-processing",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 24,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 15
+  },
+  "verifier": {
+    "requiredFiles": [
+      "optimized/",
+      "manifest.csv",
+      "report.json"
+    ],
+    "unchangedPaths": [
+      "input/images/a.png",
+      "input/images/b.png",
+      "input/rules.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

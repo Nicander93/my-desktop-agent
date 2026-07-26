@@ -1,0 +1,16 @@
+{
+  "threads": [
+    {
+      "id": "t1",
+      "customer": "Acme",
+      "lastMessage": "When will the patch ship?",
+      "needsDate": true
+    },
+    {
+      "id": "t2",
+      "customer": "Beta",
+      "lastMessage": "Thanks for the quick fix.",
+      "needsDate": false
+    }
+  ]
+}

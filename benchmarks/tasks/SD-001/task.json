@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "SD-001",
+  "version": "1.0.0",
+  "title": "Real Repository Bug Fix",
+  "prompt": "这是一个小型订单计价服务仓库。issue 描述见 ISSUE.md：批量折扣未正确应用。请修复 src/ 中的缺陷，使全部测试通过。\n\n约束：\n1. 不要修改 test/ 下任何文件\n2. 不要修改 package.json\n3. 修改范围尽量小，只修计价逻辑\n4. 完成后运行 pnpm test 确认通过",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests", "inspect-git-diff"],
+  "workflowId": "coding-change-verify",
+  "suite": "quality",
+  "tags": ["dwb", "software-development", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 32,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 6
+  },
+  "verifier": {
+    "requiredFiles": ["src/pricing.js"],
+    "unchangedPaths": [
+      "test/pricing.test.js",
+      "test/cart.test.js",
+      "test/integration.test.js",
+      "package.json",
+      "ISSUE.md"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

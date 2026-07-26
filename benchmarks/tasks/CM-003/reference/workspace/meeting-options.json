@@ -1,0 +1,18 @@
+{
+  "candidates": [
+    {
+      "rank": 1,
+      "startUtc": "2026-03-10T07:00:00Z",
+      "endUtc": "2026-03-10T08:00:00Z",
+      "score": 100,
+      "note": "After Alice afternoon block"
+    },
+    {
+      "rank": 2,
+      "startUtc": "2026-03-10T08:00:00Z",
+      "endUtc": "2026-03-10T09:00:00Z",
+      "score": 90,
+      "note": "Morning UTC slot"
+    }
+  ]
+}

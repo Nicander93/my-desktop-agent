@@ -1,0 +1,22 @@
+{
+  "themes": [
+    {
+      "sourceIds": [
+        "src-z"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "views": [
+        {
+          "sourceId": "src-a"
+        },
+        {
+          "sourceId": "src-b"
+        }
+      ]
+    }
+  ],
+  "uncertain": []
+}

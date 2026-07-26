@@ -1,0 +1,7 @@
+{
+  "totalRevenue": 250,
+  "rows": [
+    { "region": "North", "revenue": 100 },
+    { "region": "South", "revenue": 150 }
+  ]
+}

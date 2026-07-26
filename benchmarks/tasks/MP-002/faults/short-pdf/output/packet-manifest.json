@@ -1,0 +1,15 @@
+{
+  "order": [
+    "cover",
+    "toc",
+    "a.pdf",
+    "b.pdf"
+  ],
+  "sections": [
+    "cover",
+    "toc",
+    "a.pdf",
+    "b.pdf"
+  ],
+  "totalPages": 4
+}

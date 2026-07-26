@@ -1,5 +1,6 @@
 /**
  * Verifier：必存文件 → 保护文件未改 → 命令 → 声明式 checks。
+ * 若存在 hidden-fixtures/<taskId>，命令执行前注入 DWB_HIDDEN_ROOT（不进 workspace）。
  * 路径都走 resolveInside，不许逃出 workspace。
  */
 import { access, readFile } from 'node:fs/promises';
@@ -7,18 +8,33 @@ import { constants } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import type { EvaluationCheck, EvaluationTask, EvaluationVerification } from '@desktop-agent/shared';
+import { resolveHiddenFixtureRoot } from './metadata.js';
 import { runProcess } from './process.js';
 
 export async function verifyTask(task: EvaluationTask, workspacePath: string, baselinePath: string): Promise<EvaluationVerification> {
   const checks: EvaluationCheck[] = [];
-  const taskDir = (task as EvaluationTask & { definitionPath?: string }).definitionPath
-    ? dirname((task as EvaluationTask & { definitionPath: string }).definitionPath)
-    : undefined;
-  for (const path of task.verifier.requiredFiles ?? []) checks.push(await requiredFileCheck(path, workspacePath));
-  for (const path of task.verifier.unchangedPaths ?? []) checks.push(await unchangedFileCheck(path, workspacePath, baselinePath));
-  for (const command of task.verifier.commands ?? []) checks.push(await commandCheck(command, workspacePath, taskDir));
-  for (const check of task.verifier.checks ?? []) checks.push(await declarativeCheck(check, task, workspacePath));
-  return { passed: checks.every((check) => check.passed), checks };
+  const definitionPath = (task as EvaluationTask & { definitionPath?: string }).definitionPath;
+  const taskDir = definitionPath ? dirname(definitionPath) : undefined;
+  const previousHidden = process.env.DWB_HIDDEN_ROOT;
+  if (definitionPath) {
+    const hiddenRoot = resolveHiddenFixtureRoot(definitionPath, task.id);
+    try {
+      await access(hiddenRoot, constants.F_OK);
+      process.env.DWB_HIDDEN_ROOT = hiddenRoot;
+    } catch {
+      delete process.env.DWB_HIDDEN_ROOT;
+    }
+  }
+  try {
+    for (const path of task.verifier.requiredFiles ?? []) checks.push(await requiredFileCheck(path, workspacePath));
+    for (const path of task.verifier.unchangedPaths ?? []) checks.push(await unchangedFileCheck(path, workspacePath, baselinePath));
+    for (const command of task.verifier.commands ?? []) checks.push(await commandCheck(command, workspacePath, taskDir));
+    for (const check of task.verifier.checks ?? []) checks.push(await declarativeCheck(check, task, workspacePath));
+    return { passed: checks.every((check) => check.passed), checks };
+  } finally {
+    if (previousHidden === undefined) delete process.env.DWB_HIDDEN_ROOT;
+    else process.env.DWB_HIDDEN_ROOT = previousHidden;
+  }
 }
 
 async function requiredFileCheck(path: string, workspacePath: string): Promise<EvaluationCheck> {

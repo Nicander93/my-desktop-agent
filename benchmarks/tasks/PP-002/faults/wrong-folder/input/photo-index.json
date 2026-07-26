@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "path": "photos/a.jpg",
+      "isImage": true,
+      "dateTaken": "2024-03-15T10:00:00"
+    },
+    {
+      "path": "photos/shot.jpg",
+      "isImage": true,
+      "dateTaken": "2024-03-15T11:00:00"
+    },
+    {
+      "path": "photos/album/shot.jpg",
+      "isImage": true,
+      "dateTaken": "2024-03-15T12:00:00"
+    },
+    {
+      "path": "photos/c.jpg",
+      "isImage": true,
+      "dateTaken": null
+    },
+    {
+      "path": "photos/notes.txt",
+      "isImage": false,
+      "dateTaken": null
+    }
+  ]
+}

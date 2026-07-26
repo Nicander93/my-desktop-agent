@@ -1,0 +1,4 @@
+[
+  { "time": "2024-06-18T14:20:00Z", "type": "deploy", "detail": "release v2.4.1 api-service" },
+  { "time": "2024-06-18T14:25:00Z", "type": "config", "detail": "pool maxConnections raised to 50" }
+]

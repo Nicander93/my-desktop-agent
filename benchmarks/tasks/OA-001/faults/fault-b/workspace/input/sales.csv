@@ -1,0 +1,8 @@
+region,product,units,price,date
+East,Alpha,10,$50.00,2024-01-05
+East,Beta,5,30,2024-01-06
+West,Alpha,3,50,2024/01/07
+West,,2,20,2024-01-08
+North,Gamma,100,5.50,2024-02-01
+East,Alpha,2,50,2024-02-02
+South,Delta,4,$25.00,02/03/2024

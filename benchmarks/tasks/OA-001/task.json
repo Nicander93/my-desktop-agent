@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "OA-001",
+  "version": "1.0.0",
+  "title": "Excel Analysis Dashboard",
+  "prompt": "根据 input/sales.csv 创建销售分析工作簿与摘要，输出到 output/：\n- output/dashboard.xlsx：须含 RawData（原始数据）、Cleaned（清洗后）、Summary（区域汇总）三个工作表，且至少 1 个图表引用 Summary 数据\n- output/summary.json：含 totalRevenue、cleanedRowCount、regionCount、topRegion、sheets（表名数组）、chartCount\n\n清洗规则：\n1. 去掉 product 为空的行\n2. price 去货币符号转数字；units 为整数\n3. date 统一 YYYY-MM-DD\n4. 不得修改 input/sales.csv\n\nsummary.json 中数值须与工作簿 Summary 表一致。",
+  "profile": "office",
+  "capabilities": ["read-project", "edit-code", "run-tests"],
+  "workflowId": "spreadsheet-analyze-report",
+  "suite": "quality",
+  "tags": ["dwb", "office-automation", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 15
+  },
+  "verifier": {
+    "requiredFiles": ["output/dashboard.xlsx", "output/summary.json"],
+    "unchangedPaths": ["input/sales.csv"],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

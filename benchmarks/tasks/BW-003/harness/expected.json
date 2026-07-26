@@ -1,0 +1,21 @@
+{
+  "taskId": "BW-003",
+  "domain": "business-workflow",
+  "checks": [
+    "字段有证据",
+    "缺失值不补造",
+    "合同逐份覆盖",
+    "日期金额格式统一"
+  ],
+  "required": [
+    "output/contract-register.xlsx",
+    "output/evidence.json",
+    "output/review-notes.md"
+  ],
+  "mustContain": [
+    "contract-register.xlsx",
+    "evidence.json",
+    "review-notes.md"
+  ],
+  "fingerprint": "d2a9d552cb9a7b84"
+}

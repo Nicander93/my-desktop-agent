@@ -1,0 +1,4 @@
+path,size_bytes,risk,action
+protected/config.db,1024,high,delete_candidate
+cache/tmp/big.bin,9000,low,delete_candidate
+logs/app.log,500,medium,archive_candidate

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "CM-001",
+  "version": "1.0.0",
+  "title": "Inbox Triage from Mail Export",
+  "prompt": "处理 input/mailbox.json：分类、优先级(P1-P3)、附件索引。输出 triage.csv、attachment-index.csv、summary.md。不发送或删除邮件。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "communication",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/triage.csv",
+      "output/attachment-index.csv",
+      "output/summary.md"
+    ],
+    "unchangedPaths": [
+      "input/mailbox.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

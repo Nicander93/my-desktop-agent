@@ -1,0 +1,812 @@
+schemaVersion: 1
+benchmark: desktop-workload-benchmark
+version: 0.1.0
+design:
+  goal: Evaluate and improve the Desktop Agent on common, reproducible, real-world
+    desktop workloads.
+  task_count: 36
+  domains: 12
+  primary_levels:
+  - D1
+  - D2
+  - D3
+  principles:
+  - user-goal-first
+  - implementation-path-neutral
+  - execution-based-verification
+  - input-integrity
+  - hidden-variant-tests
+  - diagnostic-task-family
+domains:
+- id: personal-productivity
+  code: PP
+  title: 个人生产力
+  tasks:
+  - id: PP-001
+    title: Downloads Organizer
+    difficulty: D2
+    user_goal: 整理杂乱的下载目录，按内容类型分类，识别重复文件，生成操作清单；默认不删除文件。
+    capabilities:
+    - filesystem
+    - inspect
+    - hash
+    - plan
+    - verify
+    expected_artifacts:
+    - organized/
+    - manifest.json
+    - duplicates.json
+    core_checks:
+    - dry-run 无副作用
+    - 文件哈希保持
+    - 无覆盖和删除
+    - 清单与实际一致
+    status: designed
+    implementation_wave: 2
+  - id: PP-002
+    title: Photo Library Organizer
+    difficulty: D2
+    user_goal: 根据照片拍摄时间整理家庭或旅行照片；处理缺失 EXIF、重名和非图片文件。
+    capabilities:
+    - filesystem
+    - metadata
+    - batch
+    - rename
+    - verify
+    expected_artifacts:
+    - photos-by-date/
+    - manifest.csv
+    - warnings.json
+    core_checks:
+    - 日期分组正确
+    - 缺失 EXIF 有明确策略
+    - 重名不覆盖
+    - 非图片不误处理
+    status: designed
+    implementation_wave: 2
+  - id: PP-003
+    title: Personal Archive Builder
+    difficulty: D2
+    user_goal: 将一批多年文档按年份和类型归档，生成索引并保留原件。
+    capabilities:
+    - filesystem
+    - classify
+    - archive
+    - manifest
+    - verify
+    expected_artifacts:
+    - archive/
+    - archive-index.csv
+    - archive-report.md
+    core_checks:
+    - 原件不变
+    - 分类规则可解释
+    - 压缩包可解压
+    - 索引完整
+    status: designed
+    implementation_wave: 2
+- id: knowledge-work
+  code: KW
+  title: 知识工作
+  tasks:
+  - id: KW-001
+    title: Multi-document Brief
+    difficulty: D2
+    user_goal: 阅读多份 PDF/Markdown/TXT 材料，输出去重后的主题摘要、关键事实和待办事项。
+    capabilities:
+    - document-read
+    - synthesis
+    - citation
+    - report
+    - verify
+    expected_artifacts:
+    - brief.md
+    - sources.json
+    core_checks:
+    - 事实可追溯到输入
+    - 重复内容被合并
+    - 不引入材料外事实
+    - 输出结构完整
+    status: designed
+    implementation_wave: 2
+  - id: KW-002
+    title: Meeting Minutes
+    difficulty: D2
+    user_goal: 从会议转写稿生成会议摘要、决策、行动项、负责人和截止日期表。
+    capabilities:
+    - text-analysis
+    - entity-extraction
+    - table
+    - report
+    - verify
+    expected_artifacts:
+    - minutes.md
+    - actions.csv
+    core_checks:
+    - 行动项来自原文
+    - 负责人/日期不臆造
+    - 决策与讨论区分
+    - 表格字段完整
+    status: designed
+    implementation_wave: 1
+  - id: KW-003
+    title: Research Digest
+    difficulty: D2
+    user_goal: 将一组文章摘要、笔记和链接清单整理成主题化周报，标记冲突观点和待核实信息。
+    capabilities:
+    - document-read
+    - cluster
+    - synthesis
+    - uncertainty
+    - verify
+    expected_artifacts:
+    - digest.md
+    - evidence-map.json
+    core_checks:
+    - 观点分组合理
+    - 冲突观点保留
+    - 不确定项明确
+    - 证据映射有效
+    status: designed
+    implementation_wave: 2
+- id: data-processing
+  code: DP
+  title: 数据处理
+  tasks:
+  - id: DP-001
+    title: Messy CSV Cleaner
+    difficulty: D2
+    user_goal: 清洗一份真实风格 CSV：列名、空格、日期、数值、重复记录和异常行。
+    capabilities:
+    - structured-data
+    - code
+    - cli
+    - execute
+    - verify
+    expected_artifacts:
+    - cleaned.csv
+    - invalid_rows.csv
+    - report.json
+    core_checks:
+    - 行数守恒
+    - 去重规则正确
+    - 异常行完整
+    - 输入未修改
+    status: designed
+    implementation_wave: 1
+  - id: DP-002
+    title: Multi-source Data Merge
+    difficulty: D2
+    user_goal: 合并客户、订单和产品三份数据，处理未匹配键、重复键和字段冲突。
+    capabilities:
+    - structured-data
+    - join
+    - code
+    - report
+    - verify
+    expected_artifacts:
+    - merged.csv
+    - unmatched.csv
+    - report.json
+    core_checks:
+    - 关联语义正确
+    - 左表顺序保持
+    - 冲突字段明确
+    - 统计与输出一致
+    status: designed
+    implementation_wave: 2
+  - id: DP-003
+    title: Reusable Format Converter
+    difficulty: D2
+    user_goal: 编写参数化工具，将 JSON/CSV/YAML 中至少两种格式互转，并保留嵌套结构或给出明确降维规则。
+    capabilities:
+    - code
+    - cli
+    - schema
+    - batch
+    - verify
+    expected_artifacts:
+    - converter/
+    - converted/
+    - README.md
+    - report.json
+    core_checks:
+    - 隐藏文件名可用
+    - 参数不写死
+    - 转换可逆性合理
+    - 非法输入隔离
+    status: designed
+    implementation_wave: 2
+- id: software-development
+  code: SD
+  title: 软件开发
+  tasks:
+  - id: SD-001
+    title: Real Repository Bug Fix
+    difficulty: D2
+    user_goal: 在给定小型真实仓库中根据 issue 修复缺陷，不修改测试，并通过现有测试。
+    capabilities:
+    - repo-inspect
+    - code-edit
+    - test
+    - diff
+    - verify
+    expected_artifacts:
+    - source patch
+    - test results
+    core_checks:
+    - 复现缺陷
+    - 测试通过
+    - 保护文件未改
+    - 修改范围最小
+    status: designed
+    implementation_wave: 1
+  - id: SD-002
+    title: Incremental Feature
+    difficulty: D2
+    user_goal: 在现有应用中实现一个小型但跨层的功能，例如筛选、导出或配置项，并补充测试。
+    capabilities:
+    - repo-inspect
+    - planning
+    - code-edit
+    - test
+    - verify
+    expected_artifacts:
+    - feature implementation
+    - tests
+    - usage note
+    core_checks:
+    - 需求行为完整
+    - 无回归
+    - 边界测试
+    - 无无关重构
+    status: designed
+    implementation_wave: 2
+  - id: SD-003
+    title: Dependency Upgrade
+    difficulty: D2
+    user_goal: 升级一个受控依赖版本，处理破坏性 API 变化并保持构建与测试通过。
+    capabilities:
+    - dependency
+    - repo-inspect
+    - migration
+    - test
+    - verify
+    expected_artifacts:
+    - updated manifests
+    - source changes
+    - migration note
+    core_checks:
+    - 锁文件一致
+    - 无降级绕过
+    - 测试通过
+    - 变更说明准确
+    status: designed
+    implementation_wave: 2
+- id: office-automation
+  code: OA
+  title: 办公自动化
+  tasks:
+  - id: OA-001
+    title: Excel Analysis Dashboard
+    difficulty: D2
+    user_goal: 根据销售或运营数据创建带清洗表、汇总表、图表和关键指标的 Excel。
+    capabilities:
+    - spreadsheet
+    - data-analysis
+    - chart
+    - formula
+    - verify
+    expected_artifacts:
+    - dashboard.xlsx
+    - summary.json
+    core_checks:
+    - 工作簿可打开
+    - 公式/数值正确
+    - 图表引用正确
+    - 源数据保留
+    status: designed
+    implementation_wave: 1
+  - id: OA-002
+    title: Presentation from Brief
+    difficulty: D2
+    user_goal: 根据结构化 brief 和素材生成一份 8–12 页 PPT，包含标题、要点、图表和结论。
+    capabilities:
+    - slides
+    - content-structure
+    - chart
+    - layout
+    - verify
+    expected_artifacts:
+    - presentation.pptx
+    - outline.md
+    core_checks:
+    - 页数范围
+    - 必要章节存在
+    - 图表数据一致
+    - 文件可打开
+    status: designed
+    implementation_wave: 2
+  - id: OA-003
+    title: Document Report Generator
+    difficulty: D2
+    user_goal: 根据数据表和模板生成正式 Word 报告，包含摘要、表格、图表、结论和附录。
+    capabilities:
+    - document
+    - template
+    - data-analysis
+    - chart
+    - verify
+    expected_artifacts:
+    - report.docx
+    - report-data.json
+    core_checks:
+    - 模板结构保持
+    - 关键数据一致
+    - 表格完整
+    - 文件可打开
+    status: designed
+    implementation_wave: 2
+- id: file-management
+  code: FM
+  title: 文件管理
+  tasks:
+  - id: FM-001
+    title: Duplicate File Audit
+    difficulty: D1
+    user_goal: 递归识别完全重复文件和疑似重复文件，只生成审计报告和处理建议。
+    capabilities:
+    - filesystem
+    - hash
+    - similarity
+    - report
+    - verify
+    expected_artifacts:
+    - duplicates.json
+    - audit.md
+    core_checks:
+    - 不删除文件
+    - 哈希分组准确
+    - 疑似与完全重复区分
+    - 空间统计正确
+    status: designed
+    implementation_wave: 3
+  - id: FM-002
+    title: Safe Batch Rename
+    difficulty: D2
+    user_goal: 按日期、序号和清洗规则批量改名，先生成 dry-run 计划，再可选择执行。
+    capabilities:
+    - filesystem
+    - rename
+    - dry-run
+    - rollback
+    - verify
+    expected_artifacts:
+    - rename-plan.json
+    - manifest.json
+    - rollback.json
+    core_checks:
+    - dry-run 零副作用
+    - 冲突稳定处理
+    - 无覆盖
+    - 可回滚
+    status: designed
+    implementation_wave: 1
+  - id: FM-003
+    title: Verified Backup
+    difficulty: D2
+    user_goal: 将指定目录备份到目标目录，生成 manifest 并验证文件数量、大小和哈希。
+    capabilities:
+    - filesystem
+    - copy
+    - hash
+    - manifest
+    - verify
+    expected_artifacts:
+    - backup/
+    - manifest.json
+    - verification.json
+    core_checks:
+    - 源文件不变
+    - 目标完整
+    - 哈希一致
+    - 失败项明确
+    status: designed
+    implementation_wave: 2
+- id: media-processing
+  code: MP
+  title: 媒体处理
+  tasks:
+  - id: MP-001
+    title: Image Batch Optimization
+    difficulty: D2
+    user_goal: 批量调整图片尺寸和格式，保留宽高比、透明通道和元数据策略。
+    capabilities:
+    - image
+    - batch
+    - convert
+    - metadata
+    - verify
+    expected_artifacts:
+    - optimized/
+    - manifest.csv
+    - report.json
+    core_checks:
+    - 尺寸约束正确
+    - 透明度处理正确
+    - 输入未改
+    - 失败隔离
+    status: designed
+    implementation_wave: 2
+  - id: MP-002
+    title: PDF Packet Builder
+    difficulty: D2
+    user_goal: 按清单合并 PDF、插入封面和目录页，并验证页数与顺序。
+    capabilities:
+    - pdf
+    - merge
+    - document
+    - manifest
+    - verify
+    expected_artifacts:
+    - packet.pdf
+    - packet-manifest.json
+    core_checks:
+    - 顺序正确
+    - 页数正确
+    - 所有来源覆盖
+    - 输出可打开
+    status: designed
+    implementation_wave: 2
+  - id: MP-003
+    title: Audio Transcript Package
+    difficulty: D2
+    user_goal: 处理已有音频与转写文本，整理时间戳、说话人和摘要，不要求在线语音识别。
+    capabilities:
+    - audio-metadata
+    - text-processing
+    - timeline
+    - report
+    - verify
+    expected_artifacts:
+    - transcript.md
+    - segments.csv
+    - summary.md
+    core_checks:
+    - 时间戳单调
+    - 文本不丢失
+    - 说话人映射一致
+    - 摘要可追溯
+    status: designed
+    implementation_wave: 2
+- id: internet-workflow
+  code: IW
+  title: 互联网工作流
+  tasks:
+  - id: IW-001
+    title: Offline Web Data Extraction
+    difficulty: D2
+    user_goal: 从保存的 HTML 页面提取产品或目录信息，输出结构化 CSV 和抓取报告。
+    capabilities:
+    - html
+    - extract
+    - normalize
+    - report
+    - verify
+    expected_artifacts:
+    - items.csv
+    - extraction-report.json
+    core_checks:
+    - 字段提取准确
+    - 重复项处理
+    - 缺失值明确
+    - 不依赖联网
+    status: designed
+    implementation_wave: 2
+  - id: IW-002
+    title: RSS Digest from Fixtures
+    difficulty: D1
+    user_goal: 读取本地 RSS/Atom fixture，去重、分类并生成摘要。
+    capabilities:
+    - xml
+    - deduplicate
+    - cluster
+    - report
+    - verify
+    expected_artifacts:
+    - rss-digest.md
+    - items.json
+    core_checks:
+    - RSS/Atom 均支持
+    - GUID/链接去重
+    - 时间排序
+    - 来源保留
+    status: designed
+    implementation_wave: 3
+  - id: IW-003
+    title: Resumable Download Plan
+    difficulty: D2
+    user_goal: 根据 URL 清单与已有本地文件生成可恢复下载计划、命名规则和校验清单；v1 不实际联网。
+    capabilities:
+    - planning
+    - filesystem
+    - url
+    - checksum
+    - verify
+    expected_artifacts:
+    - download-plan.json
+    - naming-map.csv
+    - README.md
+    core_checks:
+    - 重复 URL 合并
+    - 命名冲突处理
+    - 已有文件识别
+    - 计划可执行
+    status: designed
+    implementation_wave: 2
+- id: communication
+  code: CM
+  title: 沟通协作
+  tasks:
+  - id: CM-001
+    title: Inbox Triage from Mail Export
+    difficulty: D2
+    user_goal: 基于导出的邮件数据进行分类、优先级判断和附件清单整理，不直接发送或删除。
+    capabilities:
+    - email-data
+    - classification
+    - priority
+    - attachment
+    - verify
+    expected_artifacts:
+    - triage.csv
+    - attachment-index.csv
+    - summary.md
+    core_checks:
+    - 邮件全覆盖
+    - 优先级规则透明
+    - 附件映射准确
+    - 无外部副作用
+    status: designed
+    implementation_wave: 2
+  - id: CM-002
+    title: Grounded Reply Drafts
+    difficulty: D2
+    user_goal: 为一组客户或团队邮件生成回复草稿，严格依据线程上下文并标记缺失信息。
+    capabilities:
+    - email-thread
+    - writing
+    - grounding
+    - uncertainty
+    - verify
+    expected_artifacts:
+    - drafts/
+    - draft-index.json
+    core_checks:
+    - 逐线程对应
+    - 不臆造承诺
+    - 问题均回应
+    - 缺失信息标记
+    status: designed
+    implementation_wave: 2
+  - id: CM-003
+    title: Meeting Scheduling Proposal
+    difficulty: D2
+    user_goal: 根据多人可用时间 fixture、时区和约束生成候选会议时间，不直接写入日历。
+    capabilities:
+    - calendar-data
+    - timezone
+    - constraint-solving
+    - report
+    - verify
+    expected_artifacts:
+    - meeting-options.json
+    - proposal.md
+    core_checks:
+    - 无时间冲突
+    - 时区换算正确
+    - 约束满足
+    - 候选排序可解释
+    status: designed
+    implementation_wave: 2
+- id: business-workflow
+  code: BW
+  title: 业务流程
+  tasks:
+  - id: BW-001
+    title: Expense Reconciliation
+    difficulty: D2
+    user_goal: 将报销明细、票据索引和政策规则进行核对，输出异常清单和汇总。
+    capabilities:
+    - business-data
+    - rules
+    - reconcile
+    - report
+    - verify
+    expected_artifacts:
+    - reconciliation.xlsx
+    - exceptions.csv
+    - summary.md
+    core_checks:
+    - 金额合计正确
+    - 规则应用一致
+    - 重复票据识别
+    - 不做无依据判断
+    status: designed
+    implementation_wave: 2
+  - id: BW-002
+    title: Sales Performance Pack
+    difficulty: D3
+    user_goal: 从销售数据生成区域/产品分析、Excel 汇总和管理层简报。
+    capabilities:
+    - data-analysis
+    - spreadsheet
+    - slides
+    - cross-artifact
+    - verify
+    expected_artifacts:
+    - sales-analysis.xlsx
+    - management-brief.pptx
+    - metrics.json
+    core_checks:
+    - 跨产物数字一致
+    - 排名正确
+    - 图表正确
+    - 结论有数据依据
+    status: designed
+    implementation_wave: 3
+  - id: BW-003
+    title: Contract Obligation Register
+    difficulty: D2
+    user_goal: 从多份合同文本提取合同方、日期、金额、续约、交付和义务，生成登记表并保留证据位置。
+    capabilities:
+    - document-read
+    - entity-extraction
+    - table
+    - evidence
+    - verify
+    expected_artifacts:
+    - contract-register.xlsx
+    - evidence.json
+    - review-notes.md
+    core_checks:
+    - 字段有证据
+    - 缺失值不补造
+    - 合同逐份覆盖
+    - 日期金额格式统一
+    status: designed
+    implementation_wave: 2
+- id: system-administration
+  code: SA
+  title: 系统管理
+  tasks:
+  - id: SA-001
+    title: Docker Compose Repair
+    difficulty: D2
+    user_goal: 给定一个无法启动的 Compose 项目和日志，修复配置并验证服务健康。
+    capabilities:
+    - terminal
+    - docker
+    - config
+    - diagnose
+    - verify
+    expected_artifacts:
+    - updated compose/config
+    - diagnosis.md
+    core_checks:
+    - 服务启动
+    - 健康检查通过
+    - 不删除业务数据
+    - 修改范围合理
+    status: designed
+    implementation_wave: 2
+  - id: SA-002
+    title: Service Log Diagnosis
+    difficulty: D2
+    user_goal: 从系统与应用日志中定位故障时间线、可能根因和验证步骤。
+    capabilities:
+    - logs
+    - timeline
+    - diagnose
+    - report
+    - verify
+    expected_artifacts:
+    - incident-report.md
+    - timeline.csv
+    - evidence.json
+    core_checks:
+    - 时间线准确
+    - 证据引用有效
+    - 区分事实和推断
+    - 修复建议可验证
+    status: designed
+    implementation_wave: 1
+  - id: SA-003
+    title: Disk Cleanup Plan
+    difficulty: D1
+    user_goal: 分析磁盘清单，识别大文件、缓存和可归档内容，只输出风险分级清理计划。
+    capabilities:
+    - filesystem
+    - analysis
+    - risk
+    - report
+    - verify
+    expected_artifacts:
+    - cleanup-plan.csv
+    - summary.md
+    core_checks:
+    - 不实际删除
+    - 大小统计正确
+    - 风险分级
+    - 排除受保护路径
+    status: designed
+    implementation_wave: 3
+- id: cross-application
+  code: CW
+  title: 跨应用工作流
+  tasks:
+  - id: CW-001
+    title: Sales Reporting Pipeline
+    difficulty: D3
+    user_goal: 清洗多份销售数据，生成 Excel 分析、PPT 汇报和一致性报告。
+    capabilities:
+    - data
+    - spreadsheet
+    - slides
+    - cross-artifact
+    - verify
+    expected_artifacts:
+    - sales-report.xlsx
+    - sales-review.pptx
+    - consistency.json
+    core_checks:
+    - 跨文件指标一致
+    - 数据清洗正确
+    - 图表正确
+    - 所有文件可打开
+    status: designed
+    implementation_wave: 3
+  - id: CW-002
+    title: Research to Presentation
+    difficulty: D3
+    user_goal: 从多份材料生成证据化研究摘要、演示文稿和讲稿。
+    capabilities:
+    - document-read
+    - synthesis
+    - slides
+    - citations
+    - verify
+    expected_artifacts:
+    - research-brief.md
+    - presentation.pptx
+    - speaker-notes.md
+    - evidence.json
+    core_checks:
+    - 结论有证据
+    - PPT 与摘要一致
+    - 引用完整
+    - 无材料外事实
+    status: designed
+    implementation_wave: 3
+  - id: CW-003
+    title: Project Handover Pack
+    difficulty: D3
+    user_goal: 从代码仓库、README、变更记录和任务清单生成交接文档、风险表和启动指南。
+    capabilities:
+    - repo-inspect
+    - document
+    - risk
+    - cross-artifact
+    - verify
+    expected_artifacts:
+    - handover.md
+    - risks.xlsx
+    - quickstart.md
+    - evidence.json
+    core_checks:
+    - 命令来自仓库
+    - 风险有依据
+    - 文件相互一致
+    - 不泄露秘密
+    status: designed
+    implementation_wave: 3

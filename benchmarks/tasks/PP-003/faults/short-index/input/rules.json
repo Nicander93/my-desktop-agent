@@ -1,0 +1,7 @@
+{
+  "defaultYear": "2023",
+  "types": {
+    "pdf": "papers",
+    "md": "notes"
+  }
+}

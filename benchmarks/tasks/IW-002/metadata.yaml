@@ -1,0 +1,20 @@
+benchmark: dwb
+domain: internet-workflow
+difficulty:
+  level: D1
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/rss-digest.md
+  - output/items.json
+diagnostics:
+  - IW-002-D0
+  - IW-002-D1A
+  - IW-002-D1B

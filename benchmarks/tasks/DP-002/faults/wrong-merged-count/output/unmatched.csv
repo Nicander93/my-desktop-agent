@@ -1,0 +1,2 @@
+order_id,customer_id,product_id,amount,reason
+O2,C9,P1,50,missing_customer

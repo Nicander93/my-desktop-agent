@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "FM-002",
+  "version": "1.0.0",
+  "title": "Safe Batch Rename",
+  "prompt": "客户有一批待归档文件在 input/inbox/，规则在 input/rename-rules.json。请编写工具完成 dry-run 批量改名规划，输出到 output/：\n- output/rename-plan.json：每项含 from、to、status（ok|conflict_resolved|skip）及 reason\n- output/manifest.json：含 dryRun:true、fileCount、files（from、to、sha256、sizeBytes）\n- output/rollback.json：含 operations（from 为规划后名、to 为原名），可逆回滚\n\n规则摘要：\n1. 从文件名解析日期（如 jan 5 2024）；无法解析则用 fallbackDate\n2. 按规则生成 {date}_{seq}_{slug}.{ext}，seq 从 001 递增\n3. slug 小写、空格转下划线、去掉 (copy) 与 (N) 后缀\n4. 目标名冲突时递增 seq，禁止覆盖已有目标\n5. dry-run：不得修改、删除或移动 input/inbox/ 内任何文件\n\n完成后确保三份产物语义正确且 input 未被改动。",
+  "profile": "file-organizing",
+  "capabilities": ["read-project", "edit-code"],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": ["dwb", "file-management", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 15
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/rename-plan.json",
+      "output/manifest.json",
+      "output/rollback.json"
+    ],
+    "unchangedPaths": ["input/inbox", "input/rename-rules.json"],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

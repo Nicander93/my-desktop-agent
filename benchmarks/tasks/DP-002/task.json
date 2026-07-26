@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "DP-002",
+  "version": "1.0.0",
+  "title": "Multi-source Data Merge",
+  "prompt": "合并 input/ 下 customers.csv、orders.csv、products.csv。\n\n输出 output/merged.csv（保留 orders 首次出现顺序，关联 customer 与 product 名称）、output/unmatched.csv（无法关联的行+reason）、output/report.json（totalOrders/mergedRows/unmatchedRows/duplicateOrdersSkipped）。\n\n重复 order_id 跳过并计入 duplicateOrdersSkipped。不要修改 input/。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "data-processing",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 15
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/merged.csv",
+      "output/unmatched.csv",
+      "output/report.json"
+    ],
+    "unchangedPaths": [
+      "input/customers.csv",
+      "input/orders.csv",
+      "input/products.csv"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

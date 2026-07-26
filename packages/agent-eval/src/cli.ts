@@ -14,9 +14,17 @@ import { RuntimeAgentExecutor, runTask } from './runner.js';
 async function main(): Promise<void> {
   loadProjectEnv();
   const args = parseArgs(process.argv.slice(2));
-  const tasks = args.task ? [await loadTask(args.task)] : await loadTaskCollection(args.benchmarksRoot, { suite: args.suite, taskIds: args.taskIds });
+  const tasks = args.task
+    ? [await loadTask(args.task)]
+    : await loadTaskCollection(args.benchmarksRoot, {
+      suite: args.suite,
+      taskIds: args.taskIds,
+      tag: args.tag,
+      domain: args.domain,
+      difficulty: args.difficulty,
+    });
   if (args.dryRun) {
-    console.log(JSON.stringify({ tasks: tasks.map((task) => task.id), model: args.model, baseURL: args.baseURL }, null, 2));
+    console.log(JSON.stringify({ tasks: tasks.map((task) => task.id), model: args.model, baseURL: args.baseURL, repeat: args.repeat }, null, 2));
     return;
   }
   const onProgress = createProgressSink(args.quiet);
@@ -29,12 +37,33 @@ async function main(): Promise<void> {
   });
   const results = [];
   for (const task of tasks) {
-    results.push(await runTask(task, {
-      outputRoot: args.output,
-      executor,
-      model: { model: args.model, baseURL: args.baseURL },
-      onProgress,
-    }));
+    for (let i = 0; i < args.repeat; i += 1) {
+      const result = await runTask(task, {
+        outputRoot: args.output,
+        executor,
+        model: { model: args.model, baseURL: args.baseURL },
+        onProgress,
+      });
+      results.push(result);
+      if (args.diagnose && result.status !== 'passed') {
+        const diagnostics = task.metadata?.diagnostics ?? [];
+        for (const diagnosticId of diagnostics) {
+          try {
+            const diagnostic = (await loadTaskCollection(args.benchmarksRoot, { taskIds: [diagnosticId] }))[0]!;
+            const diagnoseResult = await runTask(diagnostic, {
+              outputRoot: resolve(args.output, task.id, result.runId, 'diagnose'),
+              executor,
+              model: { model: args.model, baseURL: args.baseURL },
+              onProgress,
+            });
+            results.push(diagnoseResult);
+            if (diagnoseResult.status !== 'passed') break;
+          } catch (error) {
+            onProgress(`[eval] diagnose skip ${diagnosticId}: ${error instanceof Error ? error.message : String(error)}`);
+          }
+        }
+      }
+    }
   }
   console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));
   if (results.some((result) => result.status !== 'passed')) process.exitCode = 1;
@@ -44,12 +73,17 @@ function parseArgs(argv: string[]): {
   task?: string;
   taskIds?: string[];
   suite?: string;
+  tag?: string;
+  domain?: string;
+  difficulty?: string;
   benchmarksRoot: string;
   output: string;
   model: string;
   baseURL?: string;
   dryRun: boolean;
   quiet: boolean;
+  repeat: number;
+  diagnose: boolean;
 } {
   const get = (name: string) => {
     const index = argv.indexOf(name);
@@ -57,22 +91,36 @@ function parseArgs(argv: string[]): {
   };
   const task = get('--task');
   const suite = get('--suite');
+  const tag = get('--tag');
+  const domain = get('--domain');
+  const difficulty = get('--difficulty');
   const taskIds = argv.filter((value, index) => argv[index - 1] === '--task-id');
   const dryRun = argv.includes('--dry-run');
   const quiet = argv.includes('--quiet');
+  const diagnose = argv.includes('--diagnose');
+  const repeatRaw = get('--repeat');
+  const repeat = repeatRaw ? Number(repeatRaw) : 1;
+  if (!Number.isInteger(repeat) || repeat < 1) throw new Error('--repeat must be a positive integer.');
   const model = get('--model') ?? process.env.CODEANY_MODEL;
-  if (!model && !dryRun) throw new Error('Usage: agent-eval (--task <task.json> | --suite <suite> | --task-id <id>) --model <model> [--base-url <url>] [--output <dir>] [--quiet]');
-  if (!task && !suite && taskIds.length === 0) throw new Error('Select a task file, suite, or task id.');
+  if (!model && !dryRun) throw new Error('Usage: agent-eval (--task <task.json> | --suite <suite> | --task-id <id> | --tag <tag>) --model <model> [--base-url <url>] [--output <dir>] [--repeat N] [--diagnose] [--quiet]');
+  if (!task && !suite && taskIds.length === 0 && !tag && !domain && !difficulty) {
+    throw new Error('Select a task file, suite, task id, tag, domain, or difficulty.');
+  }
   return {
     task: task ? resolve(task) : undefined,
     taskIds,
     suite,
+    tag,
+    domain,
+    difficulty,
     benchmarksRoot: resolve(get('--benchmarks-root') ?? 'benchmarks/tasks'),
     model: model ?? 'unconfigured',
     baseURL: get('--base-url') ?? process.env.CODEANY_BASE_URL,
     output: resolve(get('--output') ?? 'eval-results'),
     dryRun,
     quiet,
+    repeat,
+    diagnose,
   };
 }
 

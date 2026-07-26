@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "KW-003",
+  "version": "1.0.0",
+  "title": "Research Digest",
+  "prompt": "阅读 input/sources/*.json，输出 digest.md（Themes/Conflicts/Needs Verification）与 evidence-map.json。保留冲突、标记不确定项，不得捏造 sourceId。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "knowledge-work",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/digest.md",
+      "output/evidence-map.json"
+    ],
+    "unchangedPaths": [
+      "input/sources/notes-a.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

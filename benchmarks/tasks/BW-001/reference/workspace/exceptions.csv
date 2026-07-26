@@ -1,0 +1,5 @@
+expense_id,rule,reason
+E1,meal_limit,amount 80 > 75
+E4,missing_receipt,amount > 25 without receipt
+E5,meal_limit,amount 80 > 75
+E5,duplicate_receipt,receipt R100 reused

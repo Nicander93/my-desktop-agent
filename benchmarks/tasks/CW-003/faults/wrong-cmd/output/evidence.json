@@ -1,0 +1,16 @@
+{
+  "risks": [
+    {
+      "id": "R1",
+      "risk": "No CI in repo",
+      "source": "README.md",
+      "note": "no CI mentioned"
+    }
+  ],
+  "commands": [
+    {
+      "name": "start",
+      "source": "package.json"
+    }
+  ]
+}

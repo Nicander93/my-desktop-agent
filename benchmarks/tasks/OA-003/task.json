@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "OA-003",
+  "version": "1.0.0",
+  "title": "Document Report Generator",
+  "prompt": "根据 input/sales.csv 与 input/template.md 生成 output/report-data.json（结构化报告数据）与 output/report.md（正式报告，含摘要、表格、结论）。保持 template 章节结构。README 说明：v1 用 Markdown 代替 docx。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data",
+    "inspect-spreadsheet"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "office-automation",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/report-data.json",
+      "output/report.md"
+    ],
+    "unchangedPaths": [
+      "input/sales.csv",
+      "input/template.md"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

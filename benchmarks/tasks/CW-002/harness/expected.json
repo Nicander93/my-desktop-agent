@@ -1,0 +1,23 @@
+{
+  "taskId": "CW-002",
+  "domain": "cross-application",
+  "checks": [
+    "结论有证据",
+    "PPT 与摘要一致",
+    "引用完整",
+    "无材料外事实"
+  ],
+  "required": [
+    "output/research-brief.md",
+    "output/presentation.pptx",
+    "output/speaker-notes.md",
+    "output/evidence.json"
+  ],
+  "mustContain": [
+    "research-brief.md",
+    "presentation.pptx",
+    "speaker-notes.md",
+    "evidence.json"
+  ],
+  "fingerprint": "c5cfd6919077e284"
+}

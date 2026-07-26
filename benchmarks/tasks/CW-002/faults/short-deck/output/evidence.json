@@ -1,0 +1,10 @@
+{
+  "claims": [
+    {
+      "text": "42%",
+      "source": "study.md",
+      "line": 2
+    }
+  ],
+  "pptSlideCount": 4
+}

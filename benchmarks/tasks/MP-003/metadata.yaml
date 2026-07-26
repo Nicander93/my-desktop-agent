@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: media-processing
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/transcript.md
+  - output/segments.csv
+  - output/summary.md
+diagnostics:
+  - MP-003-D0
+  - MP-003-D1A
+  - MP-003-D1B

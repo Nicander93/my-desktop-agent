@@ -1,0 +1,3 @@
+Task BW-003
+Goal: 从多份合同文本提取合同方、日期、金额、续约、交付和义务，生成登记表并保留证据位置。
+Domain: business-workflow

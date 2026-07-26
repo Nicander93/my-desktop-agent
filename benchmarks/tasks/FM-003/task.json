@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "FM-003",
+  "version": "1.0.0",
+  "title": "Verified Backup",
+  "prompt": "将 source/ 完整备份到 backup/，生成 manifest.json（fileCount+files 含 path/size/sha256）与 verification.json（passed/fileCount/mismatches）。不要修改 source/ 内任何文件。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "file-management",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 20,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 20
+  },
+  "verifier": {
+    "requiredFiles": [
+      "backup/",
+      "manifest.json",
+      "verification.json"
+    ],
+    "unchangedPaths": [
+      "source/"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

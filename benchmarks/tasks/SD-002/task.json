@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "id": "SD-002",
+  "version": "1.0.0",
+  "title": "Incremental Feature",
+  "prompt": "在 todo-mini 项目中实现 src/filter.js 的 filterTodos(query, tag)：按 tag 精确匹配（空 tag 表示不限），query 对 text 大小写不敏感子串匹配（空 query 表示不限）。不要修改 test/ 与 package.json。完成后运行 npm test。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "run-tests",
+    "inspect-git-diff"
+  ],
+  "workflowId": "coding-change-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "software-development",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 24,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 3
+  },
+  "verifier": {
+    "requiredFiles": [
+      "src/filter.js"
+    ],
+    "unchangedPaths": [
+      "test/filter.test.js",
+      "package.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      },
+      {
+        "command": "npm",
+        "args": [
+          "test"
+        ],
+        "expectedExitCode": 0,
+        "timeoutMs": 60000
+      }
+    ]
+  }
+}

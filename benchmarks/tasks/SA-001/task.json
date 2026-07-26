@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "SA-001",
+  "version": "1.0.0",
+  "title": "Docker Compose Repair",
+  "prompt": "修复 docker-compose.yml（参考 logs/error.txt），并写 diagnosis.md 说明修改点。要求：ports 映射为列表；depends_on 使用合法 long syntax；web/api/db 均含 healthcheck.test/interval/timeout/retries。不要删除 volumes/db_data；不要实际运行 docker。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "system-administration",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 20,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 5
+  },
+  "verifier": {
+    "requiredFiles": [
+      "docker-compose.yml",
+      "diagnosis.md"
+    ],
+    "unchangedPaths": [
+      "logs/error.txt"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

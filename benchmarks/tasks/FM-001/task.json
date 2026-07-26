@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "FM-001",
+  "version": "1.0.0",
+  "title": "Duplicate File Audit",
+  "prompt": "递归扫描 input/tree/，按 SHA256 找完全重复；同名不同内容为 suspected。输出 duplicates.json 与 audit.md。不得删除或修改任何文件。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "file-management",
+    "D1"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/duplicates.json",
+      "output/audit.md"
+    ],
+    "unchangedPaths": [
+      "input/tree/a.txt"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

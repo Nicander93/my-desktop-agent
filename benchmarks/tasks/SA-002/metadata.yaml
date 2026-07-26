@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: system-admin
+difficulty:
+  level: D2
+  planningDepth: 4
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 5
+  recoveryDemand: 3
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/incident-report.md
+  - output/timeline.csv
+  - output/evidence.json
+diagnostics:
+  - SA-002-D0
+  - SA-002-D1A
+  - SA-002-D1B

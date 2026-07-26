@@ -1,0 +1,15 @@
+{
+  "fileCount": 2,
+  "files": [
+    {
+      "path": "data/config.json",
+      "size": 15,
+      "sha256": "69dd9b5fd9fe1516fac074af401a5fdd752015683743e4e26ad8157f3489eb8e"
+    },
+    {
+      "path": "docs/readme.txt",
+      "size": 15,
+      "sha256": "caf3f47a407f5f121bd8fefe30923cc66a5267557a3bf4e6462ee0b1dd0af62e"
+    }
+  ]
+}

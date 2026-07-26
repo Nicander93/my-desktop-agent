@@ -1,0 +1,32 @@
+{
+  "themes": [
+    {
+      "name": "Battery",
+      "sourceIds": [
+        "src-a",
+        "src-b"
+      ]
+    }
+  ],
+  "conflicts": [
+    {
+      "topic": "date",
+      "views": [
+        {
+          "sourceId": "src-a",
+          "claim": "2027"
+        },
+        {
+          "sourceId": "src-b",
+          "claim": "2030"
+        }
+      ]
+    }
+  ],
+  "uncertain": [
+    {
+      "sourceId": "src-a",
+      "note": "cost"
+    }
+  ]
+}

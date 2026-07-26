@@ -1,0 +1,21 @@
+{
+  "taskId": "CW-001",
+  "domain": "cross-application",
+  "checks": [
+    "跨文件指标一致",
+    "数据清洗正确",
+    "图表正确",
+    "所有文件可打开"
+  ],
+  "required": [
+    "output/sales-report.xlsx",
+    "output/sales-review.pptx",
+    "output/consistency.json"
+  ],
+  "mustContain": [
+    "sales-report.xlsx",
+    "sales-review.pptx",
+    "consistency.json"
+  ],
+  "fingerprint": "f2fbf073a8f3eaa4"
+}

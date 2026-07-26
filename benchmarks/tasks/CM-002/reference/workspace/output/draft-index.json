@@ -1,0 +1,14 @@
+{
+  "threads": [
+    {
+      "id": "t1",
+      "missingInfo": [
+        "ship date"
+      ]
+    },
+    {
+      "id": "t2",
+      "missingInfo": []
+    }
+  ]
+}

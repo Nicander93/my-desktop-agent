@@ -1,0 +1,41 @@
+{
+  "messages": [
+    {
+      "id": "m1",
+      "subject": "Newsletter",
+      "from": "news@x.com",
+      "labels": [
+        "promo"
+      ],
+      "attachments": []
+    },
+    {
+      "id": "m2",
+      "subject": "Production down",
+      "from": "ops@co.com",
+      "labels": [
+        "incident"
+      ],
+      "attachments": [
+        {
+          "name": "log.txt",
+          "size": 100
+        }
+      ]
+    },
+    {
+      "id": "m3",
+      "subject": "Invoice",
+      "from": "ap@v.com",
+      "labels": [
+        "finance"
+      ],
+      "attachments": [
+        {
+          "name": "inv.pdf",
+          "size": 200
+        }
+      ]
+    }
+  ]
+}

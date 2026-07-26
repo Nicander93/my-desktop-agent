@@ -1,0 +1,4 @@
+source_path,archive_path,year,type,rule
+documents/2023-memo.md,archive/2023/notes/2023-memo.md,2023,notes,auto
+documents/2024-report.pdf,archive/2024/papers/2024-report.pdf,2024,papers,auto
+documents/misc.xyz,archive/2023/other/misc.xyz,2023,other,auto

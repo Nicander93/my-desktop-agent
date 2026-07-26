@@ -1,0 +1,8 @@
+{
+  "mealLimit": 75,
+  "receiptRequiredAbove": 25,
+  "categories": [
+    "meals",
+    "travel"
+  ]
+}

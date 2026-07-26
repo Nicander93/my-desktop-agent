@@ -1,0 +1,40 @@
+{
+  "facts": [
+    {
+      "id": "FACT-001",
+      "text": "Launch/GA date 2026-03-15",
+      "sources": [
+        "product-overview.md",
+        "roadmap.md"
+      ]
+    },
+    {
+      "id": "FACT-002",
+      "text": "Target market SMB teams",
+      "sources": [
+        "product-overview.md",
+        "meeting-notes.txt"
+      ]
+    },
+    {
+      "id": "FACT-003",
+      "text": "Budget cap 50000 USD",
+      "sources": [
+        "meeting-notes.txt"
+      ]
+    },
+    {
+      "id": "FACT-004",
+      "text": "Mobile app in Q3",
+      "sources": [
+        "roadmap.md"
+      ]
+    }
+  ],
+  "actionItems": [
+    {
+      "text": "Finalize pricing by Feb 10",
+      "source": "meeting-notes.txt"
+    }
+  ]
+}

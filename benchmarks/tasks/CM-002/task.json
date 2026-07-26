@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "CM-002",
+  "version": "1.0.0",
+  "title": "Grounded Reply Drafts",
+  "prompt": "为 input/threads.json 每线程写 output/drafts/<thread_id>.md 与 output/draft-index.json。严格依据上下文，标记 missing_info，不臆造承诺。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "communication",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/draft-index.json"
+    ],
+    "unchangedPaths": [
+      "input/threads.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

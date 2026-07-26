@@ -1,0 +1,11 @@
+{
+  "messages": [
+    {
+      "id": "x1",
+      "subject": "Hi",
+      "from": "a@b.com",
+      "labels": [],
+      "attachments": []
+    }
+  ]
+}

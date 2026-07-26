@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "PP-003",
+  "version": "1.0.0",
+  "title": "Personal Archive Builder",
+  "prompt": "将 input/documents/ 按 input/rules.json 归档到 output/archive/YYYY/type/，生成 archive-index.csv 与 archive-report.md。原件不得修改。",
+  "profile": "file-organizing",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "personal-productivity",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/archive-index.csv",
+      "output/archive-report.md"
+    ],
+    "unchangedPaths": [
+      "input/rules.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

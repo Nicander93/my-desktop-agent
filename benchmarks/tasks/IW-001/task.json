@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "IW-001",
+  "version": "1.0.0",
+  "title": "Offline Web Data Extraction",
+  "prompt": "从 input/catalog.html 提取产品（data-sku, name, price），去重输出 output/items.csv 与 output/extraction-report.json（found, duplicates, missingPrice）。离线处理。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "internet-workflow",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/items.csv",
+      "output/extraction-report.json"
+    ],
+    "unchangedPaths": [
+      "input/catalog.html"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

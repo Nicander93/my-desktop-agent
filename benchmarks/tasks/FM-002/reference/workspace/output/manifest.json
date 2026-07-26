@@ -1,0 +1,42 @@
+{
+  "dryRun": true,
+  "fileCount": 6,
+  "files": [
+    {
+      "from": "Invoice MAR 12 2024 draft.pdf",
+      "to": "2024-03-12_001_invoice_draft.pdf",
+      "sha256": "93d744ff0a7a32cc2e7c080750ba4142da6b347d1bebcc96ef15df3fde2bc970",
+      "sizeBytes": 26
+    },
+    {
+      "from": "notes-v2 (copy).txt",
+      "to": "2024-01-01_002_notes-v2_copy.txt",
+      "sha256": "e03f239a48ec4ab37cadffd0ccae8f5dede1b40f2c3ae5989d6e98b4f975156d",
+      "sizeBytes": 24
+    },
+    {
+      "from": "notes-v2.txt",
+      "to": "2024-01-01_003_notes-v2.txt",
+      "sha256": "6c8afd37ef4d887489a3450261179253bc796f7be2a8e9e3f201acc1b7bfc000",
+      "sizeBytes": 17
+    },
+    {
+      "from": "photo jan 5 2024 (1).jpg",
+      "to": "2024-01-05_004_photo_1.jpg",
+      "sha256": "3721da2730cc854ed64229434bd4823fb72e575cd5e0cc199b568f5dbb197dae",
+      "sizeBytes": 26
+    },
+    {
+      "from": "photo jan 5 2024.jpg",
+      "to": "2024-01-05_005_photo.jpg",
+      "sha256": "b8a4cea8ed822a2899d34f3dd7ad32345488c07a9eb2494a15cfa5267835214a",
+      "sizeBytes": 27
+    },
+    {
+      "from": "scan_report_final.pdf",
+      "to": "2024-01-01_006_scan_report_final.pdf",
+      "sha256": "a739606dc21030edbead160ad7bcbb02f00aa8d97eeea057671f6b9115ca06e4",
+      "sizeBytes": 19
+    }
+  ]
+}

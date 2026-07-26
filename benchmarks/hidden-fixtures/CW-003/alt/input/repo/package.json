@@ -1,0 +1,6 @@
+{
+  "name": "alt",
+  "scripts": {
+    "start": "node main.js"
+  }
+}

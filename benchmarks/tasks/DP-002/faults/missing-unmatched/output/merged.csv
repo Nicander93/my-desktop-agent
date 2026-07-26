@@ -1,0 +1,4 @@
+order_id,customer_id,customer_name,product_id,product_name,amount,unit_price
+O1,C1,Acme,P1,Widget,100,10
+O3,C2,Beta,P2,Gadget,80,40
+O4,C1,Acme,P1,Widget,100,10

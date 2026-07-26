@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "SA-002",
+  "version": "1.0.0",
+  "title": "Service Log Diagnosis",
+  "prompt": "分析 input/logs/ 与 input/events.json，定位 2024-06-18 的故障，输出到 output/：\n- output/incident-report.md：含 ## Facts 与 ## Inferences 两节\n- output/timeline.csv：列 timestamp,source,event_type,description,evidence_id（ISO 时间升序）\n- output/evidence.json：含 facts[]、inferences[]、evidence{}（键为 E001 等，含 log 引用）\n\n要求：\n1. 时间线事件须能在日志中找到对应 evidence_id\n2. facts 仅含日志/事件直接支持的内容；inferences 为推断并标明依据 evidence\n3. 修复建议可验证\n4. 不得修改 input/ 下文件",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code"],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": ["dwb", "system-admin", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 12
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/incident-report.md",
+      "output/timeline.csv",
+      "output/evidence.json"
+    ],
+    "unchangedPaths": ["input/logs", "input/events.json"],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

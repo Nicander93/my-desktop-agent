@@ -1,0 +1,41 @@
+{
+  "dryRun": true,
+  "entries": [
+    {
+      "from": "Invoice MAR 12 2024 draft.pdf",
+      "to": "2024-03-12_001_invoice_draft.pdf",
+      "status": "ok",
+      "reason": "matched_rules"
+    },
+    {
+      "from": "notes-v2 (copy).txt",
+      "to": "2024-01-01_002_notes-v2_copy.txt",
+      "status": "ok",
+      "reason": "matched_rules"
+    },
+    {
+      "from": "notes-v2.txt",
+      "to": "2024-01-01_003_notes-v2.txt",
+      "status": "ok",
+      "reason": "matched_rules"
+    },
+    {
+      "from": "photo jan 5 2024 (1).jpg",
+      "to": "2024-01-05_004_photo_1.jpg",
+      "status": "ok",
+      "reason": "matched_rules"
+    },
+    {
+      "from": "photo jan 5 2024.jpg",
+      "to": "2024-01-05_005_photo.jpg",
+      "status": "ok",
+      "reason": "matched_rules"
+    },
+    {
+      "from": "scan_report_final.pdf",
+      "to": "2024-01-01_006_scan_report_final.pdf",
+      "status": "ok",
+      "reason": "matched_rules"
+    }
+  ]
+}

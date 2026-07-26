@@ -1,0 +1,6 @@
+timestamp,source,event_type,description,evidence_id
+2024-06-18T14:20:03Z,app,deploy,deploy complete version=2.4.1,E001
+2024-06-18T14:32:02Z,app,error,HTTP 503 /api/orders,E002
+2024-06-18T14:32:03Z,access,error,access 503 /api/orders,E005
+2024-06-18T14:32:05Z,app,error,db pool exhausted,E003
+2024-06-18T14:33:20Z,app,warn,leak-suspect conn-88 not released,E004

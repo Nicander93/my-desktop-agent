@@ -1,0 +1,23 @@
+{
+  "taskId": "CW-003",
+  "domain": "cross-application",
+  "checks": [
+    "命令来自仓库",
+    "风险有依据",
+    "文件相互一致",
+    "不泄露秘密"
+  ],
+  "required": [
+    "output/handover.md",
+    "output/risks.xlsx",
+    "output/quickstart.md",
+    "output/evidence.json"
+  ],
+  "mustContain": [
+    "handover.md",
+    "risks.xlsx",
+    "quickstart.md",
+    "evidence.json"
+  ],
+  "fingerprint": "9af41dc779bd4811"
+}

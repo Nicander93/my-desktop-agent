@@ -1,0 +1,10 @@
+{
+  "name": "mini-app",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/app.test.js"
+  },
+  "dependencies": {
+    "semver": "7.6.3"
+  }
+}

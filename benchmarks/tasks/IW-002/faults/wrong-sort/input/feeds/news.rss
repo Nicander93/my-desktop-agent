@@ -1,0 +1,5 @@
+<?xml version="1.0"?><rss><channel>
+<item><guid>g1</guid><link>http://x/1</link><title>Alpha</title><pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate><category>tech</category></item>
+<item><guid>g1</guid><link>http://x/1</link><title>Alpha dup</title><pubDate>Mon, 01 Jan 2024 12:00:00 GMT</pubDate></item>
+<item><guid>g2</guid><link>http://x/2</link><title>Beta</title><pubDate>Tue, 02 Jan 2024 12:00:00 GMT</pubDate><category>biz</category></item>
+</channel></rss>

@@ -1,0 +1,14 @@
+{
+  "missingExif": [
+    "photos/c.jpg"
+  ],
+  "skippedNonImages": [
+    "photos/notes.txt"
+  ],
+  "renamedCollisions": [
+    {
+      "original": "photos/album/shot.jpg",
+      "renamed": "shot_2.jpg"
+    }
+  ]
+}

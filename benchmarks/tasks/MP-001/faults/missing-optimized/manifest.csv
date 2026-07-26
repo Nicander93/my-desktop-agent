@@ -1,0 +1,3 @@
+source,optimized,sourceWidth,sourceHeight,targetWidth,targetHeight,sha256
+a.png,a.png,1200,900,800,600,e6e5777e4d51ed3e9ca61a60a800d52718aaf957746c6dcd5fd94916516d1a96
+b.png,b.png,400,300,400,300,1a5abb36c587fffb0e1a03ccb65bf7959bb9574bd30e9d532401461795c35eee

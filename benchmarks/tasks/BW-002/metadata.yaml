@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: business-workflow
+difficulty:
+  level: D3
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/sales-analysis.xlsx
+  - output/management-brief.pptx
+  - output/metrics.json
+diagnostics:
+  - BW-002-D0
+  - BW-002-D1A
+  - BW-002-D1B

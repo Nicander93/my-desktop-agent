@@ -1,0 +1,19 @@
+{
+  "taskId": "SA-003",
+  "domain": "system-administration",
+  "checks": [
+    "不实际删除",
+    "大小统计正确",
+    "风险分级",
+    "排除受保护路径"
+  ],
+  "required": [
+    "output/cleanup-plan.csv",
+    "output/summary.md"
+  ],
+  "mustContain": [
+    "cleanup-plan.csv",
+    "summary.md"
+  ],
+  "fingerprint": "60dfd7cec27519b6"
+}

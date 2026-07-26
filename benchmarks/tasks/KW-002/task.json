@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "KW-002",
+  "version": "1.0.0",
+  "title": "Meeting Minutes",
+  "prompt": "根据 input/transcript.md（含证据 ID 如 [E001]）生成会议纪要到 output/：\n- output/minutes.md：含 Summary、Decisions、Discussion、Open Items 四节\n- output/actions.csv：列 action_id,description,owner,due_date,evidence_ids（分号分隔）\n\n要求：\n1. 行动项与决策必须引用 transcript 中的 evidence ID\n2. owner 与 due_date 只能来自原文明确信息；未分配则 owner 留空、due_date 写 TBD\n3. 不得臆造负责人或日期\n4. 不得修改 input/transcript.md",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code"],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": ["dwb", "knowledge-work", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 28,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 10
+  },
+  "verifier": {
+    "requiredFiles": ["output/minutes.md", "output/actions.csv"],
+    "unchangedPaths": ["input/transcript.md"],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

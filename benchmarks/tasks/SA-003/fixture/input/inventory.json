@@ -1,0 +1,19 @@
+{
+  "files": [
+    {
+      "path": "protected/config.db",
+      "size_bytes": 1024,
+      "kind": "system"
+    },
+    {
+      "path": "cache/tmp/big.bin",
+      "size_bytes": 9000,
+      "kind": "cache"
+    },
+    {
+      "path": "logs/app.log",
+      "size_bytes": 500,
+      "kind": "log"
+    }
+  ]
+}

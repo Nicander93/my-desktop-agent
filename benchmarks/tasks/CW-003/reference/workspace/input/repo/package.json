@@ -1,0 +1,7 @@
+{
+  "name": "demo-app",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  }
+}

@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  web:
+    image: nginx:1.25
+    ports: "8080:80"
+    depends_on:
+      - api
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+  api:
+    image: api:local
+    depends_on: db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+  db:
+    image: postgres:15
+    volumes:
+      - db_data:/var/lib/postgresql/data
+volumes:
+  db_data:

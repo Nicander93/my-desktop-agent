@@ -1,0 +1,4 @@
+raw,reason
+"1003,  , $5.00, 2024-01-07",invalid_fields
+"1004, Carol , abc, 2024-01-08",invalid_fields
+"1008, Grace , $15.00, not-a-date",invalid_fields

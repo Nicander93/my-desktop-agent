@@ -1,0 +1,4 @@
+message_id,category,priority
+m1,promo,P3
+m2,incident,P1
+m3,finance,P2

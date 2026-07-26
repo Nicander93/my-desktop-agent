@@ -1,0 +1,3 @@
+Task CW-001
+Goal: 清洗多份销售数据，生成 Excel 分析、PPT 汇报和一致性报告。
+Domain: cross-application

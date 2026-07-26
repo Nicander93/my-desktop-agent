@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: media-processing
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - optimized/
+  - manifest.csv
+  - report.json
+diagnostics:
+  - D0
+  - D1A
+  - D1B

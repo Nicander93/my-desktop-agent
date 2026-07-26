@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "MP-002",
+  "version": "1.0.0",
+  "title": "PDF Packet Builder",
+  "prompt": "按 input/manifest.json 顺序合并 input/pdfs/*.pdf，前置 cover 与 toc 页（各 1 页 PDF），输出 output/packet.pdf 与 output/packet-manifest.json（sections, totalPages, order）。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "media-processing",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/packet.pdf",
+      "output/packet-manifest.json"
+    ],
+    "unchangedPaths": [
+      "input/manifest.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

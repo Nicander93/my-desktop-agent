@@ -1,0 +1,23 @@
+[
+  {
+    "id": "g3",
+    "title": "Gamma",
+    "published": "2024-01-03T12:00:00Z",
+    "category": "tech",
+    "source": "blog.atom"
+  },
+  {
+    "id": "g2",
+    "title": "Beta",
+    "published": "Tue, 02 Jan 2024 12:00:00 GMT",
+    "category": "biz",
+    "source": "news.rss"
+  },
+  {
+    "id": "g1",
+    "title": "Alpha",
+    "published": "Mon, 01 Jan 2024 12:00:00 GMT",
+    "category": "tech",
+    "source": "news.rss"
+  }
+]

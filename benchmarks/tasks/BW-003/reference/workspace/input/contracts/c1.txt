@@ -1,0 +1,1 @@
+Party: Acme CorpAmount: USD 50,000Renewal: 2025-12-31

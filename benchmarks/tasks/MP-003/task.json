@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "MP-003",
+  "version": "1.0.0",
+  "title": "Audio Transcript Package",
+  "prompt": "整理 input/raw-transcript.vtt 与 input/speakers.json，输出 transcript.md、segments.csv（start,end,speaker,text）、summary.md。时间戳单调，文本完整。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "media-processing",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/transcript.md",
+      "output/segments.csv",
+      "output/summary.md"
+    ],
+    "unchangedPaths": [
+      "input/raw-transcript.vtt"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

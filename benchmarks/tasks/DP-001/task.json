@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "DP-001",
+  "version": "1.0.0",
+  "title": "Messy CSV Cleaner",
+  "prompt": "客户给了你一份格式混乱的订单 CSV（input/orders.csv）。请检查数据，清理后输出可复用结果和质量报告到 output/：\n- output/cleaned.csv：清洗后的有效行\n- output/invalid_rows.csv：无法修复的异常行（保留原行并加 reason 列）\n- output/report.json：含 totalRows、cleanedRows、invalidRows、duplicateRowsRemoved\n\n清洗规则：\n1. 规范化列名：order_id, customer, amount, order_date\n2. 去掉首尾空白；customer 空值视为无效\n3. amount 去掉货币符号与千分位，转为数字；非数字无效\n4. order_date 统一为 YYYY-MM-DD；无法解析无效\n5. 按 order_id 去重，保留首次出现\n6. 不要修改 input/orders.csv\n\n可写脚本完成。完成后确保三个产物存在且语义正确。",
+  "profile": "coding",
+  "capabilities": ["read-project", "edit-code", "run-tests"],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": ["dwb", "data-processing", "D2"],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 20
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/cleaned.csv",
+      "output/invalid_rows.csv",
+      "output/report.json"
+    ],
+    "unchangedPaths": ["input/orders.csv"],
+    "commands": [
+      {
+        "command": "node",
+        "args": ["harness/verify.mjs"],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": ["DWB_VERIFY_PASS"],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

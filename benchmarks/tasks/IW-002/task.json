@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "IW-002",
+  "version": "1.0.0",
+  "title": "RSS Digest from Fixtures",
+  "prompt": "读取 input/feeds/ 下 RSS 与 Atom，按 GUID/链接去重，时间降序，分类写入 output/rss-digest.md 与 output/items.json。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "internet-workflow",
+    "D1"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/rss-digest.md",
+      "output/items.json"
+    ],
+    "unchangedPaths": [
+      "input/feeds/news.rss"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

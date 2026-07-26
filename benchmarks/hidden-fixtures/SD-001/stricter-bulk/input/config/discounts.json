@@ -1,0 +1,7 @@
+{
+  "bulkThreshold": 5,
+  "bulkRate": 0.85,
+  "itemDiscounts": {
+    "WIDGET": 0.95
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Q2",
+  "sections": [
+    "Executive Summary",
+    "Metrics"
+  ],
+  "metrics": {
+    "revenue": 1300000,
+    "customers": 580
+  },
+  "slidesMin": 8,
+  "slidesMax": 12
+}

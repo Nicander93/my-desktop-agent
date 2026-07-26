@@ -1,0 +1,5 @@
+order_id,customer_id,product_id,amount
+O1,C1,P1,100
+O2,C9,P1,50
+O3,C2,P2,80
+O4,C1,P1,100

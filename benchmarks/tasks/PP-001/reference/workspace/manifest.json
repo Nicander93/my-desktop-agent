@@ -1,0 +1,54 @@
+{
+  "dryRun": true,
+  "fileCount": 8,
+  "files": [
+    {
+      "name": "bundle.zip",
+      "category": "archives",
+      "sha256": "38b2964ba2461a6be3211e057ed8daa4713ca004cf79337b1f0ef59840947621",
+      "organizedPath": "organized/archives/bundle.zip"
+    },
+    {
+      "name": "notes.txt",
+      "category": "text",
+      "sha256": "fbd7e5029b2b7bc8822dc0e7ec531278273c4ee5f2b02b645362a8bb720614db",
+      "organizedPath": "organized/text/notes.txt"
+    },
+    {
+      "name": "readme.md",
+      "category": "text",
+      "sha256": "8ac591c54caea7452fb66cdcda0471a9e2bd363ab8a31e8f4b68559467888f0a",
+      "organizedPath": "organized/text/readme.md"
+    },
+    {
+      "name": "report_Q1 (1).pdf",
+      "category": "documents",
+      "sha256": "de4af95fba6374ca1b579869fccae0e1be0b50ba69fb88ad7ab0c4224ca92beb",
+      "organizedPath": "organized/documents/report_Q1 (1).pdf"
+    },
+    {
+      "name": "report_Q1.pdf",
+      "category": "documents",
+      "sha256": "de4af95fba6374ca1b579869fccae0e1be0b50ba69fb88ad7ab0c4224ca92beb",
+      "organizedPath": "organized/documents/report_Q1.pdf"
+    },
+    {
+      "name": "sales.csv",
+      "category": "data",
+      "sha256": "b09f4060a87875fbd79260b9d605af03aecff15332a874b54ed2d61afcd22f91",
+      "organizedPath": "organized/data/sales.csv"
+    },
+    {
+      "name": "unknown.bin",
+      "category": "other",
+      "sha256": "b7d07c500fc550cf88d349c97996a9e007c31fa1d9409a8fa199db11c1703d34",
+      "organizedPath": "organized/other/unknown.bin"
+    },
+    {
+      "name": "vacation.jpg",
+      "category": "images",
+      "sha256": "4f7a4aae2f91174faf9788d9a9848df16c34010955b2b88966911a1f93f099b3",
+      "organizedPath": "organized/images/vacation.jpg"
+    }
+  ]
+}

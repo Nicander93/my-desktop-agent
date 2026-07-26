@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: data-processing
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 4
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/cleaned.csv
+  - output/invalid_rows.csv
+  - output/report.json
+diagnostics:
+  - DP-001-D0
+  - DP-001-D1A
+  - DP-001-D1B

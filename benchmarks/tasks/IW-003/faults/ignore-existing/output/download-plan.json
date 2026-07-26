@@ -1,0 +1,19 @@
+{
+  "tasks": [
+    {
+      "url": "http://cdn/a.zip",
+      "local": "a.zip",
+      "status": "pending"
+    },
+    {
+      "url": "http://cdn/b.pdf",
+      "local": "b.pdf",
+      "status": "pending"
+    },
+    {
+      "url": "http://cdn/report.pdf",
+      "local": "report.pdf",
+      "status": "pending"
+    }
+  ]
+}

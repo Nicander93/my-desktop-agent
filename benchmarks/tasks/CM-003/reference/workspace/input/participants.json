@@ -1,0 +1,37 @@
+{
+  "durationMinutes": 60,
+  "timezone": "Asia/Shanghai",
+  "participants": [
+    {
+      "name": "Alice",
+      "tz": "Asia/Shanghai",
+      "busy": [
+        [
+          "2026-03-10T01:00:00Z",
+          "2026-03-10T03:00:00Z"
+        ],
+        [
+          "2026-03-10T06:00:00Z",
+          "2026-03-10T07:00:00Z"
+        ]
+      ]
+    },
+    {
+      "name": "Bob",
+      "tz": "America/New_York",
+      "busy": [
+        [
+          "2026-03-10T00:00:00Z",
+          "2026-03-10T02:00:00Z"
+        ]
+      ]
+    }
+  ],
+  "constraints": {
+    "weekdaysOnly": true,
+    "localStartHour": 9,
+    "localEndHour": 17,
+    "windowStart": "2026-03-10",
+    "windowDays": 3
+  }
+}

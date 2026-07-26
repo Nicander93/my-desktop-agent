@@ -1,0 +1,21 @@
+{
+  "durationMinutes": 60,
+  "timezone": "UTC",
+  "participants": [
+    {
+      "name": "Alice",
+      "tz": "UTC",
+      "busy": [
+        [
+          "2026-03-10T08:00:00Z",
+          "2026-03-10T12:00:00Z"
+        ]
+      ]
+    }
+  ],
+  "constraints": {
+    "weekdaysOnly": true,
+    "windowStart": "2026-03-10",
+    "windowDays": 2
+  }
+}

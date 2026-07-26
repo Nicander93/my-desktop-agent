@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: file-management
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 4
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 3
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - output/rename-plan.json
+  - output/manifest.json
+  - output/rollback.json
+diagnostics:
+  - FM-002-D0
+  - FM-002-D1A
+  - FM-002-D1B

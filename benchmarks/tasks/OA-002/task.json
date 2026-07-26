@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "OA-002",
+  "version": "1.0.0",
+  "title": "Presentation from Brief",
+  "prompt": "根据 input/brief.json 生成 output/presentation.pptx（8–12 页）与 output/outline.md。\n\n必须覆盖 brief 中 sections（Executive Summary/Metrics/Risks/Next Steps），Metrics 页需包含 revenue 1200000 与 customers 540。\n\n不要修改 input/brief.json。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "create-pptx",
+    "validate-pptx"
+  ],
+  "workflowId": "office-create-validate",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "office-automation",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 20,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 8
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/presentation.pptx",
+      "output/outline.md"
+    ],
+    "unchangedPaths": [
+      "input/brief.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

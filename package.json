@@ -21,7 +21,9 @@
     "eval:coding": "pnpm --filter @desktop-agent/agent-eval build && node packages/agent-eval/dist/cli.js",
     "eval:coding:smoke": "pnpm run eval:coding -- --suite smoke",
     "eval:coding:regression": "pnpm run eval:coding -- --suite regression",
-    "eval": "pnpm --filter @desktop-agent/agent-eval build && node packages/agent-eval/dist/cli.js"
+    "eval": "pnpm --filter @desktop-agent/agent-eval build && node packages/agent-eval/dist/cli.js",
+    "eval:dwb": "pnpm run eval -- --tag dwb",
+    "eval:report": "pnpm --filter @desktop-agent/agent-eval build && node packages/agent-eval/dist/report-cli.js"
   },
   "devDependencies": {
     "dependency-cruiser": "^17.3.8",

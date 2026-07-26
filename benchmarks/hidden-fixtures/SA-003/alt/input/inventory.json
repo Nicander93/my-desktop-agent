@@ -1,0 +1,9 @@
+{
+  "files": [
+    {
+      "path": "cache/x",
+      "size_bytes": 100,
+      "kind": "cache"
+    }
+  ]
+}

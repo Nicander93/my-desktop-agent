@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "CW-003",
+  "version": "1.0.0",
+  "title": "Project Handover Pack",
+  "prompt": "阅读 input/repo/（含 README、package.json、CHANGELOG），生成 handover.md、risks.xlsx、quickstart.md、evidence.json。命令须来自 package.json；不得泄露 .env。",
+  "profile": "general",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "inspect-git-diff",
+    "inspect-spreadsheet"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "cross-application",
+    "D3"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/handover.md",
+      "output/risks.xlsx",
+      "output/quickstart.md",
+      "output/evidence.json"
+    ],
+    "unchangedPaths": [
+      "input/repo/README.md",
+      "input/repo/.env"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

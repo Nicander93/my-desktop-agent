@@ -1,0 +1,5 @@
+original_path,dest_path,date_source
+photos/a.jpg,photos-by-date/2024-03-15/a.jpg,exif
+photos/shot.jpg,photos-by-date/2024-03-15/shot.jpg,exif
+photos/album/shot.jpg,photos-by-date/2024-03-15/shot_2.jpg,exif
+photos/c.jpg,photos-by-date/unknown-date/c.jpg,unknown

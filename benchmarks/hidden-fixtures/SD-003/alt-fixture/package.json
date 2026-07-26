@@ -1,0 +1,10 @@
+{
+  "name": "alt",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/app.test.js"
+  },
+  "dependencies": {
+    "semver": "6.3.1"
+  }
+}

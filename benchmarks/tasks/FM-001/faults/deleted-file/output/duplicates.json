@@ -1,0 +1,21 @@
+{
+  "exact": [
+    {
+      "hash": "7158cd4226c42902bec212bf456f5b8d2cad197c28ff5adb231c51e887987b40",
+      "files": [
+        "input/tree/dup1.txt",
+        "input/tree/sub/dup2.txt"
+      ],
+      "wastedBytes": 13
+    }
+  ],
+  "suspected": [
+    {
+      "name": "readme.txt",
+      "files": [
+        "input/tree/readme.txt",
+        "input/tree/sub/readme.txt"
+      ]
+    }
+  ]
+}

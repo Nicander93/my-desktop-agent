@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "BW-002",
+  "version": "1.0.0",
+  "title": "Sales Performance Pack",
+  "prompt": "分析 input/sales.csv，生成 output/sales-analysis.xlsx（区域汇总）、output/management-brief.pptx（≥3 页，含 top region）、output/metrics.json。跨文件数字一致。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data",
+    "inspect-spreadsheet",
+    "create-pptx",
+    "validate-pptx"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "business-workflow",
+    "D3"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/sales-analysis.xlsx",
+      "output/management-brief.pptx",
+      "output/metrics.json"
+    ],
+    "unchangedPaths": [
+      "input/sales.csv"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+benchmark: dwb
+domain: personal-productivity
+difficulty:
+  level: D2
+  planningDepth: 3
+  toolDiversity: 3
+  stateDependency: 3
+  inputAmbiguity: 3
+  verificationDifficulty: 4
+  recoveryDemand: 2
+frequency: weekly
+risk: medium
+sourceType: synthesized-from-common-workflow
+expectedArtifacts:
+  - organized/
+  - manifest.json
+  - duplicates.json
+diagnostics:
+  - D0
+  - D1A
+  - D1B

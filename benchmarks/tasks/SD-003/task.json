@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "SD-003",
+  "version": "1.0.0",
+  "title": "Dependency Upgrade",
+  "prompt": "fixture 中 mini-app 使用旧版 semver 库（compare(a,b) 返回 -1/0/1）。升级到 package.json 指定的新 API（semver.compare）并修复 src/app.js，通过 npm test。写 output/migration-note.md 说明变更。",
+  "profile": "coding",
+  "capabilities": [
+    "read-project",
+    "edit-code",
+    "run-tests",
+    "inspect-git-diff"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "software-development",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 30,
+    "timeoutMs": 900000,
+    "maxChangedFiles": 30
+  },
+  "verifier": {
+    "requiredFiles": [
+      "output/migration-note.md"
+    ],
+    "unchangedPaths": [
+      "test/app.test.js",
+      "package-lock.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

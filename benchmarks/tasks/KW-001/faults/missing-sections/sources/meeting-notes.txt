@@ -1,0 +1,4 @@
+Meeting 2026-02-01
+FACT-002: SMB teams are primary buyers.
+FACT-003: Budget cap is 50000 USD.
+TODO: finalize pricing by Feb 10.

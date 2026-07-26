@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "CM-003",
+  "version": "1.0.0",
+  "title": "Meeting Scheduling Proposal",
+  "prompt": "根据 input/participants.json 生成 meeting-options.json（candidates 数组：rank/startUtc/endUtc/score/note，至少 2 个无冲突候选）与 proposal.md（说明时区与理由）。不要写入真实日历；不要修改 input/。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "communication",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 20,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 10
+  },
+  "verifier": {
+    "requiredFiles": [
+      "meeting-options.json",
+      "proposal.md"
+    ],
+    "unchangedPaths": [
+      "input/participants.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

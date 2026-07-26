@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "KW-001",
+  "version": "1.0.0",
+  "title": "Multi-document Brief",
+  "prompt": "阅读 sources/ 下三份材料，生成 brief.md 与 sources.json。\n\nbrief.md 必须含 ## Summary、## Key Facts、## Action Items。\n\nKey Facts 使用 FACT-001.. 编号，内容只能来自输入材料（可合并重复 FACT-002 等），不得编造。\n\nsources.json 结构：{ facts:[{id,text,sources[]}], actionItems:[{text,source}] }，sources 为文件名。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "knowledge-work",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 24,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 10
+  },
+  "verifier": {
+    "requiredFiles": [
+      "brief.md",
+      "sources.json"
+    ],
+    "unchangedPaths": [
+      "sources/"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}

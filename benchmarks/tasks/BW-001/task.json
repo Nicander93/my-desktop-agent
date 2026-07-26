@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "BW-001",
+  "version": "1.0.0",
+  "title": "Expense Reconciliation",
+  "prompt": "核对 input/expenses.csv 与 input/policy.json，输出 exceptions.csv（expense_id,rule,reason）与 summary.md（总笔数、总金额、异常数、按规则汇总）。\n\n规则：meals>mealLimit 违规；amount>receiptRequiredAbove 且无 receipt_id 违规；重复 receipt_id 违规。不要修改 input/。",
+  "profile": "office",
+  "capabilities": [
+    "read-project",
+    "transform-data",
+    "inspect-spreadsheet"
+  ],
+  "workflowId": "inspect-implement-run-verify",
+  "suite": "quality",
+  "tags": [
+    "dwb",
+    "business-workflow",
+    "D2"
+  ],
+  "fixture": "fixture",
+  "limits": {
+    "maxTurns": 24,
+    "timeoutMs": 600000,
+    "maxChangedFiles": 10
+  },
+  "verifier": {
+    "requiredFiles": [
+      "exceptions.csv",
+      "summary.md"
+    ],
+    "unchangedPaths": [
+      "input/expenses.csv",
+      "input/policy.json"
+    ],
+    "commands": [
+      {
+        "command": "node",
+        "args": [
+          "harness/verify.mjs"
+        ],
+        "resolveArgsFromTaskDir": true,
+        "expectedExitCode": 0,
+        "stdoutIncludes": [
+          "DWB_VERIFY_PASS"
+        ],
+        "timeoutMs": 120000
+      }
+    ]
+  }
+}
