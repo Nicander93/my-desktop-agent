@@ -33,19 +33,19 @@ export function ThoughtSection({ thinking, durationMs, isStreaming }: ThoughtSec
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-[13px] text-gray-500 hover:text-gray-600 transition-colors"
+        className="flex items-center gap-1 text-[13px] text-[var(--color-text-secondary)] hover:text-[var(--color-text-secondary)] transition-colors"
       >
         <ChevronRight
           size={14}
-          className={cn('flex-shrink-0 transition-transform text-gray-400', open && 'rotate-90')}
+          className={cn('flex-shrink-0 transition-transform text-[var(--color-text-muted)]', open && 'rotate-90')}
         />
         <span>{label}</span>
       </button>
 
       {open && thinking && (
-        <div className="mt-2 pl-3 border-l border-gray-200 text-[13px] text-gray-500 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+        <div className="mt-2 pl-3 border-l border-[var(--color-border-default)] text-[13px] text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
           {thinking}
-          {isStreaming && <span className="text-gray-400"> …</span>}
+          {isStreaming && <span className="text-[var(--color-text-muted)]"> …</span>}
         </div>
       )}
     </div>

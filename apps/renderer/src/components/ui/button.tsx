@@ -4,27 +4,27 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-primary-500)] disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-md)] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-500)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--color-bg-surface)] disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-[var(--color-primary-500)] text-white shadow hover:bg-[var(--color-primary-600)]",
+          "bg-[var(--color-primary-500)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--color-primary-600)]",
         destructive:
-          "bg-red-500 text-white shadow-sm hover:bg-red-600",
+          "bg-[var(--color-danger)] text-white shadow-[var(--shadow-sm)] hover:opacity-90",
         outline:
-          "border border-gray-200 bg-white shadow-sm hover:bg-gray-100 hover:text-gray-900",
+          "border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-sm)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]",
         secondary:
-          "bg-gray-100 text-gray-900 shadow-sm hover:bg-gray-200",
+          "bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)] shadow-[var(--shadow-sm)] hover:bg-[var(--color-surface-hover)]",
         ghost:
-          "hover:bg-gray-100 hover:text-gray-900",
+          "hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-text-primary)]",
         link:
           "text-[var(--color-primary-500)] underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
+        sm: "h-8 rounded-[var(--radius-md)] px-3 text-xs",
+        lg: "h-10 rounded-[var(--radius-md)] px-8",
         icon: "h-9 w-9",
       },
     },

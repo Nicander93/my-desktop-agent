@@ -32,15 +32,15 @@ export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
         <button
           type="button"
           onClick={() => toggleExpand(entry.path)}
-          className="w-full flex items-center gap-1 py-1 pr-2 text-xs text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+          className="w-full flex items-center gap-1 py-1 pr-2 text-xs text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] rounded-md transition-colors"
           style={{ paddingLeft }}
         >
           {isLoading ? (
-            <Loader2 size={14} className="shrink-0 animate-spin text-gray-400" />
+            <Loader2 size={14} className="shrink-0 animate-spin text-[var(--color-text-muted)]" />
           ) : isExpanded ? (
-            <ChevronDown size={14} className="shrink-0 text-gray-400" />
+            <ChevronDown size={14} className="shrink-0 text-[var(--color-text-muted)]" />
           ) : (
-            <ChevronRight size={14} className="shrink-0 text-gray-400" />
+            <ChevronRight size={14} className="shrink-0 text-[var(--color-text-muted)]" />
           )}
           {isExpanded ? (
             <FolderOpen size={14} className="shrink-0 text-amber-500" />
@@ -61,13 +61,13 @@ export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
       type="button"
       onClick={() => openFile(entry.path)}
       className={cn(
-        'w-full flex items-center gap-1.5 py-1 pr-2 text-xs text-gray-600 hover:bg-gray-100 rounded-md transition-colors',
+        'w-full flex items-center gap-1.5 py-1 pr-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] rounded-md transition-colors',
         activeFile === entry.path && 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
       )}
       style={{ paddingLeft: paddingLeft + 18 }}
       title={entry.path}
     >
-      <File size={14} className="shrink-0 text-gray-400" />
+      <File size={14} className="shrink-0 text-[var(--color-text-muted)]" />
       <span className="truncate">{entry.name}</span>
     </button>
   );

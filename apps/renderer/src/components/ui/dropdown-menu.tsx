@@ -49,7 +49,7 @@ function DropdownMenuContent({ children, align = 'start', className }: { childre
     <div
       ref={ref}
       className={cn(
-        'absolute z-50 min-w-[160px] rounded-md border border-gray-200 bg-white p-1 shadow-md',
+        'absolute z-50 min-w-[160px] rounded-[var(--radius-md)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] p-1 shadow-[var(--shadow-panel)]',
         align === 'end' ? 'right-0' : 'left-0',
         'mt-1 top-full',
         className
@@ -65,7 +65,7 @@ function DropdownMenuItem({ children, onClick, className }: { children: React.Re
   return (
     <button
       className={cn(
-        'flex items-center w-full rounded-sm px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors',
+        'flex items-center w-full rounded-[var(--radius-sm)] px-2 py-1.5 text-sm text-[var(--color-text-primary)] hover:bg-[var(--color-surface-hover)] transition-colors',
         className
       )}
       onClick={(e) => { e.stopPropagation(); onClick?.(); setOpen(false); }}

@@ -25,7 +25,7 @@ export function SettingsPage() {
       <Header title="设置" />
       
       <div className="flex-1 flex min-h-0">
-        <nav className="w-48 shrink-0 border-r border-[var(--color-sidebar-border)] p-4">
+        <nav className="w-48 shrink-0 border-r border-[var(--color-border-default)] p-4">
           <div className="space-y-1">
             {settingsTabs.map((tab) => (
               <Button

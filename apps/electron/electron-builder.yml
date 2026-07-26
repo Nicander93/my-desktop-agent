@@ -11,7 +11,10 @@ extraResources:
     to: binaries/manifest.json
   - from: resources/binaries/archives
     to: binaries/archives
+  - from: resources/icon.png
+    to: icon.png
 win:
+  icon: icon.ico
   target:
     - nsis
   artifactName: ${productName}-${version}-win-${arch}.${ext}

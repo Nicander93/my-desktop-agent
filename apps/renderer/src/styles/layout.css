@@ -2,24 +2,21 @@
  * 应用骨架样式（语义化 class）
  *
  * 仅覆盖整体布局结构（AppLayout / NavSidebar / Header / ResizeHandle），
- * 颜色全部引用 globals.css @theme 中定义的设计令牌，便于统一调整与暗色模式。
- * 功能 / 叶子组件（ui/*、chat 面板）仍使用 Tailwind utility，不在本文件内。
- *
- * 本文件为普通（未分层）CSS：在 Tailwind v4 中生成的 utility 位于 @layer utilities，
- * 未分层样式优先级更高，可确保骨架样式不被零散 utility 意外覆盖。
+ * 颜色全部引用 globals.css 中定义的设计令牌，便于统一调整与暗色模式。
  */
 
 /* ===== 应用外壳 ===== */
 .app-layout {
   display: flex;
   height: 100vh;
-  background: var(--color-content-bg);
+  background: var(--color-bg-app);
 }
 
 .app-main {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  background: var(--color-bg-surface);
 }
 
 /* ===== 左侧导航栏 ===== */
@@ -29,10 +26,42 @@
   display: flex;
   flex-direction: column;
   background: var(--color-sidebar-bg);
+  border-right: 1px solid var(--color-border-default);
 }
 
 .app-sidebar--collapsed {
   width: 4rem;
+}
+
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+  padding: 1rem 0.875rem 0.75rem;
+}
+
+.app-brand--collapsed {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.app-brand__logo {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.app-brand__name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .app-sidebar__body {
@@ -43,34 +72,71 @@
 .app-sidebar__nav {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.75rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.app-sidebar__section-label {
+  padding: 0.5rem 0.75rem 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
 }
 
 .app-sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   padding: 0.75rem;
-  border-top: 1px solid var(--color-sidebar-border);
+  border-top: 1px solid var(--color-border-default);
 }
 
-/* 导航项（新对话 / 设置），活跃与悬浮态复用同一组 class */
+.app-nav-new-chat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fff;
+  background: var(--color-primary-500);
+  cursor: pointer;
+  transition: background-color 0.16s;
+}
+
+.app-nav-new-chat:hover {
+  background: var(--color-primary-600);
+}
+
+.app-nav-new-chat--collapsed {
+  padding: 0.625rem;
+}
+
 .app-nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-md);
   font-size: 0.875rem;
-  color: var(--color-text-tertiary);
-  transition: background-color 0.2s, color 0.2s;
+  color: var(--color-text-secondary);
+  transition: background-color 0.16s, color 0.16s;
 }
 
 .app-nav-item:hover {
   background: var(--color-surface-hover);
+  color: var(--color-text-primary);
 }
 
 .app-nav-item--active {
-  background: var(--color-primary-100);
+  background: var(--color-primary-50);
   color: var(--color-primary-700);
 }
 
@@ -83,16 +149,16 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 3rem;
+  height: 3.5rem;
   padding: 0 1rem;
-  border-bottom: 1px solid var(--color-sidebar-border);
-  background: var(--color-content-bg);
+  border-bottom: 1px solid var(--color-border-default);
+  background: var(--color-bg-surface);
 }
 
 .app-header__title {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-text-secondary);
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
 
 .app-header__subtitle {
@@ -117,7 +183,7 @@
   flex-shrink: 0;
   cursor: col-resize;
   user-select: none;
-  background: var(--color-sidebar-border);
+  background: var(--color-border-default);
 }
 
 .app-resize-handle:hover {

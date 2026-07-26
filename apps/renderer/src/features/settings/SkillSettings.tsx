@@ -103,8 +103,8 @@ export function SkillSettings() {
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Skills</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">Skills</h2>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
             启用的 Skill 会注册到 Agent，模型通过 Skill 工具按需加载完整指引；对话中 /name 可指定优先使用的 Skill。
           </p>
         </div>
@@ -132,12 +132,12 @@ export function SkillSettings() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-gray-500 mb-4">加载中...</p>}
+      {loading && <p className="text-sm text-[var(--color-text-secondary)] mb-4">加载中...</p>}
 
       {tab === 'installed' && (
         <div className="space-y-4">
           {skills.length === 0 && (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
+            <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-8 text-center text-[var(--color-text-secondary)]">
               暂无 Skill，可从目录安装或导入 URL
             </div>
           )}
@@ -158,17 +158,17 @@ export function SkillSettings() {
       {tab === 'catalog' && (
         <div className="grid gap-3">
           {catalog.map((entry) => (
-            <div key={entry.id} className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <div key={entry.id} className="rounded-lg border border-[var(--color-border-default)] p-4 bg-[var(--color-bg-subtle)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <BookOpen size={16} className="text-gray-500" />
+                    <BookOpen size={16} className="text-[var(--color-text-secondary)]" />
                     <span className="font-medium">{entry.displayName}</span>
                     <Badge variant="outline">/{entry.name}</Badge>
                     {entry.installed && <Badge>已安装</Badge>}
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">{entry.description}</p>
-                  <p className="text-xs text-gray-400 mt-1">分类：{entry.category}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)] mt-2">{entry.description}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">分类：{entry.category}</p>
                 </div>
                 <Button
                   disabled={entry.installed || installingId === entry.id}
@@ -186,11 +186,11 @@ export function SkillSettings() {
 
       {tab === 'import' && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--color-text-secondary)]">
             从 URL 导入 SKILL.md，例如 https://officecli.ai/SKILL.md
           </p>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">名称（/mention 用）</label>
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">名称（/mention 用）</label>
             <Input
               value={importName}
               onChange={(e) => setImportName(e.target.value)}
@@ -198,7 +198,7 @@ export function SkillSettings() {
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">SKILL.md URL</label>
+            <label className="block text-sm text-[var(--color-text-secondary)] mb-1">SKILL.md URL</label>
             <Input
               value={importUrl}
               onChange={(e) => setImportUrl(e.target.value)}
@@ -231,10 +231,10 @@ function SkillCard({
   onUpdate: (updates: Partial<SkillRecord>) => void;
 }) {
   return (
-    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="p-4 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border-default)]">
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <BookOpen size={16} className="text-gray-500 shrink-0" />
+          <BookOpen size={16} className="text-[var(--color-text-secondary)] shrink-0" />
           <Input
             value={skill.displayName}
             onChange={(e) => onUpdate({ displayName: e.target.value })}
@@ -253,15 +253,15 @@ function SkillCard({
           <Button variant="ghost" size="icon" onClick={onToggle}>
             <div className={cn(
               'w-10 h-5 rounded-full transition-colors relative',
-              skill.enabled ? 'bg-[var(--color-primary-500)]' : 'bg-gray-300',
+              skill.enabled ? 'bg-[var(--color-primary-500)]' : 'bg-[var(--color-border-strong)]',
             )}>
               <div className={cn(
-                'w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform',
+                'w-4 h-4 bg-[var(--color-bg-surface)] rounded-full absolute top-0.5 transition-transform',
                 skill.enabled ? 'left-5' : 'left-0.5',
               )} />
             </div>
           </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="text-gray-400 hover:text-red-500">
+          <Button variant="ghost" size="icon" onClick={onDelete} className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]">
             <Trash2 size={16} />
           </Button>
         </div>
@@ -269,18 +269,18 @@ function SkillCard({
 
       <div className="space-y-3">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">名称（/mention 用）</label>
+          <label className="block text-sm text-[var(--color-text-secondary)] mb-1">名称（/mention 用）</label>
           <Input
             value={skill.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
           />
         </div>
-        <p className="text-xs text-gray-400 break-all">
+        <p className="text-xs text-[var(--color-text-muted)] break-all">
           来源：{skill.source === 'catalog' ? '目录安装' : skill.source === 'local' ? '本地文件' : 'URL'} · {skill.sourcePath}
         </p>
         <details className="text-sm">
-          <summary className="cursor-pointer text-gray-600">预览内容</summary>
-          <pre className="mt-2 max-h-48 overflow-auto rounded bg-white border border-gray-200 p-3 text-xs whitespace-pre-wrap">
+          <summary className="cursor-pointer text-[var(--color-text-secondary)]">预览内容</summary>
+          <pre className="mt-2 max-h-48 overflow-auto rounded bg-[var(--color-bg-surface)] border border-[var(--color-border-default)] p-3 text-xs whitespace-pre-wrap">
             {skill.contentCache.slice(0, 4000)}
             {skill.contentCache.length > 4000 ? '\n\n...(已截断)' : ''}
           </pre>

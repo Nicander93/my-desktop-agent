@@ -1,6 +1,6 @@
 /** 消息内工具调用折叠列表与耗时 */
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Loader2 } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Circle, Loader2, XCircle } from 'lucide-react';
 import type { TraceSpan } from '@desktop-agent/shared';
 import type { ToolCall } from '@/stores/chatStore';
 import { getToolActivityLabel } from '@/lib/toolActivityLabel';
@@ -23,6 +23,19 @@ function isActiveStatus(status: ToolCall['status']): boolean {
   return status === 'running' || status === 'pending';
 }
 
+function StatusIcon({ status }: { status: ToolCall['status'] }) {
+  switch (status) {
+    case 'pending':
+      return <Circle size={14} className="shrink-0 text-[var(--color-text-muted)]" />;
+    case 'running':
+      return <Loader2 size={14} className="shrink-0 animate-spin text-[var(--color-info)]" />;
+    case 'completed':
+      return <CheckCircle2 size={14} className="shrink-0 text-[var(--color-success)]" />;
+    case 'error':
+      return <XCircle size={14} className="shrink-0 text-[var(--color-danger)]" />;
+  }
+}
+
 function ToolCallRow({ toolCall }: { toolCall: ToolCall }) {
   const active = isActiveStatus(toolCall.status);
   const liveElapsed = useElapsedMs(toolCall.startedAt, active);
@@ -31,18 +44,16 @@ function ToolCallRow({ toolCall }: { toolCall: ToolCall }) {
   return (
     <div
       className={cn(
-        'flex items-center gap-2 text-[13px] leading-5 font-mono',
-        active ? 'text-gray-700' : 'text-gray-400',
+        'flex items-center gap-2 rounded-[var(--radius-sm)] px-2 py-1.5 text-[13px] leading-5',
+        active ? 'bg-[var(--color-bg-subtle)] text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)]',
       )}
     >
-      {active && (
-        <Loader2 size={12} className="animate-spin shrink-0 text-gray-400" />
-      )}
-      <span className="truncate flex-1 min-w-0">
+      <StatusIcon status={toolCall.status} />
+      <span className="truncate flex-1 min-w-0 font-medium">
         {getToolActivityLabel(toolCall.toolName, toolCall.input)}
       </span>
       {durationLabel && (
-        <span className="shrink-0 ml-2 tabular-nums text-gray-400">{durationLabel}</span>
+        <span className="shrink-0 ml-2 tabular-nums text-[var(--color-text-muted)] text-xs">{durationLabel}</span>
       )}
     </div>
   );
@@ -80,29 +91,32 @@ export function ToolActivityLog({ toolCalls, traceSpans, isStreaming }: ToolActi
   const showSpinner = activeCount > 0 || waitingForModel;
 
   return (
-    <div className="mb-2">
+    <div className="mb-3 rounded-[var(--radius-lg)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-600"
+        className="flex w-full items-center gap-2 px-3 py-2 text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] transition-colors"
       >
         {showSpinner && (
-          <Loader2 size={12} className="animate-spin shrink-0" />
+          <Loader2 size={14} className="animate-spin shrink-0 text-[var(--color-info)]" />
         )}
-        <span>{summary}</span>
+        {!showSpinner && (
+          <CheckCircle2 size={14} className="shrink-0 text-[var(--color-success)]" />
+        )}
+        <span className="flex-1 text-left truncate">{summary}</span>
         <ChevronDown
           size={14}
-          className={cn('transition-transform', open && 'rotate-180')}
+          className={cn('shrink-0 transition-transform', open && 'rotate-180')}
         />
       </button>
 
       {open && (
-        <div className="mt-1 space-y-0.5 pl-0.5">
+        <div className="space-y-0.5 border-t border-[var(--color-border-default)] px-2 py-2">
           {displayToolCalls.map((toolCall) => (
             <ToolCallRow key={toolCall.id} toolCall={toolCall} />
           ))}
           {isStreaming && activeCount === 0 && !waitingForModel && (
-            <div className="text-[13px] text-gray-400 font-mono">…</div>
+            <div className="px-2 py-1 text-[13px] text-[var(--color-text-muted)]">…</div>
           )}
         </div>
       )}

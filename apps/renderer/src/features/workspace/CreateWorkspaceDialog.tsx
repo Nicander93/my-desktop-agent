@@ -58,11 +58,11 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
 
         <div className="space-y-4 py-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">工作区名称</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">工作区名称</label>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="例如：我的项目" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">目录路径</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">目录路径</label>
             <div className="flex gap-2">
               <Input value={path} readOnly placeholder="点击选择目录" className="flex-1" />
               <Button variant="outline" onClick={handleSelectDirectory}>
@@ -71,7 +71,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">描述（可选）</label>
+            <label className="block text-sm font-medium text-[var(--color-text-primary)] mb-2">描述（可选）</label>
             <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="简单描述这个工作区" />
           </div>
         </div>

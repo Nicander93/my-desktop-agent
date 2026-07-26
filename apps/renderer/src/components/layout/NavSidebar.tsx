@@ -1,14 +1,15 @@
 /**
  * 左侧导航栏
  *
- * 包含新对话入口、工作区列表（WorkspaceList）和设置链接
+ * 品牌、新建对话、工作区列表与设置入口
  */
 import { NavLink, useLocation } from 'react-router-dom';
-import { MessageSquarePlus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MessageSquare, MessageSquarePlus, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useUIStore } from '@/stores/uiStore';
 import { useNewConversation } from '@/hooks/useNewConversation';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AppLogo } from '@/components/brand/AppLogo';
 import { WorkspaceList } from '@/features/workspace/WorkspaceList';
 import { cn } from '@/lib/utils';
 
@@ -26,26 +27,48 @@ export function NavSidebar() {
       )}
       style={sidebarCollapsed ? undefined : { width: sidebarWidth }}
     >
+      <div className={cn('app-brand', sidebarCollapsed && 'app-brand--collapsed')}>
+        <AppLogo className="app-brand__logo" size={28} />
+        {!sidebarCollapsed && <span className="app-brand__name">Desktop Agent</span>}
+      </div>
+
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => void startNewConversation()}
+          className={cn(
+            'app-nav-new-chat',
+            sidebarCollapsed && 'app-nav-new-chat--collapsed'
+          )}
+          aria-label="新对话"
+          title="新对话"
+        >
+          <MessageSquarePlus size={18} />
+          {!sidebarCollapsed && <span>新对话</span>}
+        </button>
+      </div>
+
       <ScrollArea className="app-sidebar__body">
         <nav className="app-sidebar__nav">
-          <button
-            type="button"
-            onClick={() => void startNewConversation()}
-            className={cn(
-              'app-nav-item',
-              isChatActive && 'app-nav-item--active',
-              sidebarCollapsed && 'app-nav-item--collapsed'
-            )}
-          >
-            <MessageSquarePlus size={20} />
-            {!sidebarCollapsed && <span>新对话</span>}
-          </button>
-
-          {!sidebarCollapsed && <WorkspaceList collapsed={false} />}
+          <WorkspaceList collapsed={sidebarCollapsed} />
         </nav>
       </ScrollArea>
 
       <div className="app-sidebar__footer">
+        <NavLink
+          to="/"
+          end
+          className={() => cn(
+            'app-nav-item',
+            isChatActive && 'app-nav-item--active',
+            sidebarCollapsed && 'app-nav-item--collapsed'
+          )}
+          title="对话"
+        >
+          <MessageSquare size={20} />
+          {!sidebarCollapsed && <span>对话</span>}
+        </NavLink>
+
         <NavLink
           to="/settings"
           className={({ isActive }) => cn(
@@ -53,12 +76,19 @@ export function NavSidebar() {
             isActive && 'app-nav-item--active',
             sidebarCollapsed && 'app-nav-item--collapsed'
           )}
+          title="设置"
         >
           <Settings size={20} />
           {!sidebarCollapsed && <span>设置</span>}
         </NavLink>
 
-        <Button variant="ghost" size="icon" onClick={toggleSidebar} className="w-full mt-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="w-full mt-1"
+          aria-label={sidebarCollapsed ? '展开侧栏' : '收起侧栏'}
+        >
           {sidebarCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </Button>
       </div>

@@ -13,6 +13,7 @@ import { useGoToChat } from '@/hooks/useGoToChat';
 import { WorkspaceItem } from './WorkspaceItem';
 import { CreateWorkspaceDialog } from './CreateWorkspaceDialog';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface WorkspaceListProps {
   collapsed: boolean;
@@ -40,39 +41,56 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
 
   if (collapsed) {
     return (
-      <div className="space-y-1">
+      <div className="space-y-1 px-1">
         {workspaces.slice(0, 5).map((workspace) => (
           <button
             key={workspace.id}
+            type="button"
             onClick={() => handleSelectWorkspace(workspace.id)}
             className={cn(
-              'w-full flex items-center justify-center p-2 rounded-lg transition-colors',
+              'w-full flex items-center justify-center p-2 rounded-[var(--radius-md)] transition-colors',
               currentWorkspaceId === workspace.id
-                ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
-                : 'text-gray-600 hover:bg-gray-100'
+                ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]'
+                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
             )}
             title={workspace.name}
           >
             <Folder size={20} style={{ color: workspace.color }} />
           </button>
         ))}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="w-full"
+          onClick={() => setDialogOpen(true)}
+          aria-label="创建工作区"
+        >
+          <FolderPlus size={18} />
+        </Button>
+        <CreateWorkspaceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between px-3">
-        <p className="text-xs font-medium text-gray-400 uppercase">工作区</p>
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setDialogOpen(true)}>
+      <div className="flex items-center justify-between px-1">
+        <p className="app-sidebar__section-label !px-2 !pt-0">工作区</p>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={() => setDialogOpen(true)}
+          aria-label="创建工作区"
+        >
           <FolderPlus size={14} />
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="px-3 py-2 text-sm text-gray-400">加载中...</div>
+        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">加载中...</div>
       ) : workspaces.length === 0 ? (
-        <div className="px-3 py-2 text-sm text-gray-400">暂无工作区，点击 + 创建</div>
+        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">暂无工作区，点击 + 创建</div>
       ) : (
         <div className="space-y-1">
           {workspaces.map((workspace) => (
@@ -88,8 +106,4 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
       <CreateWorkspaceDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </div>
   );
-}
-
-function cn(...classes: (string | boolean | undefined | null)[]) {
-  return classes.filter(Boolean).join(' ');
 }

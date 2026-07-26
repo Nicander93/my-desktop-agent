@@ -61,11 +61,11 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
       <div
         className={cn(
           'group flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors',
-          isActive ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' : 'text-gray-600 hover:bg-gray-100'
+          isActive ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]' : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
         )}
         onClick={handleToggleExpand}
       >
-        <button onClick={handleExpand} className="p-0.5 hover:bg-gray-200 rounded">
+        <button onClick={handleExpand} className="p-0.5 hover:bg-[var(--color-surface-hover)] rounded">
           <ChevronRight size={14} className={cn('transition-transform', expanded && 'rotate-90')} />
         </button>
         <Folder size={16} style={{ color: workspace.color }} />
@@ -76,7 +76,7 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
             onChange={(e) => setEditName(e.target.value)}
             onBlur={handleRename}
             onKeyDown={(e) => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setIsEditing(false); }}
-            className="flex-1 bg-white border rounded px-1 py-0.5 text-sm"
+            className="flex-1 bg-[var(--color-bg-surface)] border rounded px-1 py-0.5 text-sm"
             autoFocus
             onClick={(e) => e.stopPropagation()}
           />
@@ -91,7 +91,7 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
         )}
 
         <button
-          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded"
+          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[var(--color-surface-hover)] rounded"
           onClick={handleCreateConversation}
           title="新建对话"
         >
@@ -100,7 +100,7 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger>
-            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded" onClick={(e) => e.stopPropagation()}>
+            <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-[var(--color-surface-hover)] rounded" onClick={(e) => e.stopPropagation()}>
               <MoreHorizontal size={14} />
             </button>
           </DropdownMenuTrigger>
@@ -108,7 +108,7 @@ export function WorkspaceItem({ workspace, isActive }: WorkspaceItemProps) {
             <DropdownMenuItem onClick={() => setIsEditing(true)}>
               <Pencil size={14} className="mr-2" />重命名
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-red-600">
+            <DropdownMenuItem onClick={handleDelete} className="text-[var(--color-danger)]">
               <Trash2 size={14} className="mr-2" />删除
             </DropdownMenuItem>
           </DropdownMenuContent>

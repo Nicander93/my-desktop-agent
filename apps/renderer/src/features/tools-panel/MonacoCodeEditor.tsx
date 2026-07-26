@@ -1,6 +1,7 @@
 /** Monaco 文本编辑器封装，语言按路径推断 */
 import Editor from '@monaco-editor/react';
 import { getLanguageFromPath } from '@/lib/fileTypeUtils';
+import { useUIStore } from '@/stores/uiStore';
 
 interface MonacoCodeEditorProps {
   path: string;
@@ -11,6 +12,7 @@ interface MonacoCodeEditorProps {
 /** Monaco 代码编辑区 */
 export function MonacoCodeEditor({ path, value, onChange }: MonacoCodeEditorProps) {
   const language = getLanguageFromPath(path);
+  const resolvedTheme = useUIStore((s) => s.resolvedTheme);
 
   return (
     <Editor
@@ -18,7 +20,7 @@ export function MonacoCodeEditor({ path, value, onChange }: MonacoCodeEditorProp
       language={language}
       value={value}
       onChange={(next) => onChange(next ?? '')}
-      theme="vs-light"
+      theme={resolvedTheme === 'dark' ? 'vs-dark' : 'vs-light'}
       options={{
         minimap: { enabled: false },
         fontSize: 12,

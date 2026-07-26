@@ -101,7 +101,7 @@ export function ConversationList({ workspaceId }: ConversationListProps) {
             'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-left transition-colors group cursor-pointer',
             currentSessionId === session.id
               ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
-              : 'text-gray-600 hover:bg-gray-100'
+              : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
           )}
         >
           {editingId === session.id ? (
@@ -114,21 +114,21 @@ export function ConversationList({ workspaceId }: ConversationListProps) {
                 if (e.key === 'Enter') handleRename(session.id);
                 if (e.key === 'Escape') setEditingId(null);
               }}
-              className="flex-1 bg-white border rounded px-1 py-0.5 text-sm min-w-0"
+              className="flex-1 bg-[var(--color-bg-surface)] border rounded px-1 py-0.5 text-sm min-w-0"
               autoFocus
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <span className="flex-1 truncate">{session.title}</span>
           )}
-          <span className="text-xs text-gray-400 flex-shrink-0">
+          <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0">
             {formatCompactTime(session.updatedAt)}
           </span>
           <DropdownMenu>
             <DropdownMenuTrigger>
               <button
                 type="button"
-                className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-gray-200 rounded flex-shrink-0"
+                className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[var(--color-surface-hover)] rounded flex-shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal size={12} />
@@ -138,7 +138,7 @@ export function ConversationList({ workspaceId }: ConversationListProps) {
               <DropdownMenuItem onClick={() => startRename(session.id, session.title)}>
                 <Pencil size={12} className="mr-2" />重命名
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDelete(session.id)} className="text-red-600">
+              <DropdownMenuItem onClick={() => handleDelete(session.id)} className="text-[var(--color-danger)]">
                 <Trash2 size={12} className="mr-2" />删除
               </DropdownMenuItem>
             </DropdownMenuContent>

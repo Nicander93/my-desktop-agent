@@ -81,17 +81,17 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
   if (!activeFile) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[200px] text-center p-4">
-        <File size={40} className="text-gray-300 mb-3" />
-        <p className="text-sm text-gray-500">{emptyHint}</p>
+        <File size={40} className="text-[var(--color-text-muted)] mb-3" />
+        <p className="text-sm text-[var(--color-text-secondary)]">{emptyHint}</p>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--color-border-default)] shrink-0">
         <FileTypeIcon fileType={fileType} />
-        <span className="text-sm font-medium text-gray-700 truncate flex-1" title={activeFile}>
+        <span className="text-sm font-medium text-[var(--color-text-primary)] truncate flex-1" title={activeFile}>
           {getFileName(activeFile)}
           {isDirty && <span className="text-orange-500 ml-1">●</span>}
         </span>
@@ -100,7 +100,7 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
             <Button
               variant="ghost"
               size="sm"
-              className={cn('h-7 px-2 text-xs', htmlViewMode === 'preview' && 'bg-gray-100')}
+              className={cn('h-7 px-2 text-xs', htmlViewMode === 'preview' && 'bg-[var(--color-surface-hover)]')}
               onClick={() => setHtmlViewMode('preview')}
             >
               预览
@@ -108,7 +108,7 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
             <Button
               variant="ghost"
               size="sm"
-              className={cn('h-7 px-2 text-xs', htmlViewMode === 'source' && 'bg-gray-100')}
+              className={cn('h-7 px-2 text-xs', htmlViewMode === 'source' && 'bg-[var(--color-surface-hover)]')}
               onClick={() => setHtmlViewMode('source')}
             >
               源码
@@ -126,14 +126,14 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center flex-1 p-4 text-gray-400">
+        <div className="flex items-center justify-center flex-1 p-4 text-[var(--color-text-muted)]">
           <Loader2 size={20} className="animate-spin mr-2" />
           <span className="text-sm">加载中...</span>
         </div>
       )}
 
       {!isLoading && error && (
-        <div className="p-4 text-sm text-red-600">{error}</div>
+        <div className="p-4 text-sm text-[var(--color-danger)]">{error}</div>
       )}
 
       {!isLoading && !error && fileType === 'html' && content !== null && htmlViewMode === 'preview' && (
@@ -188,8 +188,8 @@ export function FileEditorPane({ emptyHint = '点击左侧文件进行编辑' }:
 
       {!isLoading && !error && fileType === 'binary' && (
         <div className="flex flex-col items-center justify-center flex-1 p-4 text-center">
-          <FileText size={32} className="text-gray-300 mb-2" />
-          <p className="text-sm text-gray-500">此文件类型不支持预览</p>
+          <FileText size={32} className="text-[var(--color-text-muted)] mb-2" />
+          <p className="text-sm text-[var(--color-text-secondary)]">此文件类型不支持预览</p>
         </div>
       )}
     </div>

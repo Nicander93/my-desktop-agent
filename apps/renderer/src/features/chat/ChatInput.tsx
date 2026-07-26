@@ -288,8 +288,8 @@ export function ChatInput({ onSend }: ChatInputProps) {
   };
 
   return (
-    <div className="shrink-0 px-6 pb-6 pt-2 bg-white">
-      <div className="max-w-3xl mx-auto relative">
+    <div className="shrink-0 px-6 pb-5 pt-2 bg-[var(--color-bg-surface)]">
+      <div className="max-w-[900px] mx-auto relative">
         {mentionKind === 'file' && (fileResults.length > 0 || fileLoading) && (
           <FileMentionPicker
             results={fileResults}
@@ -300,54 +300,54 @@ export function ChatInput({ onSend }: ChatInputProps) {
         )}
 
         {mentionKind === 'mcp' && filteredMcp.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-[var(--radius-lg)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-panel)] overflow-hidden">
             {filteredMcp.map((item, index) => (
               <button
                 key={item.name}
                 type="button"
                 className={cn(
-                  'w-full px-4 py-2 text-left hover:bg-gray-50',
-                  index === selectedIndex && 'bg-gray-50',
+                  'w-full px-4 py-2 text-left hover:bg-[var(--color-surface-hover)]',
+                  index === selectedIndex && 'bg-[var(--color-surface-hover)]',
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   insertMcpMention(item.name);
                 }}
               >
-                <div className="text-sm font-medium">${item.name}</div>
-                <div className="text-xs text-gray-500">{item.displayName}</div>
+                <div className="text-sm font-medium text-[var(--color-text-primary)]">${item.name}</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">{item.displayName}</div>
               </button>
             ))}
           </div>
         )}
 
         {mentionKind === 'skill' && filteredSkills.length > 0 && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+          <div className="absolute bottom-full left-0 right-0 mb-2 rounded-[var(--radius-lg)] border border-[var(--color-border-default)] bg-[var(--color-bg-surface)] shadow-[var(--shadow-panel)] overflow-hidden">
             {filteredSkills.map((item, index) => (
               <button
                 key={item.name}
                 type="button"
                 className={cn(
-                  'w-full px-4 py-2 text-left hover:bg-gray-50',
-                  index === selectedIndex && 'bg-gray-50',
+                  'w-full px-4 py-2 text-left hover:bg-[var(--color-surface-hover)]',
+                  index === selectedIndex && 'bg-[var(--color-surface-hover)]',
                 )}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   insertSkillMention(item.name);
                 }}
               >
-                <div className="text-sm font-medium">/{item.name}</div>
-                <div className="text-xs text-gray-500">{item.displayName}</div>
+                <div className="text-sm font-medium text-[var(--color-text-primary)]">/{item.name}</div>
+                <div className="text-xs text-[var(--color-text-secondary)]">{item.displayName}</div>
               </button>
             ))}
           </div>
         )}
 
-        <div className="overflow-hidden bg-[#f3f4f6] rounded-3xl border border-gray-200/80 px-4 py-3 focus-within:border-gray-300 focus-within:bg-white transition-colors">
+        <div className="overflow-hidden bg-[var(--color-bg-surface)] rounded-[var(--radius-composer)] border border-[var(--color-border-default)] px-4 py-3 shadow-[var(--shadow-sm)] focus-within:border-[var(--color-primary-400)] focus-within:ring-2 focus-within:ring-[var(--color-primary-100)] transition-colors">
           {attachments.length > 0 && (
             <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
               {attachments.map((attachment) => (
-                <div key={attachment.id} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div key={attachment.id} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-border-default)] bg-[var(--color-bg-subtle)]">
                   <button
                     type="button"
                     onClick={() => setPreview(attachment)}
@@ -357,14 +357,15 @@ export function ChatInput({ onSend }: ChatInputProps) {
                     {attachment.previewUrl ? (
                       <img src={attachment.previewUrl} alt={attachment.fileName} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="h-full w-full bg-gray-100" />
+                      <div className="h-full w-full bg-[var(--color-bg-subtle)]" />
                     )}
                   </button>
                   <button
                     type="button"
                     onClick={() => removeAttachment(attachment.id)}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900/80 text-white hover:bg-gray-900"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black/90"
                     title="删除图片"
+                    aria-label="删除图片"
                   >
                     <X size={12} />
                   </button>
@@ -380,8 +381,9 @@ export function ChatInput({ onSend }: ChatInputProps) {
               disabled={isProcessing || uploading || attachments.length >= MAX_ATTACHMENTS}
               size="icon"
               variant="ghost"
-              className="shrink-0 mb-0.5 h-8 w-8 rounded-full text-gray-500 hover:text-gray-700"
+              className="shrink-0 mb-0.5 h-8 w-8 rounded-full text-[var(--color-text-secondary)]"
               title="添加图片"
+              aria-label="添加图片"
             >
               <Plus size={18} />
             </Button>
@@ -402,22 +404,23 @@ export function ChatInput({ onSend }: ChatInputProps) {
               spellCheck={false}
               autoCorrect="off"
               autoCapitalize="off"
-              className="flex-1 min-h-[36px] max-h-[200px] px-1 py-1 bg-transparent resize-none border-0 outline-none text-[15px] leading-relaxed text-gray-800 placeholder-gray-400 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              className="flex-1 min-h-[36px] max-h-[200px] px-1 py-1 bg-transparent resize-none border-0 outline-none text-[15px] leading-relaxed text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             />
 
             <Button
               onClick={handleSubmit}
               disabled={(!input.trim() && attachments.length === 0) || isProcessing}
               size="icon"
-              className="shrink-0 mb-0.5 h-8 w-8 rounded-full bg-gray-800 hover:bg-gray-700 disabled:bg-gray-300"
+              className="shrink-0 mb-0.5 h-8 w-8 rounded-full"
               title="发送"
+              aria-label="发送"
             >
               <ArrowUp size={16} />
             </Button>
           </div>
         </div>
 
-        {error && <div className="mt-2 px-2 text-xs text-red-500">{error}</div>}
+        {error && <div className="mt-2 px-2 text-xs text-[var(--color-danger)]">{error}</div>}
       </div>
 
       {preview?.previewUrl && (

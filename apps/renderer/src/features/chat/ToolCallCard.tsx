@@ -1,6 +1,7 @@
 /** 单条工具调用卡片（状态图标 + 名称） */
-import { Loader2, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, ChevronRight, Circle } from 'lucide-react';
 import { ToolCall } from '@/stores/chatStore';
+import { getToolActivityLabel } from '@/lib/toolActivityLabel';
 
 interface ToolCallCardProps {
   toolCall: ToolCall;
@@ -12,13 +13,13 @@ export function ToolCallCard({ toolCall, onClick }: ToolCallCardProps) {
   const getStatusIcon = () => {
     switch (toolCall.status) {
       case 'pending':
-        return <div className="w-4 h-4 rounded-full border-2 border-gray-300" />;
+        return <Circle size={16} className="text-[var(--color-text-muted)]" />;
       case 'running':
-        return <Loader2 size={16} className="text-[var(--color-primary-500)] animate-spin" />;
+        return <Loader2 size={16} className="text-[var(--color-info)] animate-spin" />;
       case 'completed':
-        return <CheckCircle size={16} className="text-[var(--color-primary-500)]" />;
+        return <CheckCircle size={16} className="text-[var(--color-success)]" />;
       case 'error':
-        return <XCircle size={16} className="text-red-500" />;
+        return <XCircle size={16} className="text-[var(--color-danger)]" />;
     }
   };
 
@@ -37,20 +38,23 @@ export function ToolCallCard({ toolCall, onClick }: ToolCallCardProps) {
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className="
-        w-full flex items-center gap-3 px-3 py-2 
-        bg-white border border-gray-200 rounded-lg
+        w-full flex items-center gap-3 px-3 py-2
+        bg-[var(--color-bg-surface)] border border-[var(--color-border-default)] rounded-[var(--radius-lg)]
         hover:border-[var(--color-primary-300)] hover:bg-[var(--color-primary-50)]
         transition-colors text-left
       "
     >
       {getStatusIcon()}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-700 truncate">{toolCall.toolName}</p>
-        <p className="text-xs text-gray-500">{getStatusText()}</p>
+        <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+          {getToolActivityLabel(toolCall.toolName, toolCall.input)}
+        </p>
+        <p className="text-xs text-[var(--color-text-secondary)]">{getStatusText()}</p>
       </div>
-      <ChevronRight size={16} className="text-gray-400" />
+      <ChevronRight size={16} className="text-[var(--color-text-muted)]" />
     </button>
   );
 }

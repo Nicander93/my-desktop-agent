@@ -39,8 +39,8 @@ export function MessageList() {
   if (messages.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
-        <h2 className="text-2xl font-medium text-gray-800 mb-2">有什么可以帮你的？</h2>
-        <p className="text-gray-500 text-sm max-w-md">
+        <h2 className="text-2xl font-medium text-[var(--color-text-primary)] mb-2">有什么可以帮你的？</h2>
+        <p className="text-[var(--color-text-secondary)] text-sm max-w-md">
           描述你的任务，Agent 会自动调用工具完成工作
         </p>
       </div>
@@ -49,7 +49,7 @@ export function MessageList() {
 
   return (
     <div ref={containerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
-      <div className="max-w-3xl mx-auto px-6 py-6 space-y-8">
+      <div className="max-w-[840px] mx-auto px-6 py-6 space-y-6">
         {messages.map((message) => (
           <MessageItem key={message.id} message={message} />
         ))}

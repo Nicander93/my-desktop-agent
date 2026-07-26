@@ -1,6 +1,6 @@
-/** 右侧 Trace Tab：展示当前会话最新 trace 时间线 */
+/** 右侧 Trace：展示当前会话最新 trace 时间线 */
 import { useMemo } from 'react';
-import { Copy, Loader2, Wrench } from 'lucide-react';
+import { Copy, Loader2, ListTodo } from 'lucide-react';
 import type { AgentTrace } from '@desktop-agent/shared';
 import { useChatStore } from '@/stores/chatStore';
 import { TraceTimeline } from '@/features/chat/TraceSection';
@@ -32,9 +32,9 @@ export function TracePanel() {
   if (!trace) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
-        <Wrench size={40} className="text-gray-300 mb-3" />
-        <p className="text-sm text-gray-500">暂无 Agent Trace</p>
-        <p className="text-xs text-gray-400 mt-1">Agent 执行任务后会在这里显示详细追踪</p>
+        <ListTodo size={40} className="text-[var(--color-text-muted)] mb-3" />
+        <p className="text-sm text-[var(--color-text-secondary)]">暂无原始 Trace</p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">Agent 执行任务后会在这里显示详细追踪</p>
       </div>
     );
   }
@@ -50,21 +50,22 @@ export function TracePanel() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--color-sidebar-border)] bg-indigo-50/40">
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--color-border-default)] bg-[var(--color-primary-50)]">
         {isLive ? (
-          <Loader2 size={14} className="animate-spin flex-shrink-0 text-indigo-400" />
+          <Loader2 size={14} className="animate-spin flex-shrink-0 text-[var(--color-primary-500)]" />
         ) : (
-          <Wrench size={14} className="flex-shrink-0 text-indigo-500" />
+          <ListTodo size={14} className="flex-shrink-0 text-[var(--color-primary-600)]" />
         )}
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-medium text-indigo-800">Agent Trace</div>
-          <div className="text-[12px] text-indigo-600/80 truncate">{label}</div>
+          <div className="text-[13px] font-medium text-[var(--color-primary-700)]">Agent Trace</div>
+          <div className="text-[12px] text-[var(--color-primary-600)] truncate">{label}</div>
         </div>
         <button
           type="button"
           onClick={handleCopy}
-          className="p-1.5 rounded text-gray-400 hover:text-gray-600 hover:bg-white/80"
+          className="p-1.5 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface)]"
           title="复制 JSON"
+          aria-label="复制 JSON"
         >
           <Copy size={14} />
         </button>

@@ -103,8 +103,8 @@ export function McpSettings() {
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">MCP 服务器</h2>
-          <p className="text-sm text-gray-500 mt-1">全局安装，对话中可用 $name 优先指定 MCP。首次安装会自动下载依赖并验证连接，可能需要 1–3 分钟。</p>
+          <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">MCP 服务器</h2>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">全局安装，对话中可用 $name 优先指定 MCP。首次安装会自动下载依赖并验证连接，可能需要 1–3 分钟。</p>
         </div>
       </div>
 
@@ -130,12 +130,12 @@ export function McpSettings() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-gray-500 mb-4">加载中...</p>}
+      {loading && <p className="text-sm text-[var(--color-text-secondary)] mb-4">加载中...</p>}
 
       {tab === 'installed' && (
         <div className="space-y-4">
           {servers.length === 0 && (
-            <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
+            <div className="rounded-lg border border-dashed border-[var(--color-border-strong)] p-8 text-center text-[var(--color-text-secondary)]">
               暂无 MCP，可从目录安装或导入配置
             </div>
           )}
@@ -156,17 +156,17 @@ export function McpSettings() {
       {tab === 'catalog' && (
         <div className="grid gap-3">
           {catalog.map((entry) => (
-            <div key={entry.id} className="rounded-lg border border-gray-200 p-4 bg-gray-50">
+            <div key={entry.id} className="rounded-lg border border-[var(--color-border-default)] p-4 bg-[var(--color-bg-subtle)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Server size={16} className="text-gray-500" />
+                    <Server size={16} className="text-[var(--color-text-secondary)]" />
                     <span className="font-medium">{entry.displayName}</span>
                     <Badge variant="outline">${entry.id}</Badge>
                     {entry.installed && <Badge>已安装</Badge>}
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">{entry.description}</p>
-                  <p className="text-xs text-gray-400 mt-1">分类：{entry.category}</p>
+                  <p className="text-sm text-[var(--color-text-secondary)] mt-2">{entry.description}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-1">分类：{entry.category}</p>
                 </div>
                 <Button
                   disabled={entry.installed || installingId === entry.id}
@@ -184,7 +184,7 @@ export function McpSettings() {
 
       {tab === 'import' && (
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[var(--color-text-secondary)]">
             粘贴 Cursor / Claude Desktop 格式的 mcp.json 内容
           </p>
           <Textarea
@@ -224,10 +224,10 @@ function ServerCard({
   }, [server]);
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="p-4 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border-default)]">
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-2 min-w-0">
-          <Server size={16} className="text-gray-500 shrink-0" />
+          <Server size={16} className="text-[var(--color-text-secondary)] shrink-0" />
           <Input
             value={server.displayName}
             onChange={(e) => onUpdate({ displayName: e.target.value })}
@@ -246,15 +246,15 @@ function ServerCard({
           <Button variant="ghost" size="icon" onClick={onToggle}>
             <div className={cn(
               'w-10 h-5 rounded-full transition-colors relative',
-              server.enabled ? 'bg-[var(--color-primary-500)]' : 'bg-gray-300',
+              server.enabled ? 'bg-[var(--color-primary-500)]' : 'bg-[var(--color-border-strong)]',
             )}>
               <div className={cn(
-                'w-4 h-4 bg-white rounded-full absolute top-0.5 transition-transform',
+                'w-4 h-4 bg-[var(--color-bg-surface)] rounded-full absolute top-0.5 transition-transform',
                 server.enabled ? 'left-5' : 'left-0.5',
               )} />
             </div>
           </Button>
-          <Button variant="ghost" size="icon" onClick={onDelete} className="text-gray-400 hover:text-red-500">
+          <Button variant="ghost" size="icon" onClick={onDelete} className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)]">
             <Trash2 size={16} />
           </Button>
         </div>
@@ -262,14 +262,14 @@ function ServerCard({
 
       <div className="space-y-3">
         <div>
-          <label className="block text-sm text-gray-600 mb-1">名称（$mention 用）</label>
+          <label className="block text-sm text-[var(--color-text-secondary)] mb-1">名称（$mention 用）</label>
           <Input
             value={server.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
           />
         </div>
         <div>
-          <label className="block text-sm text-gray-600 mb-1">
+          <label className="block text-sm text-[var(--color-text-secondary)] mb-1">
             {server.transport === 'stdio' ? '启动命令' : 'URL'}
           </label>
           {server.transport === 'stdio' ? (
@@ -292,7 +292,7 @@ function ServerCard({
             />
           )}
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-[var(--color-text-muted)]">
           来源：{server.source === 'catalog' ? '目录安装' : '自定义'} · 传输：{server.transport}
         </p>
       </div>

@@ -57,7 +57,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       }
 
       const fileType = resolveEditorFileType(path, result.file.mimeType, result.file.encoding);
-      useUIStore.getState().setToolPanelTab(fileType === 'html' ? 'preview' : 'explorer');
+      useUIStore.getState().setToolPanelTab(fileType === 'html' ? 'preview' : 'files');
       useFileExplorerStore.getState().selectPath(path);
 
       set({
