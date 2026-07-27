@@ -2,12 +2,19 @@
  * App 运行时路径与环境变量
  *
  * 目录约定（均在用户主目录 ~/.desktop-agent/ 下）：
- * - binaries/  运行时（node、git、uv），随 App 版本更新
+ * - binaries/  运行时（node、MinGit、git-bash、uv），均在 ~/.desktop-agent/ 内，不写入系统目录
  * - store/     npm/uv 包与缓存，MCP 等依赖装在这里，不污染系统或工作区
  */
 import { join } from 'node:path';
+import { getPythonPathSegments } from './python.js';
+import { getGitShellPathSegments } from './shell.js';
 
 export const APP_DIR_NAME = '.desktop-agent';
+export const GIT_BASH_DIR = 'git-bash';
+
+export function getGitBashRoot(paths: AppRuntimePaths): string {
+  return join(paths.binaries.root, GIT_BASH_DIR);
+}
 
 export type BundledCommandName = 'node' | 'npm' | 'npx' | 'git' | 'uv' | 'uvx';
 
@@ -43,7 +50,7 @@ export function getAppRuntimePaths(homeDir = process.env.USERPROFILE || process.
     binaries: {
       root: binariesRoot,
       node: join(binariesRoot, 'node'),
-      // PortableGit / MinGit 的 git.exe 在 cmd/ 子目录
+      // MinGit 的 git.exe 在 cmd/ 子目录（仅 App 内使用，不替换系统 Git）
       git: join(binariesRoot, 'git', 'cmd'),
       uv: join(binariesRoot, 'uv'),
     },
@@ -60,7 +67,7 @@ export function getAppRuntimePaths(homeDir = process.env.USERPROFILE || process.
   };
 }
 
-/** 将 bundled 路径前置到 PATH，优先于系统安装 */
+/** 将 bundled 路径前置到 PATH，优先于系统安装（仅用于 Agent 子进程 env 副本） */
 function prependPath(existingPath: string | undefined, segments: string[], platform = process.platform): string {
   const sep = platform === 'win32' ? ';' : ':';
   const normalized = segments.filter(Boolean);
@@ -68,16 +75,29 @@ function prependPath(existingPath: string | undefined, segments: string[], platf
   return `${normalized.join(sep)}${sep}${existingPath}`;
 }
 
+export function getBundledPathSegments(
+  paths: AppRuntimePaths,
+  platform = process.platform,
+): string[] {
+  const segments: string[] = [];
+
+  if (platform === 'win32') {
+    segments.push(...getPythonPathSegments(paths.store.root));
+    segments.push(paths.binaries.node, paths.binaries.uv, paths.binaries.git);
+    segments.push(...getGitShellPathSegments(getGitBashRoot(paths)));
+  } else {
+    segments.push(paths.binaries.node, paths.binaries.uv, paths.binaries.git);
+  }
+
+  return [...new Set(segments.filter(Boolean))];
+}
+
 export function buildBundledPathEnv(
   paths: AppRuntimePaths,
   existingPath?: string,
   platform = process.platform,
 ): string {
-  return prependPath(
-    existingPath,
-    [paths.binaries.node, paths.binaries.uv, paths.binaries.git],
-    platform,
-  );
+  return prependPath(existingPath, getBundledPathSegments(paths, platform), platform);
 }
 
 /** 办公/通用场景：npm、uv 包装进 store，不写入工作区或系统目录 */

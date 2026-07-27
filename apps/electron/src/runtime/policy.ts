@@ -1,16 +1,20 @@
 /**
  * 子进程依赖落盘策略。
  * office / file-organizing / mcp / general → App 目录；coding → 工作区，并删掉 App 级 npm/uv 变量。
- * 默认只改 spawn 用的 env 副本；applyBaseRuntimeEnv 才会动全局 PATH。
+ * 默认只改 spawn 用的 env 副本（buildSubprocessEnv）；不修改全局 process.env。
  */
 import {
   buildAppLevelEnv,
   buildBundledPathEnv,
   buildCodingEnv,
+  buildGitBashEnv,
   getAppRuntimePaths,
+  getGitBashRoot,
   resolveCommandIfBundled,
+  resolveGitBashPath,
   type AppRuntimePaths,
 } from '@desktop-agent/shared/runtime';
+import { existsSync } from 'node:fs';
 import type { AgentRuntimeProfile } from '@desktop-agent/shared';
 
 export type DependencyScope = 'app' | 'workspace';
@@ -70,16 +74,24 @@ export function buildSubprocessEnv(
     }
   }
 
+  if (process.platform === 'win32') {
+    const bashPath = resolveGitBashPath(getGitBashRoot(paths), existsSync);
+    if (bashPath) {
+      Object.assign(merged, buildGitBashEnv(bashPath));
+    }
+  }
+
   return merged;
 }
 
-/** 启动时把 bundled node/git/uv 写进全局 PATH */
+/**
+ * 返回 bundled PATH 快照；不修改全局 process.env，避免影响用户系统运行时。
+ * Agent / MCP 子进程通过 buildSubprocessEnv 使用隔离 env。
+ */
 export function applyBaseRuntimeEnv(
   paths: AppRuntimePaths = getAppRuntimePaths(),
 ): Record<string, string> {
-  const pathValue = buildBundledPathEnv(paths, process.env.PATH);
-  process.env.PATH = pathValue;
-  return { PATH: pathValue };
+  return { PATH: buildBundledPathEnv(paths, process.env.PATH) };
 }
 
 /** stdio MCP 合并进 subprocessEnv；sse/http 原样返回 */

@@ -28,6 +28,7 @@ import { pipeline } from 'node:stream/promises';
 export interface RuntimeManifestEntry {
   version: string;
   archive: string;
+  archiveType?: 'zip' | '7z-sfx';
   url: string;
   mirrorUrl?: string;
   extractDir: string;
@@ -148,14 +149,31 @@ async function sha256File(filePath: string): Promise<string> {
 function getDownloadUrls(runtimeDef: RuntimeManifestEntry): string[] {
   const urls: string[] = [];
   if (runtimeDef.mirrorUrl) urls.push(runtimeDef.mirrorUrl);
+
   if (runtimeDef.url.includes('nodejs.org/dist/')) {
     urls.push(runtimeDef.url.replace('https://nodejs.org/dist/', 'https://cdn.npmmirror.com/binaries/node/'));
   }
+
   if (runtimeDef.url.includes('github.com/')) {
-    urls.push(`https://mirror.ghproxy.com/${runtimeDef.url}`);
+    for (const mirror of [
+      `https://ghproxy.net/${runtimeDef.url}`,
+      `https://mirror.ghproxy.com/${runtimeDef.url}`,
+      `https://ghfast.top/${runtimeDef.url}`,
+    ]) {
+      if (!urls.includes(mirror)) urls.push(mirror);
+    }
   }
-  urls.push(runtimeDef.url);
-  return [...new Set(urls)];
+
+  if (!urls.includes(runtimeDef.url)) urls.push(runtimeDef.url);
+  return urls;
+}
+
+function isValidArchiveFile(filePath: string, archiveType: RuntimeManifestEntry['archiveType'] = 'zip'): boolean {
+  if (!existsSync(filePath)) return false;
+  if (archiveType === '7z-sfx') {
+    return statSync(filePath).size > 1024 * 1024;
+  }
+  return isValidZipFile(filePath);
 }
 
 function isValidZipFile(filePath: string): boolean {
@@ -193,26 +211,38 @@ async function downloadFile(
   const total = Number(response.headers.get('content-length') || 0);
   let downloaded = 0;
   const fileStream = createWriteStream(destPath);
+  const streamError = new Promise<never>((_, reject) => {
+    fileStream.once('error', reject);
+  });
 
   if (!response.body) {
+    fileStream.destroy();
     throw new Error(`下载失败 ${url}: empty body`);
   }
 
   try {
     for await (const chunk of response.body) {
-      downloaded += chunk.length;
-      if (!fileStream.write(chunk)) {
-        await new Promise<void>((resolve) => fileStream.once('drain', resolve));
-      }
-      if (onProgress && total > 0) {
-        onProgress({ downloaded, total, percent: Math.round((downloaded / total) * 100) });
-      }
+      await Promise.race([
+        (async () => {
+          downloaded += chunk.length;
+          if (!fileStream.write(chunk)) {
+            await new Promise<void>((resolve) => fileStream.once('drain', resolve));
+          }
+          if (onProgress && total > 0) {
+            onProgress({ downloaded, total, percent: Math.round((downloaded / total) * 100) });
+          }
+        })(),
+        streamError,
+      ]);
     }
 
-    await new Promise<void>((resolve, reject) => {
-      fileStream.end(() => resolve());
-      fileStream.on('error', reject);
-    });
+    await Promise.race([
+      new Promise<void>((resolve, reject) => {
+        fileStream.end(() => resolve());
+        fileStream.once('error', reject);
+      }),
+      streamError,
+    ]);
   } catch (error) {
     fileStream.destroy();
     if (existsSync(destPath)) rmSync(destPath, { force: true });
@@ -236,7 +266,8 @@ async function ensureArchiveFile(options: {
   const { runtimeKey, runtimeDef, archivesDir, cacheArchive, onProgress } = options;
 
   const localPath = resolveArchivePath(runtimeDef, archivesDir);
-  if (localPath && isValidZipFile(localPath)) {
+  const archiveType = runtimeDef.archiveType ?? 'zip';
+  if (localPath && isValidArchiveFile(localPath, archiveType)) {
     return localPath;
   }
 
@@ -245,7 +276,7 @@ async function ensureArchiveFile(options: {
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (existsSync(cacheArchive)) {
-      if (isValidZipFile(cacheArchive)) {
+      if (isValidArchiveFile(cacheArchive, archiveType)) {
         return cacheArchive;
       }
       rmSync(cacheArchive, { force: true });
@@ -275,9 +306,9 @@ async function ensureArchiveFile(options: {
         await downloadFile(url, cacheArchive, (p) => {
           onProgress?.({ stage: 'download', runtime: runtimeKey, ...p });
         });
-        if (!isValidZipFile(cacheArchive)) {
+        if (!isValidArchiveFile(cacheArchive, archiveType)) {
           rmSync(cacheArchive, { force: true });
-          throw new Error(`${runtimeDef.archive} 不是有效的 zip 文件`);
+          throw new Error(`${runtimeDef.archive} 不是有效的归档文件`);
         }
         return cacheArchive;
       } catch (error) {
@@ -302,6 +333,17 @@ async function ensureArchiveFile(options: {
 function resolveArchivePath(runtimeDef: RuntimeManifestEntry, archivesDir: string): string | null {
   const localPath = join(archivesDir, runtimeDef.archive);
   return existsSync(localPath) ? localPath : null;
+}
+
+function extract7zSfx(archivePath: string, destDir: string): void {
+  mkdirSync(destDir, { recursive: true });
+  const result = spawnSync(archivePath, [`-o${destDir}`, '-y'], {
+    encoding: 'utf-8',
+    timeout: 10 * 60 * 1000,
+  });
+  if (result.status !== 0) {
+    throw new Error(result.stderr || result.stdout || `解压失败: ${archivePath}`);
+  }
 }
 
 function extractZipWindows(zipPath: string, destDir: string): void {
@@ -386,7 +428,12 @@ export async function installRuntime(options: {
 
   const { targetDir, tempDir } = normalizeExtractedRuntime(runtimeDef, binariesRoot);
   onProgress?.({ stage: 'extract', runtime: runtimeKey, message: `解压 ${basename(archivePath)}...` });
-  extractZipWindows(archivePath, tempDir);
+  const archiveType = runtimeDef.archiveType ?? 'zip';
+  if (archiveType === '7z-sfx') {
+    extract7zSfx(archivePath, tempDir);
+  } else {
+    extractZipWindows(archivePath, tempDir);
+  }
 
   if (runtimeDef.stripTopLevelDir) {
     const entries = readdirSync(tempDir);

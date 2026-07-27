@@ -4,29 +4,21 @@
 
 import { spawn } from 'child_process'
 import { defineTool } from './types.js'
+import { formatShellOutput, resolveShellInvocation } from './shell.js'
 
 const isWin32 = process.platform === 'win32'
-
-function getShell() {
-  if (isWin32) {
-    return { cmd: 'powershell.exe', args: ['-NoProfile', '-Command', ''] }
-  }
-  return { cmd: 'bash', args: ['-c', ''] }
-}
 
 export const BashTool = defineTool({
   name: 'Bash',
   description: isWin32
-    ? 'Execute a PowerShell command and return its output. On Windows, use PowerShell syntax (e.g. Get-ChildItem, Select-String). For bash-specific commands, wrap them in bash -c "..." explicitly.'
+    ? 'Execute a bash command via bundled Git Bash and return its output. Use Unix shell syntax (ls, grep, sed, python3, pipes, etc.).'
     : 'Execute a bash command and return its output. Use for running shell commands, scripts, and system operations.',
   inputSchema: {
     type: 'object',
     properties: {
       command: {
         type: 'string',
-        description: isWin32
-          ? 'The PowerShell command to execute'
-          : 'The bash command to execute',
+        description: 'The bash command to execute',
       },
       timeout: {
         type: 'number',
@@ -40,17 +32,13 @@ export const BashTool = defineTool({
   async call(input, context) {
     const { command, timeout: userTimeout } = input
     const timeoutMs = Math.min(userTimeout || 120000, 600000)
+    const shell = resolveShellInvocation(command, context.subprocessEnv)
 
-    const shell = getShell()
-    const args = isWin32
-      ? ['-NoProfile', '-Command', command]
-      : ['-c', command]
-
-    return new Promise<string>((resolve) => {
+    return new Promise((resolve) => {
       const chunks: Buffer[] = []
       const errChunks: Buffer[] = []
 
-      const proc = spawn(shell.cmd, args, {
+      const proc = spawn(shell.cmd, shell.args, {
         cwd: context.cwd,
         env: context.subprocessEnv
           ? { ...process.env, ...context.subprocessEnv }
@@ -71,24 +59,25 @@ export const BashTool = defineTool({
       proc.on('close', (code) => {
         const stdout = Buffer.concat(chunks).toString('utf-8')
         const stderr = Buffer.concat(errChunks).toString('utf-8')
+        const output = formatShellOutput(stdout, stderr, code)
 
-        let output = ''
-        if (stdout) output += stdout
-        if (stderr) output += (output ? '\n' : '') + stderr
-        if (code !== 0 && code !== null) {
-          output += `\nExit code: ${code}`
-        }
-
-        // Truncate very large outputs
         if (output.length > 100000) {
-          output = output.slice(0, 50000) + '\n...(truncated)...\n' + output.slice(-50000)
+          const truncated = output.slice(0, 50000) + '\n...(truncated)...\n' + output.slice(-50000)
+          resolve(code !== 0 && code !== null
+            ? { data: truncated, is_error: true }
+            : truncated)
+          return
         }
 
-        resolve(output || '(no output)')
+        if (code !== 0 && code !== null) {
+          resolve({ data: output, is_error: true })
+          return
+        }
+        resolve(output)
       })
 
       proc.on('error', (err) => {
-        resolve(`Error executing command: ${err.message}`)
+        resolve({ data: `Error executing command: ${err.message}`, is_error: true })
       })
     })
   },

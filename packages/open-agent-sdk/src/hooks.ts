@@ -24,6 +24,7 @@
  */
 
 import { spawn, type ChildProcess } from 'child_process'
+import { resolveShellInvocation } from './tools/shell.js'
 
 /**
  * All supported hook events.
@@ -205,12 +206,8 @@ async function executeShellHook(
   timeout: number,
 ): Promise<HookOutput | void> {
   return new Promise((resolve) => {
-    const isWin32 = process.platform === 'win32'
-    const shellCmd = isWin32 ? 'powershell.exe' : 'bash'
-    const shellArgs = isWin32
-      ? ['-NoProfile', '-Command', command]
-      : ['-c', command]
-    const proc = spawn(shellCmd, shellArgs, {
+    const shell = resolveShellInvocation(command)
+    const proc = spawn(shell.cmd, shell.args, {
       timeout,
       env: {
         ...process.env,

@@ -12,7 +12,7 @@ import {
   getPackagedResourcePaths,
   type BinaryInstallRecord,
 } from './install.js';
-import { applyBaseRuntimeEnv } from './policy.js';
+import { ensurePythonRuntime } from './python.js';
 
 export type { BinaryInstallRecord } from './install.js';
 
@@ -103,10 +103,14 @@ export class BinaryManager {
     }
   }
 
-  /** 仅注入 bundled PATH 与 store 目录，profile 相关 env 由 subprocessEnv 按 session 传递 */
+  /** 初始化 store 目录与 Python；bundled env 仅注入 Agent 子进程，不改全局 process.env */
   applyBaseEnv(): void {
-    applyBaseRuntimeEnv(this.paths);
     this.ensureStoreDirectories();
+    try {
+      ensurePythonRuntime(this.paths, (message) => console.info(`[runtime] ${message}`));
+    } catch (error) {
+      console.warn('[runtime] Python 初始化失败:', error instanceof Error ? error.message : error);
+    }
   }
 
   private ensureStoreDirectories(): void {

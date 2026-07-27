@@ -8,6 +8,8 @@ import {
   getDefaultHomeDir,
   getDevResourcePaths,
 } from '../apps/electron/src/runtime/install.ts';
+import { ensurePythonRuntime } from '../apps/electron/src/runtime/python.ts';
+import { getAppRuntimePaths } from '../packages/shared/src/runtime/paths.ts';
 
 const checkOnly = process.argv.includes('--check');
 
@@ -56,6 +58,8 @@ async function main() {
   }
 
   if (!checkOnly) {
+    const paths = getAppRuntimePaths(homeDir);
+    ensurePythonRuntime(paths, (message) => console.log(`[python] ${message}`));
     console.log(`运行时已安装到 ${getBinariesRoot(homeDir)}`);
   }
 }

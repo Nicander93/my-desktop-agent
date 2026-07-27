@@ -5,7 +5,7 @@
  * 模型：--model 或 CODEANY_MODEL。过程日志打 stderr；--quiet 关闭。见 benchmarks/README.md。
  */
 import { resolve } from 'node:path';
-import { loadProjectEnv } from '@desktop-agent/shared';
+import { loadProjectEnv } from '@desktop-agent/shared/env';
 import { loadTaskCollection } from './collection.js';
 import { createProgressSink } from './progress.js';
 import { loadTask } from './task.js';

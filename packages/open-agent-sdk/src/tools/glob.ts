@@ -51,24 +51,15 @@ export const GlobTool = defineTool({
 
     // Fallback: use platform shell
     const { spawn } = await import('child_process')
+    const { resolveShellInvocation } = await import('./shell.js')
+    const command = `shopt -s globstar nullglob 2>/dev/null; cd ${JSON.stringify(searchDir)} && ls -1d ${pattern} 2>/dev/null | head -500`
+    const shell = resolveShellInvocation(command)
+
     return new Promise<string>((resolvePromise) => {
-      const isWin32 = process.platform === 'win32'
-      let cmd: string
-      let shellCmd: string
-      let shellArgs: string[]
-      if (isWin32) {
-        shellCmd = 'powershell.exe'
-        const psPattern = pattern.replace(/\*\*/g, '**').replace(/\*/g, '*')
-        cmd = `Get-ChildItem -Path '${searchDir}' -Filter '${psPattern}' -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 500 -ExpandProperty FullName`
-        shellArgs = ['-NoProfile', '-Command', cmd]
-      } else {
-        shellCmd = 'bash'
-        cmd = `shopt -s globstar nullglob 2>/dev/null; cd ${JSON.stringify(searchDir)} && ls -1d ${pattern} 2>/dev/null | head -500`
-        shellArgs = ['-c', cmd]
-      }
-      const proc = spawn(shellCmd, shellArgs, {
+      const proc = spawn(shell.cmd, shell.args, {
         cwd: searchDir,
         timeout: 30000,
+        env: { ...process.env },
       })
 
       const chunks: Buffer[] = []

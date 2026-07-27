@@ -15,16 +15,26 @@
       "version": "2.47.1",
       "archive": "MinGit-2.47.1-64-bit.zip",
       "url": "https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/MinGit-2.47.1-64-bit.zip",
-      "mirrorUrl": "https://mirror.ghproxy.com/https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/MinGit-2.47.1-64-bit.zip",
+      "mirrorUrl": "https://ghproxy.net/https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/MinGit-2.47.1-64-bit.zip",
       "extractDir": "git",
       "stripTopLevelDir": true,
       "verifyFile": "cmd/git.exe"
+    },
+    "git-bash": {
+      "version": "2.47.1",
+      "archive": "PortableGit-2.47.1-64-bit.7z.exe",
+      "archiveType": "7z-sfx",
+      "url": "https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/PortableGit-2.47.1-64-bit.7z.exe",
+      "mirrorUrl": "https://ghproxy.net/https://github.com/git-for-windows/git/releases/download/v2.47.1.windows.1/PortableGit-2.47.1-64-bit.7z.exe",
+      "extractDir": "git-bash",
+      "stripTopLevelDir": true,
+      "verifyFile": "bin/bash.exe"
     },
     "uv": {
       "version": "0.6.14",
       "archive": "uv-x86_64-pc-windows-msvc.zip",
       "url": "https://github.com/astral-sh/uv/releases/download/0.6.14/uv-x86_64-pc-windows-msvc.zip",
-      "mirrorUrl": "https://mirror.ghproxy.com/https://github.com/astral-sh/uv/releases/download/0.6.14/uv-x86_64-pc-windows-msvc.zip",
+      "mirrorUrl": "https://ghproxy.net/https://github.com/astral-sh/uv/releases/download/0.6.14/uv-x86_64-pc-windows-msvc.zip",
       "extractDir": "uv",
       "stripTopLevelDir": false,
       "verifyFile": "uv.exe"

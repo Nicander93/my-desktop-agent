@@ -13,6 +13,12 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./env": {
+      "types": "./dist/env/loadEnvFile.d.ts",
+      "import": "./dist/env/loadEnvFile.js",
+      "require": "./dist/env/loadEnvFile.js",
+      "default": "./dist/env/loadEnvFile.js"
+    },
     "./runtime": {
       "types": "./dist/runtime/index.d.ts",
       "import": "./dist/runtime/index.js",

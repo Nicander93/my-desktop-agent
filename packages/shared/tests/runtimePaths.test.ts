@@ -1,14 +1,19 @@
 /** 应用运行时路径与 bundled 命令解析 */
 import { describe, it, expect } from 'vitest';
-import { normalize } from 'path';
+import { normalize, join } from 'path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import {
   getAppRuntimePaths,
   buildAppLevelEnv,
   buildCodingEnv,
   buildBundledPathEnv,
+  getBundledPathSegments,
+  getGitBashRoot,
   resolveBundledCommand,
   resolveCommandIfBundled,
 } from '../src/runtime/paths.js';
+import { getPythonPathSegments, getPythonRuntimeRecordPath } from '../src/runtime/python.js';
 
 const home = 'C:/Users/Test';
 
@@ -33,7 +38,7 @@ describe('buildAppLevelEnv', () => {
     const env = buildAppLevelEnv(paths, { PATH: 'C:/Windows/system32' }, 'win32');
 
     expect(env.PATH).toContain(paths.binaries.node);
-    expect(env.PATH).toContain(paths.binaries.git);
+    expect(env.PATH).toContain(join(paths.binaries.root, 'git', 'cmd'));
     expect(env.PATH).toContain('C:/Windows/system32');
     expect(env.NPM_CONFIG_PREFIX).toBe(paths.store.npmPrefix);
     expect(env.UV_TOOL_DIR).toBe(paths.store.uvTools);
@@ -48,6 +53,38 @@ describe('buildCodingEnv', () => {
     expect(env.PATH).toContain(paths.binaries.node);
     expect(env.NPM_CONFIG_PREFIX).toBeUndefined();
     expect(env.UV_CACHE_DIR).toBe(paths.store.uvCache);
+  });
+});
+
+describe('getBundledPathSegments', () => {
+  it('includes git-bash shell dirs on Windows', () => {
+    const paths = getAppRuntimePaths(home);
+    const segments = getBundledPathSegments(paths, 'win32');
+    expect(segments).toContain(join(getGitBashRoot(paths), 'usr', 'bin'));
+    expect(segments).toContain(join(getGitBashRoot(paths), 'bin'));
+    expect(segments).toContain(paths.binaries.git);
+    expect(segments).toContain(paths.binaries.node);
+  });
+
+  it('includes python shims when runtime record exists', () => {
+    const storeRoot = join(tmpdir(), `desktop-agent-python-test-${Date.now()}`);
+    const pythonExe = join(storeRoot, 'python', 'cpython-3.12', 'python.exe');
+    const shimsDir = join(storeRoot, 'shims');
+    mkdirSync(join(storeRoot, 'python', 'cpython-3.12'), { recursive: true });
+    writeFileSync(pythonExe, '', 'utf-8');
+    writeFileSync(getPythonRuntimeRecordPath(storeRoot), JSON.stringify({
+      version: '3.12',
+      pythonExe,
+      shimsDir,
+    }), 'utf-8');
+
+    const paths = getAppRuntimePaths(home);
+    paths.store.root = storeRoot;
+    const segments = getBundledPathSegments(paths, 'win32');
+
+    expect(segments).toContain(shimsDir);
+    expect(segments).toContain(join(storeRoot, 'python', 'cpython-3.12'));
+    expect(getPythonPathSegments(storeRoot)).toEqual([shimsDir, join(storeRoot, 'python', 'cpython-3.12')]);
   });
 });
 

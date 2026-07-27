@@ -15,6 +15,8 @@ describe('runtime install', () => {
     expect(manifest.platform).toBe('win32-x64');
     expect(manifest.runtimes.node.version).toBeTruthy();
     expect(manifest.runtimes.git.verifyFile).toBe('cmd/git.exe');
+    expect(manifest.runtimes['git-bash'].verifyFile).toBe('bin/bash.exe');
+    expect(manifest.runtimes['git-bash'].archiveType).toBe('7z-sfx');
   });
 
   it('detects missing runtimes in empty home', () => {

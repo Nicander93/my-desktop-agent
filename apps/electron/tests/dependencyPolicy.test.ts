@@ -1,12 +1,19 @@
 /** runtime/policy：profile 依赖范围与子进程环境 */
 import { describe, it, expect } from 'vitest';
+import { existsSync } from 'node:fs';
 import {
-  getDependencyScope,
-  getAgentEnv,
   buildSubprocessEnv,
   createBundledCommandResolver,
+  getAgentEnv,
+  getDependencyScope,
+  applyBaseRuntimeEnv,
 } from '../src/runtime/policy.js';
-import { getAppRuntimePaths, resolveCommandIfBundled } from '@desktop-agent/shared/runtime';
+import {
+  getAppRuntimePaths,
+  getGitBashRoot,
+  resolveCommandIfBundled,
+  resolveGitBashPath,
+} from '@desktop-agent/shared/runtime';
 
 const home = 'C:/Users/Test';
 const paths = getAppRuntimePaths(home);
@@ -41,6 +48,15 @@ describe('buildSubprocessEnv', () => {
     expect(env.NPM_CONFIG_PREFIX).toBe(paths.store.npmPrefix);
   });
 
+  it('injects git bash env when bundled bash exists', () => {
+    const bashPath = resolveGitBashPath(getGitBashRoot(paths), existsSync);
+    if (!bashPath) return;
+
+    const env = buildSubprocessEnv('general', paths);
+    expect(env.DESKTOP_AGENT_BASH).toBe(bashPath);
+    expect(env.MSYSTEM).toBe('MINGW64');
+  });
+
   it('removes npm prefix for coding even when present in process.env', () => {
     const previous = process.env.NPM_CONFIG_PREFIX;
     process.env.NPM_CONFIG_PREFIX = paths.store.npmPrefix;
@@ -53,6 +69,14 @@ describe('buildSubprocessEnv', () => {
     } else {
       process.env.NPM_CONFIG_PREFIX = previous;
     }
+  });
+});
+
+describe('applyBaseRuntimeEnv', () => {
+  it('does not mutate global process.env.PATH', () => {
+    const previousPath = process.env.PATH;
+    applyBaseRuntimeEnv(paths);
+    expect(process.env.PATH).toBe(previousPath);
   });
 });
 
