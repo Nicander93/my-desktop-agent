@@ -6,10 +6,12 @@
  */
 import { resolve } from 'node:path';
 import { loadProjectEnv } from '@desktop-agent/shared/env';
+import { DESKTOP_AGENT_BASH_ENV } from '@desktop-agent/shared/runtime';
 import { loadTaskCollection } from './collection.js';
 import { createProgressSink } from './progress.js';
 import { loadTask } from './task.js';
 import { RuntimeAgentExecutor, runTask } from './runner.js';
+import { buildEvalSubprocessEnv } from './subprocessEnv.js';
 
 async function main(): Promise<void> {
   loadProjectEnv();
@@ -28,13 +30,18 @@ async function main(): Promise<void> {
     return;
   }
   const onProgress = createProgressSink(args.quiet);
+  const subprocessEnv = buildEvalSubprocessEnv();
+  const bashPath = subprocessEnv[DESKTOP_AGENT_BASH_ENV];
+  if (bashPath) {
+    onProgress(`[eval] Bash → ${bashPath}`);
+  }
   const executor = new RuntimeAgentExecutor({
     apiKey: process.env.AGENT_EVAL_API_KEY ?? process.env.CODEANY_API_KEY ?? '',
     apiType: 'openai-completions',
     model: args.model,
     baseURL: args.baseURL,
     permissionMode: 'bypassPermissions',
-  });
+  }, subprocessEnv);
   const results = [];
   for (const task of tasks) {
     for (let i = 0; i < args.repeat; i += 1) {

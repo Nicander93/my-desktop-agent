@@ -301,6 +301,27 @@ export function useAgent() {
         } else if (agentError) {
           updateMessage(assistantId, { ...normalized, content: agentError, isStreaming: false, thinkingDurationMs, trace: finalTrace, toolCalls: syncedToolCalls });
           await saveAssistantMessage(assistantId, sessionId, agentError, syncedToolCalls, finalThinking, thinkingDurationMs, finalTrace, current?.parts);
+        } else if (finalThinking?.trim()) {
+          // 推理模型可能只回 reasoning_content，避免误报成「API 配置错误」
+          const thinkingOnly = finalThinking.trim();
+          updateMessage(assistantId, {
+            ...normalized,
+            content: thinkingOnly,
+            isStreaming: false,
+            thinkingDurationMs,
+            trace: finalTrace,
+            toolCalls: syncedToolCalls,
+          });
+          await saveAssistantMessage(
+            assistantId,
+            sessionId,
+            thinkingOnly,
+            syncedToolCalls,
+            finalThinking,
+            thinkingDurationMs,
+            finalTrace,
+            current?.parts,
+          );
         } else {
           const emptyReply = '模型未返回有效内容，请检查 API 配置或稍后重试。';
           updateMessage(assistantId, { ...normalized, content: emptyReply, isStreaming: false, thinkingDurationMs, trace: finalTrace, toolCalls: syncedToolCalls });

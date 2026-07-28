@@ -25,6 +25,10 @@ export const DEFAULT_RETRY_CONFIG: RetryConfig = {
   retryableStatusCodes: [429, 500, 502, 503, 529],
 }
 
+function getErrorCode(err: any): string | undefined {
+  return err?.code || err?.cause?.code || err?.cause?.cause?.code
+}
+
 /**
  * Check if an error is retryable.
  */
@@ -33,8 +37,22 @@ export function isRetryableError(err: any, config: RetryConfig = DEFAULT_RETRY_C
     return true
   }
 
-  // Network errors
-  if (err?.code === 'ECONNRESET' || err?.code === 'ETIMEDOUT' || err?.code === 'ECONNREFUSED') {
+  // Network errors（undici 常把 code 放在 cause 上，message 只有 "fetch failed"）
+  const code = getErrorCode(err)
+  if (
+    code === 'ECONNRESET' ||
+    code === 'ETIMEDOUT' ||
+    code === 'ECONNREFUSED' ||
+    code === 'UND_ERR_SOCKET' ||
+    code === 'UND_ERR_CONNECT_TIMEOUT' ||
+    code === 'UND_ERR_HEADERS_TIMEOUT' ||
+    code === 'UND_ERR_BODY_TIMEOUT'
+  ) {
+    return true
+  }
+
+  const message = String(err?.message || '')
+  if (message === 'fetch failed' || /ECONNRESET|ETIMEDOUT|ECONNREFUSED|socket/i.test(message)) {
     return true
   }
 

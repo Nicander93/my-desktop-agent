@@ -1,6 +1,13 @@
 /** Desktop Agent Runtime：session、profile、MCP/skills、策略解析。别从这 re-export shared。 */
 export { AgentRuntime } from './runtime.js';
-export { inferRuntimeProfile, getRuntimeProfilePolicy, profilePolicyToAgentOptions, OFFICE_FAST_PATH_PROMPT } from './profiles.js';
+export {
+  inferRuntimeProfile,
+  resolveExplicitProfile,
+  getRuntimeProfilePolicy,
+  profilePolicyToAgentOptions,
+  OFFICE_FAST_PATH_PROMPT,
+} from './profiles.js';
+export { classifyRuntimeProfile, type ClassifyRuntimeProfileOptions } from './classifyProfile.js';
 export { extractPathsFromToolInput } from './pathUtils.js';
 export { buildSessionMcpServers, preinstallMcpDependencies, setupMcpServer, testMcpConnection, resolveSpawnCommandName } from './mcp.js';
 export { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';

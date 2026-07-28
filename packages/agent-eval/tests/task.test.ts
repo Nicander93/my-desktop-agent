@@ -23,7 +23,7 @@ describe('coding-bugfix-basic task', () => {
   it('keeps all PR 4 task policies explicit and verifier-driven', async () => {
     const packageDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '..');
     const tasks = await Promise.all(['coding-mario-web', 'office-ai-ppt', 'office-excel-report'].map((id) => loadTask(resolve(packageDirectory, `../../benchmarks/tasks/${id}/task.json`))));
-    expect(tasks.map((task) => task.profile)).toEqual(['coding', 'office', 'office']);
+    expect(tasks.map((task) => task.profile)).toEqual(['coding', 'office-pptx', 'office']);
     expect(tasks.every((task) => task.capabilities.length > 0 && task.verifier.commands?.length)).toBe(true);
   });
 

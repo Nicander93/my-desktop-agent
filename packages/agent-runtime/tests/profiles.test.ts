@@ -1,28 +1,30 @@
-/** runtime profile 推断与 office 策略映射 */
+/** runtime profile 策略与显式解析 */
 import { describe, expect, it } from 'vitest';
-import { getRuntimeProfilePolicy, inferRuntimeProfile, profilePolicyToAgentOptions } from '../src/profiles.js';
+import { getRuntimeProfilePolicy, profilePolicyToAgentOptions, resolveExplicitProfile } from '../src/profiles.js';
 
 describe('runtime profiles', () => {
-  it('should infer office profile from ppt requests', () => {
-    expect(inferRuntimeProfile('帮我创建一个水资源分区 ppt')).toBe('office');
-    expect(inferRuntimeProfile('写一个 React 组件')).toBe('general');
+  it('resolves explicit profile or general', () => {
+    expect(resolveExplicitProfile('coding')).toBe('coding');
+    expect(resolveExplicitProfile(undefined)).toBe('general');
   });
 
-  it('should infer coding profile from dev keywords', () => {
-    expect(inferRuntimeProfile('帮我修复这个 bug')).toBe('coding');
-    expect(inferRuntimeProfile('运行 pnpm test')).toBe('coding');
-  });
-
-  it('should map office policy to agent query options', () => {
-    const policy = getRuntimeProfilePolicy('office');
+  it('maps office-pptx policy to agent query options with fast path', () => {
+    const policy = getRuntimeProfilePolicy('office-pptx');
     expect(policy?.appendSystemPrompt).toContain('officecli batch');
-    expect(policy?.appendSystemPrompt).toContain('禁止 Bash 执行：officecli open、close、save、watch、load_skill');
-    expect(policy?.appendSystemPrompt).toContain('batch 单独运行已内含 open/save');
-    expect(policy?.appendSystemPrompt).toContain('Desktop Agent 版');
+    expect(policy?.appendSystemPrompt).toContain('禁止用 python-pptx');
+    expect(policy?.appendSystemPrompt).toContain('officecli open');
+    expect(policy?.appendSystemPrompt).toContain('相对路径');
+    expect(policy?.maxTurns).toBe(8);
     expect(profilePolicyToAgentOptions(policy)).toEqual(expect.objectContaining({
       maxTurns: 8,
       thinking: { type: 'disabled' },
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
     }));
+  });
+
+  it('keeps office policy without pptx fast path', () => {
+    const policy = getRuntimeProfilePolicy('office');
+    expect(policy?.maxTurns).toBe(24);
+    expect(policy?.appendSystemPrompt).toBeUndefined();
   });
 });

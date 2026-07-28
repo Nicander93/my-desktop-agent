@@ -36,13 +36,21 @@
 新增 Profile 概念：
 
 ```ts
-type RuntimeProfile = 'general' | 'office' | 'coding' | 'file-organizing' | 'mcp';
+// packages/shared：AGENT_RUNTIME_PROFILES 常量枚举
+type RuntimeProfile = 'general' | 'office' | 'office-pptx' | 'coding' | 'file-organizing' | 'mcp';
 ```
 
-Profile 由用户输入、显式 Skill/MCP mention、文件类型、当前工作区上下文共同决定。第一版使用简单规则：
+Profile 由 **显式指定** 或 **同会话模型短调用分类** 决定（不做关键词匹配）：
 
-- 包含 `ppt`、`pptx`、`powerpoint`、`演示文稿`、`word`、`docx`、`excel`、`xlsx`、`officecli` 时进入 `office`。
-- 包含代码修复、测试、构建、重构等关键词时保持 `coding` 或 `general`。
+- 显式 `options.profile` / `task.json` 优先。
+- 否则 `classifyRuntimeProfile`，合法枚举见 `AGENT_RUNTIME_PROFILES`；失败回落 `general`。
+- `office-pptx`：PPT/officecli batch 快路径（原 office fast path）。
+- `office`：通用办公（表格/文档等），无 PPT batch 提示。
+
+历史关键词规则已废弃：
+
+- ~~包含 `ppt`、`excel` 等关键词时进入 `office`。~~
+- ~~包含代码修复、测试、构建、重构等关键词时保持 `coding` 或 `general`。~~
 - 用户显式指定时优先用户指定。
 
 ### Profile Policy
@@ -61,11 +69,11 @@ interface RuntimeProfilePolicy {
 }
 ```
 
-Office 第一版策略：
+Office 第一版策略（现迁到 `office-pptx`）：
 
 ```ts
 {
-  profile: 'office',
+  profile: 'office-pptx',
   maxTurns: 8,
   thinking: { type: 'disabled' },
   allowedTools: ['Bash', 'Read', 'Write', 'Edit'],

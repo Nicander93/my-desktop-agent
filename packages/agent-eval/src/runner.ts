@@ -28,7 +28,10 @@ export interface AgentExecutor {
 export class RuntimeAgentExecutor implements AgentExecutor {
   private readonly sessions = new Map<string, AgentRuntime>();
 
-  constructor(private readonly runtimeOptions: RuntimeOptions) {}
+  constructor(
+    private readonly runtimeOptions: RuntimeOptions,
+    private readonly subprocessEnv?: Record<string, string>,
+  ) {}
 
   async execute(task: EvaluationTask, workspacePath: string, sessionId: string, onProgress?: ProgressSink): Promise<AgentExecution> {
     const log = onProgress ?? (() => undefined);
@@ -48,8 +51,15 @@ export class RuntimeAgentExecutor implements AgentExecutor {
       const stream = await runtime.sendMessage(
         sessionId,
         evaluationPrompt,
-        { cwd: workspacePath },
-        { profile: task.profile, capabilities: task.capabilities as RuntimeCapability[] },
+        {
+          cwd: workspacePath,
+          ...(this.subprocessEnv ? { subprocessEnv: this.subprocessEnv } : {}),
+        },
+        {
+          profile: task.profile,
+          capabilities: task.capabilities as RuntimeCapability[],
+          ...(task.limits?.maxTurns != null ? { maxTurns: task.limits.maxTurns } : {}),
+        },
       );
       let text = '';
       let executionError: string | undefined;

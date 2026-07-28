@@ -5,8 +5,8 @@
  */
 
 import { readFile, writeFile } from 'fs/promises'
-import { resolve } from 'path'
 import { defineTool } from './types.js'
+import { resolveToolPath } from '../utils/toolPath.js'
 
 function detectEol(content: string): '\r\n' | '\n' {
   return content.includes('\r\n') ? '\r\n' : '\n'
@@ -29,7 +29,7 @@ export const FileEditTool = defineTool({
     properties: {
       file_path: {
         type: 'string',
-        description: 'The absolute path to the file to modify',
+        description: 'Path to the file (prefer workspace-relative). Absolute Windows or Git Bash /d/... paths also work.',
       },
       old_string: {
         type: 'string',
@@ -49,7 +49,7 @@ export const FileEditTool = defineTool({
   isReadOnly: false,
   isConcurrencySafe: false,
   async call(input, context) {
-    const filePath = resolve(context.cwd, input.file_path)
+    const filePath = resolveToolPath(context.cwd, input.file_path)
     const { old_string, new_string, replace_all } = input
 
     const normalizedOld = normalizeNewlines(old_string)

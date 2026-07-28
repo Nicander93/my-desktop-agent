@@ -21,6 +21,7 @@ const paths = getAppRuntimePaths(home);
 describe('getDependencyScope', () => {
   it('uses app scope for office and general profiles', () => {
     expect(getDependencyScope('office')).toBe('app');
+    expect(getDependencyScope('office-pptx')).toBe('app');
     expect(getDependencyScope('general')).toBe('app');
   });
 

@@ -86,7 +86,7 @@ describe('AgentRuntime', () => {
     expect(mockAgent.close).toHaveBeenCalledTimes(1);
   });
 
-  it('should apply office profile query overrides', async () => {
+  it('should apply office-pptx profile query overrides', async () => {
     const runtime = new AgentRuntime({
       maxTurns: 50,
       thinking: { type: 'enabled', budgetTokens: 8000 },
@@ -96,7 +96,7 @@ describe('AgentRuntime', () => {
       'session-1',
       '帮我做一个介绍 MCP 的 ppt',
       undefined,
-      { profile: 'office', skillMentions: ['officecli'] },
+      { profile: 'office-pptx', skillMentions: ['officecli'] },
     );
 
     const [, overrides] = mockAgent.query.mock.calls[0]!;
@@ -105,8 +105,22 @@ describe('AgentRuntime', () => {
       thinking: { type: 'disabled' },
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
     }));
-    expect(overrides.appendSystemPrompt).toContain('禁止 Bash 执行：officecli open');
+    expect(overrides.appendSystemPrompt).toContain('禁止用 python-pptx');
     expect(overrides.appendSystemPrompt).toContain('Desktop Agent 版');
     expect(overrides.appendSystemPrompt).not.toContain('运行 CLI 命令：officecli load_skill');
+  });
+
+  it('should prefer query maxTurns over office-pptx profile default', async () => {
+    const runtime = new AgentRuntime({ maxTurns: 50 });
+
+    await runtime.sendMessage(
+      'session-1',
+      '核对费用',
+      undefined,
+      { profile: 'office-pptx', maxTurns: 24 },
+    );
+
+    const [, overrides] = mockAgent.query.mock.calls[0]!;
+    expect(overrides).toEqual(expect.objectContaining({ maxTurns: 24 }));
   });
 });

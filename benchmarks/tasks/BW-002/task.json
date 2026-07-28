@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "title": "Sales Performance Pack",
   "prompt": "分析 input/sales.csv，生成 output/sales-analysis.xlsx（区域汇总）、output/management-brief.pptx（≥3 页，含 top region）、output/metrics.json。跨文件数字一致。",
-  "profile": "office",
+  "profile": "office-pptx",
   "capabilities": [
     "read-project",
     "transform-data",

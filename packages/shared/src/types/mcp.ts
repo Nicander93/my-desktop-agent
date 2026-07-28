@@ -74,10 +74,23 @@ export interface McpToolInfo {
   description: string;
 }
 
-/** 影响工具策略、subprocess env、office 提示等 */
-export type AgentRuntimeProfile = 'general' | 'office' | 'coding' | 'file-organizing' | 'mcp';
+/** 影响工具策略、subprocess env、office 提示等；单一来源，分类/policy 共用 */
+export const AGENT_RUNTIME_PROFILES = [
+  'general',
+  'office',
+  'office-pptx',
+  'coding',
+  'file-organizing',
+  'mcp',
+] as const;
 
-/** renderer → main 发消息可选参数；profile 空则 Host 按文案猜 */
+export type AgentRuntimeProfile = (typeof AGENT_RUNTIME_PROFILES)[number];
+
+export function isAgentRuntimeProfile(value: string): value is AgentRuntimeProfile {
+  return (AGENT_RUNTIME_PROFILES as readonly string[]).includes(value);
+}
+
+/** renderer → main 发消息可选参数；profile 空则 Host 用模型分类 */
 export interface AgentSendMessageOptions {
   mcpMentions?: string[];
   fileRefs?: string[];

@@ -1,7 +1,6 @@
 /**
- * profile 推断 + office 专用策略。
- * 文案里带 excel/ppt 会误判成 office；显式 profile 优先。
- * coding 的依赖隔离在 electron/runtime/policy，不在这。
+ * profile 策略：office-pptx 走 officecli 快路径；office 为通用办公。
+ * 交互侧分类见 classifyRuntimeProfile；coding 依赖隔离在 electron/runtime/policy。
  */
 import type { AgentOptions } from '@codeany/open-agent-sdk';
 import { getSkillPromptBody, OFFICECLI_PPTX_AGENT_SKILL } from '@desktop-agent/shared';
@@ -27,92 +26,67 @@ export interface RuntimeProfilePolicy {
   toolResultPolicy?: ToolResultPolicy;
 }
 
-/** 命中 → office（officecli 批处理约束） */
-const OFFICE_KEYWORDS = [
-  'officecli',
-  'ppt',
-  'pptx',
-  'powerpoint',
-  '演示文稿',
-  '幻灯片',
-  'word',
-  'docx',
-  'excel',
-  'xlsx',
-  '表格',
-];
-
-/** 命中 → coding（允许项目里 npm/pnpm install） */
-const CODING_KEYWORDS = [
-  'bug',
-  'fix',
-  'refactor',
-  'test',
-  'unit test',
-  'npm',
-  'pnpm',
-  'yarn',
-  'compile',
-  'build',
-  'debug',
-  '测试',
-  '重构',
-  '修复',
-  '单元测试',
-];
+const OFFICE_TOOLS = ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'];
 
 /**
- * office 系统提示：禁 open/save/load_skill，逼走 batch。
- * 盖过 skill 文档里的 Quick Start。
+ * office-pptx 系统提示：开头硬约束，优先于 skill / 官方文档。
+ * 盖过 load_skill 里的 open→save Quick Start，并挡住 python-pptx 弯路。
  */
 export const OFFICE_FAST_PATH_PROMPT = [
-  '你正在处理 Office 文档任务（Desktop Agent）。以下 Agent 执行约束 **优先于** officecli 官方 load_skill / 交互式 shell 文档中的 open、save、Quick Start。',
+  '# office-pptx 硬约束（必须遵守）',
   '',
-  '## 执行约束',
-  '1. 禁止 Bash 执行：officecli open、close、save、watch、load_skill（会阻塞或灌入错误流程）。',
-  '2. 禁止 officecli batch "batch.json" --json（缺少目标 .pptx/.docx 路径）。',
-  '3. 标准路径：Write batch.json → officecli batch "目标.pptx" --input "batch.json" --json → 一次 validate/outline。',
-  '4. batch 单独运行已内含 open/save；不要 create 后再 open，不要 open 后再 batch。',
-  '5. help 只查当前缺的一条：officecli help pptx shape；禁止 help ... --json 拉完整 schema。',
-  '6. 失败只看前 5 条错误做最小修补；无错误不重写整份 batch。',
-  '7. 保持工具调用少；不要重复 help / validate / load_skill。',
+  '1. **做 PPT / .pptx 只能用 officecli batch**，禁止用 python-pptx、pptx、PIL 拼幻灯片。',
+  '2. **Read / Write / Edit 优先工作区相对路径**（如 `input/a.csv`、`output/deck.pptx`、`batch.json`）；不要把 Git Bash 的 `/d/...` 和 Windows 路径混着用。',
+  '3. 标准流程（尽量少工具调用）：',
+  '   - 读/分析输入',
+  '   - Write `batch.json`（PPT 操作列表）',
+  '   - Bash: `officecli batch "output/xxx.pptx" --input "batch.json" --json`',
+  '   - 可选一次：`officecli validate "output/xxx.pptx" --json` 或 `view outline`',
+  '4. 禁止 Bash：`officecli open` / `close` / `save` / `watch` / `load_skill`（会阻塞）。',
+  '5. 禁止：`officecli batch "batch.json" --json`（缺少目标 .pptx 路径）。',
+  '6. help 只查当前缺的一条（如 `officecli help pptx shape`）；禁止 `help ... --json` 拉全量 schema。',
+  '7. 失败只根据前几条错误做最小修补；不要无错重写整份 batch。',
   '',
-  '## PPTX 格式与 batch 参考',
+  '## PPTX batch 参考',
   getSkillPromptBody(OFFICECLI_PPTX_AGENT_SKILL),
 ].join('\n');
 
-/** explicit 优先；否则 office 关键词 > coding 关键词 > general */
-export function inferRuntimeProfile(content: string, explicit?: RuntimeProfile): RuntimeProfile {
-  if (explicit) return explicit;
-
-  const lower = content.toLowerCase();
-  if (OFFICE_KEYWORDS.some((keyword) => lower.includes(keyword))) {
-    return 'office';
-  }
-
-  if (CODING_KEYWORDS.some((keyword) => lower.includes(keyword.toLowerCase()))) {
-    return 'coding';
-  }
-
-  return 'general';
+/** 仅返回显式值；无显式则 general。模型分类走 classifyRuntimeProfile。 */
+export function resolveExplicitProfile(explicit?: RuntimeProfile): RuntimeProfile {
+  return explicit ?? 'general';
 }
 
-/** 目前只有 office 返回策略；coding 差异在 Host 的 env */
-export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfilePolicy | undefined {
-  if (profile !== 'office') return undefined;
+/** @deprecated 用 resolveExplicitProfile / classifyRuntimeProfile */
+export function inferRuntimeProfile(_content: string, explicit?: RuntimeProfile): RuntimeProfile {
+  return resolveExplicitProfile(explicit);
+}
 
-  return {
-    profile: 'office',
-    maxTurns: 8,
-    thinking: { type: 'disabled' },
-    allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
-    appendSystemPrompt: OFFICE_FAST_PATH_PROMPT,
-    toolResultPolicy: {
-      maxChars: 4000,
-      summarizeJson: true,
-      preserveHeadTail: true,
-    },
-  };
+/** office-pptx 返回快路径；office 仅抬高回合、不开 PPT prompt */
+export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfilePolicy | undefined {
+  if (profile === 'office-pptx') {
+    return {
+      profile: 'office-pptx',
+      maxTurns: 8,
+      thinking: { type: 'disabled' },
+      allowedTools: [...OFFICE_TOOLS],
+      appendSystemPrompt: OFFICE_FAST_PATH_PROMPT,
+      toolResultPolicy: {
+        maxChars: 4000,
+        summarizeJson: true,
+        preserveHeadTail: true,
+      },
+    };
+  }
+
+  if (profile === 'office') {
+    return {
+      profile: 'office',
+      maxTurns: 24,
+      allowedTools: [...OFFICE_TOOLS],
+    };
+  }
+
+  return undefined;
 }
 
 /** 不含 appendSystemPrompt，那块由 runtime 自己拼 */

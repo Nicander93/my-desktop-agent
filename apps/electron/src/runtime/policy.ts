@@ -21,6 +21,7 @@ export type DependencyScope = 'app' | 'workspace';
 
 const APP_SCOPED_PROFILES: AgentRuntimeProfile[] = [
   'office',
+  'office-pptx',
   'file-organizing',
   'mcp',
   'general',

@@ -189,7 +189,7 @@ Chat UI (features/chat)
 
 ### 5.2 Runtime Profile
 
-`inferRuntimeProfile(content)`（关键词规则）→ `getRuntimeProfilePolicy` → 覆盖 `allowedTools` / `maxTurns` / `appendSystemPrompt` / tool result 压缩等。
+`classifyRuntimeProfile(content)`（同模型短调用，枚举校验）或显式 `profile` → `getRuntimeProfilePolicy` → 覆盖 `allowedTools` / `maxTurns` / `appendSystemPrompt` / tool result 压缩等。Profile 列表见 shared `AGENT_RUNTIME_PROFILES`（含 `office-pptx`）。
 
 当前重点：`office` 走窄工具集 + Office CLI 约束 prompt；`coding` 等保留更宽策略。设计背景：[agent-runtime-profiles-plan.md](./agent-runtime-profiles-plan.md)。
 
@@ -268,6 +268,7 @@ pnpm eval:report -- --group-by domain,difficulty
 
 - Key：`AGENT_EVAL_API_KEY`，没有就用 `.env` 里的 `CODEANY_API_KEY`
 - 模型：`--model` / `--base-url`，或 `CODEANY_MODEL` / `CODEANY_BASE_URL`
+- Windows：Bash 走 `~/.desktop-agent/binaries/git-bash`；缺了先 `pnpm setup:binaries`
 - 过程日志默认打 **stderr**（`[eval]` / `[agent]` / `[tool]` / `[verify]`）；最终 JSON 在 stdout。加 `--quiet` 可关掉过程输出
 - 分只看 Verifier；别改 fixture 测试刷分
 - 结果在 `eval-results/`（已 ignore）

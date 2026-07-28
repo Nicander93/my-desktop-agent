@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "title": "Presentation from Brief",
   "prompt": "根据 input/brief.json 生成 output/presentation.pptx（8–12 页）与 output/outline.md。\n\n必须覆盖 brief 中 sections（Executive Summary/Metrics/Risks/Next Steps），Metrics 页需包含 revenue 1200000 与 customers 540。\n\n不要修改 input/brief.json。",
-  "profile": "office",
+  "profile": "office-pptx",
   "capabilities": [
     "read-project",
     "create-pptx",
