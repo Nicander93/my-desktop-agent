@@ -35,3 +35,19 @@ describe('coding-bugfix-basic task', () => {
     expect(tasks.every((task) => task.profile === 'coding' && task.verifier.commands?.length)).toBe(true);
   });
 });
+
+describe('maxAttempts validation', () => {
+  it.each([0, -1, 1.5, '3'])('rejects invalid maxAttempts: %s', async (maxAttempts) => {
+    const packageDirectory = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+    const taskPath = resolve(packageDirectory, '../../benchmarks/tasks/coding-bugfix-basic/task.json');
+    const task = JSON.parse(await (await import('node:fs/promises')).readFile(taskPath, 'utf8')) as Record<string, unknown>;
+    task.limits = { ...(task.limits as Record<string, unknown>), maxAttempts };
+    const temporaryPath = resolve(packageDirectory, `../../.tmp-invalid-max-attempts-${String(maxAttempts).replace('.', '-')}.json`);
+    await (await import('node:fs/promises')).writeFile(temporaryPath, JSON.stringify(task), 'utf8');
+    try {
+      await expect(loadTask(temporaryPath)).rejects.toThrow('task.limits.maxAttempts must be a positive integer');
+    } finally {
+      await (await import('node:fs/promises')).rm(temporaryPath, { force: true });
+    }
+  });
+});

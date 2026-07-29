@@ -32,4 +32,8 @@ function validateTask(task: Partial<EvaluationTask>, path: string): asserts task
   if (task.schemaVersion !== 1) throw new Error(`${path}: unsupported task schemaVersion.`);
   if (!Array.isArray(task.capabilities)) throw new Error(`${path}: task.capabilities must be an array.`);
   if (!task.verifier || typeof task.verifier !== 'object') throw new Error(`${path}: task.verifier is required.`);
+  const maxAttempts = task.limits?.maxAttempts;
+  if (maxAttempts !== undefined && (!Number.isInteger(maxAttempts) || maxAttempts < 1)) {
+    throw new Error(`${path}: task.limits.maxAttempts must be a positive integer.`);
+  }
 }

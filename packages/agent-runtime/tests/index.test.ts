@@ -13,6 +13,12 @@ vi.mock('@codeany/open-agent-sdk', () => ({
   createAgent: vi.fn(() => mockAgent),
   registerSkill: vi.fn(),
   unregisterSkill: vi.fn(),
+  DEFAULT_RETRY_CONFIG: {
+    maxRetries: 3,
+    baseDelayMs: 2000,
+    maxDelayMs: 30000,
+    retryableStatusCodes: [429, 500, 502, 503, 529],
+  },
 }));
 
 import { createAgent } from '@codeany/open-agent-sdk';
@@ -34,9 +40,21 @@ describe('AgentRuntime', () => {
         sessionId: 'session-1',
         persistSession: true,
         promptCache: { enabled: true, ttl: '5m' },
+        apiRetry: expect.objectContaining({ maxRetries: 3 }),
       })
     );
     expect(agent).toBe(mockAgent);
+  });
+
+  it('should pass custom apiRetry policy to the SDK', () => {
+    const runtime = new AgentRuntime({ apiRetry: { maxRetries: 5, baseDelayMs: 1000, maxDelayMs: 10000, retryableStatusCodes: [500] } });
+    runtime.createAgent('session-1');
+
+    expect(createAgent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        apiRetry: { maxRetries: 5, baseDelayMs: 1000, maxDelayMs: 10000, retryableStatusCodes: [500] },
+      }),
+    );
   });
 
   it('should allow prompt cache defaults to be overridden', () => {
@@ -101,11 +119,11 @@ describe('AgentRuntime', () => {
 
     const [, overrides] = mockAgent.query.mock.calls[0]!;
     expect(overrides).toEqual(expect.objectContaining({
-      maxTurns: 8,
+      maxTurns: 50,
       thinking: { type: 'disabled' },
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
     }));
-    expect(overrides.appendSystemPrompt).toContain('禁止用 python-pptx');
+    expect(overrides.appendSystemPrompt).toContain('禁止 python-pptx');
     expect(overrides.appendSystemPrompt).toContain('Desktop Agent 版');
     expect(overrides.appendSystemPrompt).not.toContain('运行 CLI 命令：officecli load_skill');
   });

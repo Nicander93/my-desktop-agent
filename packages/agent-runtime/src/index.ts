@@ -20,4 +20,5 @@ export type { RuntimeCapability } from './capabilities/types.js';
 export type { ModelCapabilityDescriptor, ResolvedExecutionPolicy, RuntimeExecutionRequest, WorkspaceExecutionPolicy } from './policies/types.js';
 
 // 重新导出 SDK 类型
-export type { Agent, AgentOptions, SDKMessage } from '@codeany/open-agent-sdk';
+export type { Agent, AgentOptions, SDKMessage, RetryConfig } from '@codeany/open-agent-sdk';
+export { DEFAULT_RETRY_CONFIG } from '@codeany/open-agent-sdk';

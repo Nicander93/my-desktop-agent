@@ -414,6 +414,8 @@ export interface AgentOptions {
   traceMetadata?: Record<string, unknown>
   /** Stop repeated identical failed tool calls after this many attempts. */
   maxSameToolRetries?: number
+  /** Per-request API retry policy (rate limits, 5xx, network blips). */
+  apiRetry?: import('./utils/retry.js').RetryConfig
   /** Tool names to pre-approve without prompting */
   allowedTools?: string[]
   /** Tool names to deny */
@@ -527,4 +529,5 @@ export interface QueryEngineConfig {
   toolResultTransformer?: ToolResultTransformer
   traceMetadata?: Record<string, unknown>
   maxSameToolRetries?: number
+  apiRetry?: import('./utils/retry.js').RetryConfig
 }

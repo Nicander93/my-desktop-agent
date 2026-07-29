@@ -15,9 +15,9 @@ describe('runtime profiles', () => {
     expect(policy?.appendSystemPrompt).toContain('officecli create');
     expect(policy?.appendSystemPrompt).toContain('batch 不会自动建文件');
     expect(policy?.appendSystemPrompt).toContain('相对路径');
-    expect(policy?.maxTurns).toBe(8);
+    expect(policy?.maxTurns).toBe(50);
     expect(profilePolicyToAgentOptions(policy)).toEqual(expect.objectContaining({
-      maxTurns: 8,
+      maxTurns: 50,
       thinking: { type: 'disabled' },
       allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
     }));

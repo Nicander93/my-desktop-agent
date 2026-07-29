@@ -391,6 +391,7 @@ pnpm eval:report -- --group-by domain,difficulty
 | 文档 | 用途 |
 |------|------|
 | [AGENTS.md](../AGENTS.md) | Agent/AI 贡献入口 |
+| [code-style.md](../contributing/code-style.md) | 代码格式、命名与注释风格 |
 | [architecture.md](../contributing/architecture.md) | 分层与目录 |
 | [ipc-contract.md](../contributing/ipc-contract.md) | IPC 流程与 channel |
 | [testing.md](../contributing/testing.md) | 测什么、放哪 |

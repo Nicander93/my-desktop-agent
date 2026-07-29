@@ -349,6 +349,7 @@ export class Agent {
       toolResultTransformer: overrides?.toolResultTransformer ?? opts.toolResultTransformer,
       traceMetadata: overrides?.traceMetadata ?? opts.traceMetadata,
       maxSameToolRetries: overrides?.maxSameToolRetries ?? opts.maxSameToolRetries,
+      apiRetry: overrides?.apiRetry ?? opts.apiRetry,
     })
     this.currentEngine = engine
 

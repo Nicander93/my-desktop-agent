@@ -15,7 +15,9 @@ export interface ToolResultPolicy {
   preserveHeadTail?: boolean;
 }
 
-/** 转成 AgentOptions 局部覆盖的那一块 */
+/**
+ * 转成 AgentOptions 局部覆盖的那一块
+ */
 export interface RuntimeProfilePolicy {
   profile: RuntimeProfile;
   maxTurns?: number;
@@ -55,22 +57,28 @@ export const OFFICE_FAST_PATH_PROMPT = [
   getSkillPromptBody(OFFICECLI_PPTX_AGENT_SKILL),
 ].join('\n');
 
-/** 仅返回显式值；无显式则 general。模型分类走 classifyRuntimeProfile。 */
+/**
+ * 仅返回显式值；无显式则 general。模型分类走 classifyRuntimeProfile。
+ */
 export function resolveExplicitProfile(explicit?: RuntimeProfile): RuntimeProfile {
   return explicit ?? 'general';
 }
 
-/** @deprecated 用 resolveExplicitProfile / classifyRuntimeProfile */
+/**
+ * @deprecated 用 resolveExplicitProfile / classifyRuntimeProfile
+ */
 export function inferRuntimeProfile(_content: string, explicit?: RuntimeProfile): RuntimeProfile {
   return resolveExplicitProfile(explicit);
 }
 
-/** office-pptx 返回快路径；office 仅抬高回合、不开 PPT prompt */
+/**
+ * office-pptx 返回快路径；office 仅抬高回合、不开 PPT prompt
+ */
 export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfilePolicy | undefined {
   if (profile === 'office-pptx') {
     return {
       profile: 'office-pptx',
-      maxTurns: 8,
+      maxTurns: 50,
       thinking: { type: 'disabled' },
       allowedTools: [...OFFICE_TOOLS],
       appendSystemPrompt: OFFICE_FAST_PATH_PROMPT,
@@ -93,7 +101,9 @@ export function getRuntimeProfilePolicy(profile?: RuntimeProfile): RuntimeProfil
   return undefined;
 }
 
-/** 不含 appendSystemPrompt，那块由 runtime 自己拼 */
+/**
+ * 不含 appendSystemPrompt，那块由 runtime 自己拼
+ */
 export function profilePolicyToAgentOptions(
   policy?: RuntimeProfilePolicy,
 ): Partial<AgentOptions> {

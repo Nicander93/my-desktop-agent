@@ -13,7 +13,7 @@ const PROFILE_DEFAULTS: Record<RuntimeProfile, { tools: string[]; maxTurns: numb
   general: { tools: [], maxTurns: 30, maxToolResultChars: 8000 },
   coding: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'TodoWrite'], maxTurns: 40, maxToolResultChars: 6000 },
   office: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 24, maxToolResultChars: 4000 },
-  'office-pptx': { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 8, maxToolResultChars: 4000 },
+  'office-pptx': { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 50, maxToolResultChars: 4000 },
   'file-organizing': { tools: ['Read', 'Glob', 'Grep'], maxTurns: 12, maxToolResultChars: 4000 },
   mcp: { tools: ['Read', 'Glob', 'Grep'], maxTurns: 16, maxToolResultChars: 6000 },
 };

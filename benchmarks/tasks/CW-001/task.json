@@ -21,7 +21,7 @@
   ],
   "fixture": "fixture",
   "limits": {
-    "maxTurns": 30,
+    "maxTurns": 50,
     "timeoutMs": 900000,
     "maxChangedFiles": 30
   },

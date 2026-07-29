@@ -5,6 +5,7 @@ export type { Conversation, Message as ConversationMessage } from './types/conve
 export type { ModelConfig, ModelConfigInput, ModelConnectionTestResult } from './types/model.js';
 export type {
   EvaluationArtifacts,
+  EvaluationAttempt,
   EvaluationCheck,
   EvaluationCommand,
   EvaluationLimits,

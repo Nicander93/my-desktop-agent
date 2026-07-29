@@ -34,6 +34,8 @@ import {
 import {
   withRetry,
   isPromptTooLongError,
+  DEFAULT_RETRY_CONFIG,
+  type RetryConfig,
 } from './utils/retry.js'
 import { getSystemContext, getCurrentDateContext, readProjectContextContent } from './utils/context.js'
 import { normalizeMessagesForAPI } from './utils/messages.js'
@@ -196,6 +198,10 @@ export class QueryEngine {
     this.sessionId = config.sessionId || crypto.randomUUID()
     this.hookRegistry = config.hookRegistry
     this.traceRecorder = config.traceRecorder
+  }
+
+  private get apiRetryConfig(): RetryConfig {
+    return this.config.apiRetry ?? DEFAULT_RETRY_CONFIG
   }
 
   /** hook 失败吞掉，不打断主循环 */
@@ -375,7 +381,7 @@ export class QueryEngine {
             })()
           }
 
-          const stream = await withRetry(makeStream, undefined, this.config.abortSignal)
+          const stream = await withRetry(makeStream, this.apiRetryConfig, this.config.abortSignal)
           response = { content: [], stopReason: 'end_turn', usage: { input_tokens: 0, output_tokens: 0 } }
 
           for await (const chunk of stream) {
@@ -444,7 +450,7 @@ export class QueryEngine {
                 promptCache,
               })
             },
-            undefined,
+            this.apiRetryConfig,
             this.config.abortSignal,
           )
         }

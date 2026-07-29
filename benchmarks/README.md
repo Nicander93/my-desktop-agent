@@ -87,4 +87,22 @@ pnpm eval:report -- --group-by domain,difficulty
 
 通过与否只看 Verifier。过程日志默认打到 **stderr**；只要结果加 `--quiet`。
 
+## 独立重复与单次运行内继续修复
+
+`--repeat N` 会从全新 workspace 独立运行任务 N 次，用于衡量稳定性。`task.json` 中的 `limits.maxAttempts` 表示一次 run 内根据反馈继续修复的最大尝试次数；这些尝试复用同一个 workspace 和 session，未配置时默认为 5。以下情况会消耗 attempt 并重试：Verifier 未通过、max_turns 耗尽、超时。瞬态 API 错误（5xx、网络抖动）由 `agent-runtime` / SDK 在单次请求层自动重试，不占用 eval attempt。
+
+例如：
+
+```json
+{
+  "limits": {
+    "maxTurns": 32,
+    "timeoutMs": 600000,
+    "maxAttempts": 3
+  }
+}
+```
+
+同时使用 `--repeat 5` 时，会独立运行 5 次，每次最多包含 3 次 Agent 尝试。
+
 入口说明：`docs/developer-guide.md`；DWB 设计：`docs/eval/dwb/`。

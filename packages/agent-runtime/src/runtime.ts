@@ -2,7 +2,7 @@
  * 按 sessionId 缓存 Agent，合并 profile/capability 后再调 open-agent-sdk。
  * IPC / DB / UI 不在这。有 modelConfig 时 apiKey 传空串，避免回退到 CODEANY_API_KEY。
  */
-import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace, type ContentBlockParam } from '@codeany/open-agent-sdk';
+import { createAgent, Agent, AgentOptions, SDKMessage, replayRunTrace, replaySessionTrace, type ContentBlockParam, DEFAULT_RETRY_CONFIG, type RetryConfig } from '@codeany/open-agent-sdk';
 import { Message, ToolResult, buildMcpMentionPrompt, buildFileMentionPrompt, buildSkillMentionHint, type ModelConfig, type RuntimeSkillDefinition, TraceRun } from '@desktop-agent/shared';
 import { extractPathsFromToolInput } from './pathUtils.js';
 import { syncRuntimeSkills, clearRuntimeSkills } from './skills.js';
@@ -27,6 +27,8 @@ export interface RuntimeOptions {
   promptCache?: AgentOptions['promptCache'];
   /** 隔离评测 workspace 时应为 false，避免注入宿主仓库 git/环境上下文 */
   includeEnvironmentContext?: boolean;
+  /** 单次 LLM 请求的瞬态重试（5xx、限流、网络抖动） */
+  apiRetry?: RetryConfig;
 }
 
 /** 单个 session：cwd、模型、MCP、skills 等 */
@@ -142,6 +144,7 @@ export class AgentRuntime {
       promptCache: this.options.promptCache ?? { enabled: true, ttl: '5m' },
       includeEnvironmentContext: this.options.includeEnvironmentContext,
       ...(this.options.thinking ? { thinking: this.options.thinking } : {}),
+      apiRetry: this.options.apiRetry ?? DEFAULT_RETRY_CONFIG,
       ...(sessionOptions?.mcpServers && Object.keys(sessionOptions.mcpServers).length > 0
         ? { mcpServers: sessionOptions.mcpServers as AgentOptions['mcpServers'] }
         : {}),

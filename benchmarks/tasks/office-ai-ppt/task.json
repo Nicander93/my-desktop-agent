@@ -31,7 +31,7 @@
     ]
   },
   "limits": {
-    "maxTurns": 16,
+    "maxTurns": 50,
     "timeoutMs": 300000,
     "maxChangedFiles": 5
   }

@@ -26,6 +26,8 @@ export interface EvaluationLimits {
   maxTurns?: number;
   timeoutMs?: number;
   maxChangedFiles?: number;
+  /** 同一次评测 run 中允许根据 Verifier 反馈继续执行的最大次数。 */
+  maxAttempts?: number;
 }
 
 /** 通过后才算 task 成功；agent 自述完成不算 */
@@ -63,6 +65,16 @@ export interface EvaluationCheck {
   durationMs: number;
 }
 
+export interface EvaluationAttempt {
+  index: number;
+  status: 'passed' | 'failed' | 'error' | 'timeout';
+  startedAt: string;
+  endedAt: string;
+  durationMs: number;
+  verifier: EvaluationVerification;
+  error?: string;
+}
+
 /** 单次 run 落盘结构；artifacts 路径相对 outputRoot */
 export interface EvaluationResult {
   schemaVersion: 1;
@@ -78,6 +90,10 @@ export interface EvaluationResult {
   model: { model: string; baseURL?: string };
   verifier: EvaluationVerification;
   artifacts: EvaluationArtifacts;
+  /** 新结果始终写入；可选以兼容历史 result.json。 */
+  attemptCount?: number;
+  /** 新结果始终写入；可选以兼容历史 result.json。 */
+  attempts?: EvaluationAttempt[];
   error?: string;
   failure?: { category: 'agent' | 'environment' | 'verifier' | 'timeout'; reason: string };
 }
