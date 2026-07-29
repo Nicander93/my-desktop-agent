@@ -3,6 +3,8 @@
  */
 import { create } from 'zustand';
 import type { AgentTrace, ImageAttachment, MessagePart } from '@desktop-agent/shared';
+import type { ToolCall } from '@/types/chat';
+export type { ToolCall } from '@/types/chat';
 import { syncToolCallsFromTrace } from '@/lib/toolCallSync';
 
 export interface Message {
@@ -18,16 +20,6 @@ export interface Message {
   trace?: AgentTrace;
   parts?: MessagePart[];
   attachments?: ImageAttachment[];
-}
-
-export interface ToolCall {
-  id: string;
-  toolName: string;
-  input: unknown;
-  output?: { success: boolean; data?: unknown; error?: string };
-  status: 'pending' | 'running' | 'completed' | 'error';
-  startedAt?: number;
-  durationMs?: number;
 }
 
 interface ChatState {

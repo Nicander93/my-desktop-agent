@@ -1,7 +1,7 @@
 /**
  * 按扩展名/MIME 决定编辑器展示模式与 Monaco 语言
  */
-import type { EditorFileType } from '@/stores/editorStore';
+import type { EditorFileType } from '@/types/editor';
 
 function getExtFromPath(path: string): string {
   const name = path.split(/[/\\]/).pop() || path;

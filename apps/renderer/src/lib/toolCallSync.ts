@@ -2,7 +2,7 @@
  * ToolCall 与 trace span 双向同步：状态、耗时、流式结果
  */
 import type { ToolCallPayload, ToolResultPayload, TraceSpan } from '@desktop-agent/shared';
-import type { ToolCall } from '@/stores/chatStore';
+import type { ToolCall } from '@/types/chat';
 
 function hasActiveTools(toolCalls: ToolCall[]): boolean {
   return toolCalls.some((t) => t.status === 'running' || t.status === 'pending');
