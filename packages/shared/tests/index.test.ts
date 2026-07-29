@@ -1,6 +1,6 @@
 /** shared 包 Session/Message 类型烟雾测试 */
 import { describe, it, expect } from 'vitest';
-import { Session, Message, Tool } from '../src';
+import type { Session, Message } from '../src';
 
 describe('Shared Types', () => {
   it('should create a session object', () => {

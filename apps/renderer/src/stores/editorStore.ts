@@ -4,11 +4,9 @@
 import { create } from 'zustand';
 import { useWorkspaceStore } from './workspaceStore';
 import { useUIStore } from './uiStore';
-import { useFileExplorerStore } from './fileExplorerStore';
 import { resolveEditorFileType } from '@/lib/fileTypeUtils';
-
-/** 编辑器可展示的文件类型 */
-export type EditorFileType = 'text' | 'image' | 'docx' | 'pptx' | 'xlsx' | 'pdf' | 'html' | 'binary';
+import type { EditorFileType } from '@/types/editor';
+export type { EditorFileType } from '@/types/editor';
 
 interface EditorState {
   activeFile: string | null;
@@ -58,7 +56,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
       const fileType = resolveEditorFileType(path, result.file.mimeType, result.file.encoding);
       useUIStore.getState().setToolPanelTab(fileType === 'html' ? 'preview' : 'files');
-      useFileExplorerStore.getState().selectPath(path);
 
       set({
         content: result.file.content,

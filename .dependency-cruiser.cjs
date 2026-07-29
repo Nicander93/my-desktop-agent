@@ -2,6 +2,13 @@
 module.exports = {
   forbidden: [
     {
+      name: 'renderer-no-circular',
+      comment: 'Renderer modules must not form circular dependency chains',
+      severity: 'error',
+      from: {},
+      to: { path: '^apps/renderer/src/', circular: true },
+    },
+    {
       name: 'renderer-no-host',
       comment: 'Renderer must not import electron, agent-runtime, or open-agent-sdk',
       severity: 'error',
