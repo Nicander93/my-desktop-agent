@@ -44,18 +44,32 @@ function splitCsvLine(line) {
   return out.map((v) => v.trim());
 }
 
-async function assertInputUnchanged(relPaths) {
-  for (const rel of relPaths) {
-    const base = await readFile(join(taskDir, 'fixture', rel));
-    const cur = await readFile(join(workspace, rel));
-    if (!base.equals(cur)) fail(`protected input modified: ${rel}`);
+async function assertTreeUnchanged(relDir) {
+  async function walk(dir, prefix, out) {
+    for (const e of await readdir(dir, { withFileTypes: true })) {
+      const rel = prefix ? `${prefix}/${e.name}` : e.name;
+      if (e.isDirectory()) await walk(join(dir, e.name), rel, out);
+      else if (e.isFile()) out.push(rel.replace(/\\/g, '/'));
+    }
+  }
+  const baseFiles = [];
+  const curFiles = [];
+  await walk(join(taskDir, 'fixture', relDir), '', baseFiles);
+  await walk(join(workspace, relDir), '', curFiles);
+  baseFiles.sort();
+  curFiles.sort();
+  if (baseFiles.join('\n') !== curFiles.join('\n')) fail(`protected tree file set changed: ${relDir}`);
+  for (const rel of baseFiles) {
+    const base = await readFile(join(taskDir, 'fixture', relDir, rel));
+    const cur = await readFile(join(workspace, relDir, rel));
+    if (!base.equals(cur)) fail(`protected input modified: ${relDir}/${rel}`);
   }
 }
 
 import { createHash } from 'node:crypto';
 async function hash(p){return createHash('sha256').update(await readFile(join(workspace,p))).digest('hex');}
 async function main() {
-  await assertInputUnchanged(['input/tree/a.txt']);
+  await assertTreeUnchanged('input/tree');
   const dup = JSON.parse(await readFile(join(workspace, 'output/duplicates.json'), 'utf8'));
   const h1 = await hash('input/tree/dup1.txt'); const h2 = await hash('input/tree/sub/dup2.txt');
   if (h1 !== h2) fail('fixture dup mismatch');

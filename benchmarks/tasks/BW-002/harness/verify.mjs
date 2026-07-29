@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /** BW-002 harness — deterministic checks; prints DWB_VERIFY_PASS on success. */
-import { readFile, access, readdir, copyFile, mkdir } from 'node:fs/promises';
+import { readFile, access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zipXmlText } from '../../../lib/officeZipText.mjs';
 
 const workspace = process.cwd();
 const taskDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,18 +56,18 @@ async function assertInputUnchanged(relPaths) {
 async function main() {
   await assertInputUnchanged(['input/sales.csv']);
   const csv = parseCsv(await readFile(join(workspace, 'input/sales.csv'), 'utf8'));
-  const total = csv.rows.reduce((s,r)=>s+Number(r.amount),0);
+  const total = csv.rows.reduce((s, r) => s + Number(r.amount), 0);
   const byReg = {};
-  csv.rows.forEach(r=>{ byReg[r.region]=(byReg[r.region]||0)+Number(r.amount); });
-  const top = Object.entries(byReg).sort((a,b)=>b[1]-a[1])[0];
+  csv.rows.forEach((r) => { byReg[r.region] = (byReg[r.region] || 0) + Number(r.amount); });
+  const top = Object.entries(byReg).sort((a, b) => b[1] - a[1])[0];
   const met = JSON.parse(await readFile(join(workspace, 'output/metrics.json'), 'utf8'));
-  if (met.total !== total) fail('metrics total');
+  if (Number(met.total) !== total) fail('metrics total');
   if (met.topRegion !== top[0]) fail('top region');
   try { await access(join(workspace, 'output/sales-analysis.xlsx'), constants.F_OK); } catch { fail('xlsx missing'); }
-  const ppt = await readFile(join(workspace, 'output/management-brief.pptx'));
-  const slides = (ppt.toString('latin1').match(/<p:sld /g)||[]).length;
+  const pptText = zipXmlText(await readFile(join(workspace, 'output/management-brief.pptx')));
+  const slides = (pptText.match(/<p:sld[\s>]/g) || []).length;
   if (slides < 3) fail('ppt slides');
-  if (!ppt.toString('latin1').includes(top[0])) fail('ppt top region');
-  if (met.pptSlideCount !== slides) fail('slide count sync');
+  if (!pptText.includes(top[0])) fail('ppt top region');
+  if (Number(met.pptSlideCount) !== slides) fail('slide count sync');
 }
 await main(); console.log('DWB_VERIFY_PASS');

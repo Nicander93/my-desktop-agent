@@ -3,7 +3,7 @@
   "id": "BW-001",
   "version": "1.0.0",
   "title": "Expense Reconciliation",
-  "prompt": "核对 input/expenses.csv 与 input/policy.json，在工作区根目录写出 exceptions.csv（expense_id,rule,reason；rule 为 meal_limit / missing_receipt / duplicate_receipt）与 summary.md（总笔数、总金额、异常数、按规则汇总）。不要修改 input/。",
+  "prompt": "核对 input/expenses.csv 与 input/policy.json，在工作区根目录写出 exceptions.csv（expense_id,rule,reason）与 summary.md（总笔数、总金额、异常数、按规则汇总）。规则可叠加：meals 且 amount>mealLimit → meal_limit；amount>receiptRequiredAbove 且无 receipt_id → missing_receipt；重复 receipt_id 只给后出现的那笔记 duplicate_receipt（若该笔同时超餐标，还要另记 meal_limit）。不要修改 input/。",
   "profile": "office",
   "capabilities": [
     "read-project",

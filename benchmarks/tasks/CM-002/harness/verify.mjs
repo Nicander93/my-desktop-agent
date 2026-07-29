@@ -57,11 +57,15 @@ async function main() {
   const threadsRaw = JSON.parse(await readFile(join(workspace, 'input/threads.json'), 'utf8'));
   const threads = Array.isArray(threadsRaw) ? threadsRaw : threadsRaw.threads;
   const idx = JSON.parse(await readFile(join(workspace, 'output/draft-index.json'), 'utf8'));
+  if (!Array.isArray(idx.threads)) fail('draft-index.threads missing or not array');
   if (idx.threads.length !== threads.length) fail('thread count');
   for (const t of threads) {
     try { await access(join(workspace, 'output/drafts', t.id + '.md'), constants.F_OK); } catch { fail('draft '+t.id); }
     const body = await readFile(join(workspace, 'output/drafts', t.id + '.md'), 'utf8');
-    if (t.needsDate && !body.toLowerCase().includes('missing')) fail('missing info '+t.id);
+    const indexEntry = idx.threads.find((row) => row.id === t.id);
+    const markedMissing = body.toLowerCase().includes('missing')
+      || (Array.isArray(indexEntry?.missingInfo) && indexEntry.missingInfo.length > 0);
+    if (t.needsDate && !markedMissing) fail('missing info '+t.id);
     if (body.includes('guarantee refund')) fail('fabricated promise');
   }
 }

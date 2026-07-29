@@ -37,9 +37,12 @@ benchmarks/hidden-fixtures/<task-id>/<variant>/
 设计文档：`docs/eval/dwb/`。全部 `tags` 含 `dwb`，可用：
 
 ```bash
-pnpm eval:dwb -- --model <model> --base-url <url>
-pnpm eval -- --task benchmarks/tasks/DP-001/task.json --model <model> --base-url <url>
-pnpm eval -- --task-id DP-001 --repeat 5 --model <model> --base-url <url>
+# 模型读 .env（CODEANY_MODEL / CODEANY_BASE_URL）
+pnpm eval:dwb
+pnpm eval -- --task benchmarks/tasks/DP-001/task.json
+pnpm eval -- --task-id DP-001 --repeat 5
+# 多现场并行（N 个独立进程分摊任务）
+pnpm eval -- --all --concurrency 4 --output eval-results/_full-run
 pnpm eval:report -- --group-by domain,difficulty
 ```
 

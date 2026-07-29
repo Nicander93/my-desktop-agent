@@ -4,6 +4,7 @@ import { readFile, access, readdir, copyFile, mkdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zipXmlText } from '../../../lib/officeZipText.mjs';
 
 const workspace = process.cwd();
 const taskDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,7 +58,7 @@ async function main() {
   const con = JSON.parse(await readFile(join(workspace, 'output/consistency.json'), 'utf8'));
   if (con.total !== 350) fail('expected total 350');
   if (con.xlsxTotal !== con.pptTotal || con.xlsxTotal !== con.total) fail('cross mismatch');
-  const ppt = await readFile(join(workspace, 'output/sales-review.pptx'));
-  if ((ppt.toString('latin1').match(/<p:sld /g)||[]).length < 2) fail('slides');
+  const ppt = zipXmlText(await readFile(join(workspace, 'output/sales-review.pptx')));
+  if ((ppt.match(/<p:sld[\s>]/g) || []).length < 2) fail('slides');
 }
 await main(); console.log('DWB_VERIFY_PASS');

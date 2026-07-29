@@ -3,7 +3,7 @@
   "id": "CM-001",
   "version": "1.0.0",
   "title": "Inbox Triage from Mail Export",
-  "prompt": "处理 input/mailbox.json：分类、优先级(P1-P3)、附件索引。输出 triage.csv、attachment-index.csv、summary.md。不发送或删除邮件。",
+  "prompt": "处理 input/mailbox.json：按 labels 分类与优先级（incident→P1，finance→P2，其余→P3），并建附件索引。输出 output/triage.csv（列 message_id,category,priority）、output/attachment-index.csv（列 message_id,filename,size）、output/summary.md。不发送或删除邮件。",
   "profile": "general",
   "capabilities": [
     "read-project",

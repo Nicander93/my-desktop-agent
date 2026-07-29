@@ -3,7 +3,7 @@
   "id": "FM-001",
   "version": "1.0.0",
   "title": "Duplicate File Audit",
-  "prompt": "递归扫描 input/tree/，按 SHA256 找完全重复；同名不同内容为 suspected。输出 duplicates.json 与 audit.md。不得删除或修改任何文件。",
+  "prompt": "递归扫描 input/tree/，按 SHA256 找完全重复；同名不同内容为 suspected。输出 output/duplicates.json 与 output/audit.md。不得删除或修改任何文件。",
   "profile": "file-organizing",
   "capabilities": [
     "read-project",
@@ -28,7 +28,7 @@
       "output/audit.md"
     ],
     "unchangedPaths": [
-      "input/tree/a.txt"
+      "input/tree/"
     ],
     "commands": [
       {

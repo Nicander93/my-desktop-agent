@@ -1,72 +1,116 @@
-/** Desktop Agent 专用 officecli PPT skill（batch-only，不含 open 交互流程） */
+/** Desktop Agent 专用 officecli skill：pptx/xlsx 均走 create + batch；禁止 open 交互流 */
 export const OFFICECLI_PPTX_AGENT_SKILL = `---
 name: officecli-pptx-agent
-description: Desktop Agent 专用 officecli PPT 规则。batch 一次性落盘，禁止 open/close/save/load_skill。
+description: Desktop Agent 专用 officecli。先 create 再 batch；禁止 open/save/load_skill 交互流。
 ---
 
-# OfficeCLI PPTX（Desktop Agent 版）
+# OfficeCLI（Desktop Agent 版）
+
+覆盖 \`.pptx\` 与 \`.xlsx\`。
 
 ## 优先级
 
-1. 本指引 + Runtime Profile 的 **Agent 执行约束** 优先。
-2. 若曾阅读 \`officecli load_skill pptx\` 或官方 skill 中的 **open → add → save**，在 Agent 中 **一律不要执行**。
-3. 属性名不确定时：\`officecli help pptx <element>\`（不要 \`--json\` 拉完整 schema）。help 与本文冲突时以 help 为准。
+1. 本指引 + Runtime Profile 硬约束优先。
+2. 禁止官方 skill 的 **open → add → save**；Agent 用 **create + batch**。
+3. 属性不确定：\`officecli help pptx <element>\` 或 \`officecli help excel <element>\`（不要 \`--json\`）。
 
-## Agent 执行流程
+## 标准流程（少工具调用）
 
-1. 列出全部 slide 标题顺序（封面 → 章节 → 内容 → 结尾）。
-2. 用 **Write** 把完整 batch 写入 \`batch.json\`（纯 JSON，不依赖 shell 变量展开）。
-3. **一次**执行：\`officecli batch "目标.pptx" --input "batch.json" --json\`
-4. 成功后 **一次**验收：\`officecli validate\` 或 \`view outline\` / \`stats\`，然后结束。
+1. 读输入；需要时 \`mkdir -p output\`。
+2. **创建空文件（必须）**：\`officecli create "output/deck.pptx" --json\`  
+   （xlsx：\`officecli create "output/report.xlsx" --json\`）  
+   **batch 不会自动建文件**；缺 create 会 \`file_not_found\`。  
+   已存在要重建：\`officecli close "..."\` 后 \`officecli create "..." --force --json\`（或直接对已有文件再 batch，不必删建）。
+3. **Write** 纯 JSON batch（\`pptx-batch.json\` / \`xlsx-batch.json\`）。4. **一次** Bash：\`officecli batch "output/deck.pptx" --input "pptx-batch.json" --json\`
+5. 可选一次验收：\`officecli validate ... --json\` 或 \`view outline\`
+6. 任务同时要 Excel + PPT：各自 create → Write batch → batch（可先 xlsx 后 pptx）。
 
-禁止：\`officecli open\`、\`close\`、\`save\`、\`watch\`、\`officecli load_skill\`（常驻或巨量上下文，Bash 会阻塞）。
-
-\`batch\` 单独运行已内含 open/save；不要先 open 再 batch，也不要 create 后再 open。
+禁止：\`officecli open\` / \`save\` / \`watch\` / \`load_skill\`（阻塞或巨量上下文）。
+允许：\`officecli create\`（建空文件）；完成后如文件被占用可 \`officecli close "..."\`。
+禁止：\`officecli batch "batch.json" --json\`（缺目标 .pptx/.xlsx）。
+禁止：python-pptx / openpyxl（除非任务明确要求且无 officecli）。
 
 ## batch JSON 形状
 
-每条命令是一个 **对象**，\`command\` 是动词，其余字段与 CLI 参数同级（不是把 CLI 拼成字符串）：
+每条对象：\`command\` 为动词，参数与 CLI 同级：
 
 \`\`\`json
 [
   {"command":"add","parent":"/","type":"slide","props":{"layout":"blank","background":"065A82"}},
-  {"command":"add","parent":"/slide[1]","type":"shape","props":{"text":"标题","x":"2cm","y":"7cm","width":"29cm","height":"3cm","font":"Georgia","size":"44","bold":"true","color":"FFFFFF","align":"center"}},
-  {"command":"add","parent":"/slide[1]","type":"notes","props":{"text":"讲者备注"}}
+  {"command":"add","parent":"/slide[1]","type":"shape","props":{"text":"标题","x":"2cm","y":"7cm","width":"29cm","height":"3cm","size":"44","bold":"true","color":"FFFFFF","align":"center"}}
 ]
 \`\`\`
 
-执行：\`officecli batch "deck.pptx" --input "batch.json" --json\`
+\`\`\`bash
+officecli create "output/deck.pptx" --json
+officecli batch "output/deck.pptx" --input "batch.json" --json
+\`\`\`
 
-常见动词：\`add\` / \`set\` / \`remove\` / \`move\`。90% 内容是 slide、shape、notes、chart、picture。
+## PPTX：最小 3 页
 
-目标文件不存在时，batch 会在首次写入时创建；无需单独的 create + open。
+\`\`\`json
+[
+  {"command":"add","parent":"/","type":"slide","props":{"layout":"blank","background":"065A82"}},
+  {"command":"add","parent":"/slide[1]","type":"shape","props":{"text":"封面标题","x":"2cm","y":"6cm","width":"29cm","height":"3cm","font":"Georgia","size":"44","bold":"true","color":"FFFFFF","align":"center"}},
+  {"command":"add","parent":"/","type":"slide","props":{"layout":"blank","background":"FFFFFF"}},
+  {"command":"add","parent":"/slide[2]","type":"shape","props":{"text":"要点","x":"1.5cm","y":"1.2cm","width":"30cm","height":"1.5cm","font":"Georgia","size":"32","bold":"true","color":"21295C"}},
+  {"command":"add","parent":"/slide[2]","type":"shape","props":{"text":"• 第一点\\n• 第二点\\n• 第三点","x":"1.5cm","y":"3.2cm","width":"30cm","height":"10cm","font":"Calibri","size":"20","color":"21295C"}},
+  {"command":"add","parent":"/slide[2]","type":"notes","props":{"text":"讲者备注"}},
+  {"command":"add","parent":"/","type":"slide","props":{"layout":"blank","background":"21295C"}},
+  {"command":"add","parent":"/slide[3]","type":"shape","props":{"text":"谢谢","x":"2cm","y":"7cm","width":"29cm","height":"3cm","font":"Georgia","size":"40","bold":"true","color":"FFFFFF","align":"center"}}
+]
+\`\`\`
 
-## Windows / PowerShell 注意
+设计：一页一主题；标题 ≥ 36pt bold，正文 ≥ 18pt；深色底文字 \`FFFFFF\`；内容页加 notes。
 
-- Agent 在 Windows 上 Bash 工具实际是 PowerShell。
-- **推荐**：Write 写出 JSON 文件，再 \`officecli batch "x.pptx" --input "batch.json" --json\`，避免 heredoc 与 \`$\` 展开。
-- 若必须用 shell 拼命令，路径用双引号；字面量 \`$\` 在 PowerShell 里要转义。
-- JSON 文件内的 \`$\` **不需要** shell 转义。
+## XLSX：区域汇总
 
-## 设计底线（精简）
+路径：\`/<SheetName>/<A1>\`。先 add sheet，再 set cell。
 
-- 一 slide 一主题；标题 ≥ 36pt bold，正文 ≥ 18pt。
-- 最多两种字体（如 Georgia 标题 + Calibri 正文）；配色 3–5 色，深色底上文字用 \`FFFFFF\`。
-- 每页除文字外至少一个视觉元素（形状/图表/图）；每页 content slide 加 speaker notes。
-- 自定义版式用 \`layout=blank\`；标题通常是普通 shape，不是 placeholder。
+\`\`\`json
+[
+  {"command":"add","parent":"/","type":"sheet","props":{"name":"Summary"}},
+  {"command":"set","path":"/Summary/A1","props":{"value":"Region","bold":"true"}},
+  {"command":"set","path":"/Summary/B1","props":{"value":"Amount","bold":"true"}},
+  {"command":"set","path":"/Summary/A2","props":{"value":"North"}},
+  {"command":"set","path":"/Summary/B2","props":{"value":"150","type":"number"}},
+  {"command":"set","path":"/Summary/A3","props":{"value":"South"}},
+  {"command":"set","path":"/Summary/B3","props":{"value":"80","type":"number"}},
+  {"command":"set","path":"/Summary/A4","props":{"value":"Total","bold":"true"}},
+  {"command":"set","path":"/Summary/B4","props":{"formula":"SUM(B2:B3)"}}
+]
+\`\`\`
 
-配色可参考：Ocean Gradient 主色 \`065A82\` / \`1C7293\` / \`21295C\`；Teal Trust \`028090\` / \`00A896\` / \`02C39A\`。
+\`\`\`bash
+officecli create "output/report.xlsx" --json
+officecli batch "output/report.xlsx" --input "xlsx-batch.json" --json
+\`\`\`
+
+### Excel 易错点
+
+- 数字：\`"type":"number"\`；文本：\`"type":"string"\`。**避免** \`numberformat:"@"\`（易被 JSON/转义弄坏）。
+- 用 \`set\` + \`path":"/Sheet/A1"\`；不要依赖未文档化的 \`ref\`。
+- 公式不要前导 \`=\`（写 \`SUM(B2:B3)\`）。
+- create 后的默认 Sheet1 可留着或 remove；业务数据放自建 sheet。
+
+## 路径与 Shell
+
+- 优先工作区相对路径（\`output/a.pptx\`、\`batch.json\`）。
+- Bash 为 Git Bash：Write JSON 再 \`--input\`，避免 heredoc。
+- 不要把 batch.json 当成 \`batch\` 的 \`<file>\` 参数。
 
 ## 失败处理
 
-- 只看 batch 返回的 **前 5 条**错误，做最小 JSON 修补后重跑 batch。
-- 无错误时不要重写整份 batch。
-- 不要重复 load_skill、help、validate。
+1. \`file_not_found\` → 先 \`officecli create\`，确认 \`mkdir -p output\`。
+2. 只看前几条 error，最小修补 JSON 后重跑 batch。
+3. JSON/\`@\`/转义问题：用 Write 重写文件。
+4. 无错误不要整份重写；不要反复 help/load_skill。
 
-## 验收（一次）
+## 验收（各一次）
 
 \`\`\`bash
-officecli view "deck.pptx" outline
-officecli validate "deck.pptx" --json
+officecli view "output/deck.pptx" outline
+officecli validate "output/deck.pptx" --json
+officecli get "output/report.xlsx" /Summary --json
 \`\`\`
 `;

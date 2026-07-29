@@ -61,10 +61,18 @@ async function main() {
   if (!src.includes('semver.compare')) fail('must use semver.compare');
   const note = await readFile(join(workspace, 'output/migration-note.md'), 'utf8');
   if (!note.toLowerCase().includes('semver')) fail('migration note');
+  const install = spawnSync('npm', ['install', '--no-fund', '--no-audit'], {
+    cwd: workspace,
+    shell: true,
+    encoding: 'utf8',
+  });
+  if (install.status !== 0) fail(`npm install failed: ${install.stderr || install.stdout}`);
   try {
     await access(join(workspace, 'node_modules/semver'), constants.F_OK);
-    const r = spawnSync('npm', ['test'], { cwd: workspace, shell: true, encoding: 'utf8' });
-    if (r.status !== 0) fail('tests failed');
-  } catch { /* skip npm test when node_modules absent in reference snapshot */ }
+  } catch {
+    fail('semver missing after npm install');
+  }
+  const r = spawnSync('npm', ['test'], { cwd: workspace, shell: true, encoding: 'utf8' });
+  if (r.status !== 0) fail(`tests failed: ${r.stderr || r.stdout}`);
 }
 await main(); console.log('DWB_VERIFY_PASS');

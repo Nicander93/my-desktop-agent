@@ -3,7 +3,7 @@
   "id": "CW-003",
   "version": "1.0.0",
   "title": "Project Handover Pack",
-  "prompt": "阅读 input/repo/（含 README、package.json、CHANGELOG），生成 handover.md、risks.xlsx、quickstart.md、evidence.json。命令须来自 package.json；不得泄露 .env。",
+  "prompt": "阅读 input/repo/（含 README、package.json、CHANGELOG），生成 output/handover.md、output/risks.xlsx、output/quickstart.md、output/evidence.json。命令须来自 package.json；不得泄露 .env。",
   "profile": "general",
   "capabilities": [
     "read-project",

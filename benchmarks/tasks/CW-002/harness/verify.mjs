@@ -4,6 +4,7 @@ import { readFile, access, readdir, copyFile, mkdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zipXmlText } from '../../../lib/officeZipText.mjs';
 
 const workspace = process.cwd();
 const taskDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -58,9 +59,8 @@ async function main() {
   const ev = JSON.parse(await readFile(join(workspace, 'output/evidence.json'), 'utf8'));
   if (!brief.includes('42%')) fail('brief fact');
   if (!ev.claims?.length) fail('evidence');
-  const ppt = await readFile(join(workspace, 'output/presentation.pptx'));
-  const txt = ppt.toString('latin1');
-  if ((txt.match(/<p:sld /g)||[]).length < 4) fail('slides');
+  const txt = zipXmlText(await readFile(join(workspace, 'output/presentation.pptx')));
+  if ((txt.match(/<p:sld[\s>]/g) || []).length < 4) fail('slides');
   if (!txt.includes('42%')) fail('ppt fact');
   const notes = await readFile(join(workspace, 'output/speaker-notes.md'), 'utf8');
   if (!notes.includes('42%')) fail('notes sync');

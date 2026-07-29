@@ -34,6 +34,7 @@ async function verifyRoot(root) {
   for (const [n, h] of before) if (after.get(n) !== h) fail('downloads modified: ' + n);
   const manifest = JSON.parse(await readFile(join(root, 'manifest.json'), 'utf8'));
   const dups = JSON.parse(await readFile(join(root, 'duplicates.json'), 'utf8'));
+  if (manifest.dryRun !== true) fail('manifest.dryRun must be true');
   const names = [...before.keys()];
   if (manifest.fileCount !== names.length) fail('manifest fileCount mismatch');
   const hashGroups = new Map();

@@ -36,4 +36,13 @@ describe('resolveToolPath', () => {
   it('skips MSYS conversion on linux', () => {
     expect(resolveToolPath('/home/ws', '/d/code/a.txt', 'linux')).toBe('/d/code/a.txt')
   })
+
+  it('maps POSIX /workspace paths into cwd on win32 instead of drive root', () => {
+    expect(resolveToolPath('D:\\eval\\run\\workspace', '/workspace/process.py', 'win32')).toBe(
+      'D:\\eval\\run\\workspace\\workspace\\process.py',
+    )
+    expect(resolveToolPath('D:\\eval\\run\\workspace', '/usr/bin/bash', 'win32')).toBe(
+      'D:\\eval\\run\\workspace\\usr\\bin\\bash',
+    )
+  })
 })

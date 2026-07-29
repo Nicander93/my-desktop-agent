@@ -10,7 +10,7 @@ export const SKILL_CATALOG: SkillCatalogEntry[] = [
     id: 'officecli',
     name: 'officecli',
     displayName: 'OfficeCLI',
-    description: 'Desktop Agent 版 officecli：PPT/Office 用 batch 一次性落盘（禁止 open 常驻）',
+    description: 'Desktop Agent 版 officecli：PPT/Excel 用 batch 一次性落盘（禁止 open 常驻）',
     category: 'office',
     sourcePath: 'bundled:officecli-pptx-agent',
     bundledContent: OFFICECLI_PPTX_AGENT_SKILL,

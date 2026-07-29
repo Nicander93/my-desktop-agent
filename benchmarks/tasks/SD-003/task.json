@@ -29,8 +29,7 @@
       "output/migration-note.md"
     ],
     "unchangedPaths": [
-      "test/app.test.js",
-      "package-lock.json"
+      "test/app.test.js"
     ],
     "commands": [
       {

@@ -3,7 +3,7 @@
   "id": "CW-002",
   "version": "1.0.0",
   "title": "Research to Presentation",
-  "prompt": "从 input/sources/ 生成 research-brief.md、presentation.pptx（≥4 页）、speaker-notes.md、evidence.json。结论需有证据，PPT 与摘要一致。",
+  "prompt": "从 input/sources/ 生成 output/research-brief.md、output/presentation.pptx（≥4 页）、output/speaker-notes.md、output/evidence.json。结论需有证据，PPT 与摘要一致。",
   "profile": "office-pptx",
   "capabilities": [
     "read-project",

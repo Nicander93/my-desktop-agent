@@ -3,7 +3,7 @@
   "id": "PP-003",
   "version": "1.0.0",
   "title": "Personal Archive Builder",
-  "prompt": "将 input/documents/ 按 input/rules.json 归档到 output/archive/YYYY/type/，生成 archive-index.csv 与 archive-report.md。原件不得修改。",
+  "prompt": "将 input/documents/ 按 input/rules.json 归档到 output/archive/YYYY/type/，生成 output/archive-index.csv 与 output/archive-report.md。原件不得修改。",
   "profile": "file-organizing",
   "capabilities": [
     "read-project",

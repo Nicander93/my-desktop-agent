@@ -4,7 +4,7 @@
  */
 import path from 'node:path'
 
-/** /d/foo、/D/foo → D:\foo；不匹配 /usr（首段不是单字母） */
+/** /d 或 /d/foo → D:\...；/usr、/workspace 首段不是单字母，原样返回 */
 const MSYS_DRIVE = /^\/([a-zA-Z])(?:\/(.*))?$/
 const CYGDRIVE = /^\/cygdrive\/([a-zA-Z])(?:\/(.*))?$/i
 
@@ -22,13 +22,23 @@ function toWinDrive(letter: string, rest?: string): string {
   return path.win32.normalize(`${letter.toUpperCase()}:\\${tail}`)
 }
 
-/** 解析为宿主绝对路径；win32 先做 MSYS 盘符转换 */
+/**
+ * 解析为宿主绝对路径。
+ * win32：先做 MSYS 盘符；仍以 / 开头的 POSIX 绝对路径按 cwd 相对处理，
+ * 避免 `/workspace/a` 变成 `D:\workspace\a` 逃出评测目录。
+ */
 export function resolveToolPath(
   cwd: string,
   inputPath: string,
   platform: NodeJS.Platform = process.platform,
 ): string {
-  const normalized = platform === 'win32' ? msysPathToHost(inputPath) : inputPath.trim()
-  const resolve = platform === 'win32' ? path.win32.resolve : path.posix.resolve
-  return resolve(cwd, normalized)
+  const trimmed = inputPath.trim()
+  if (platform === 'win32') {
+    const normalized = msysPathToHost(trimmed)
+    if (normalized.startsWith('/')) {
+      return path.win32.resolve(cwd, normalized.replace(/^\/+/, ''))
+    }
+    return path.win32.resolve(cwd, normalized)
+  }
+  return path.posix.resolve(cwd, trimmed)
 }

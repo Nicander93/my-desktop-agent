@@ -3,7 +3,7 @@
   "id": "MP-003",
   "version": "1.0.0",
   "title": "Audio Transcript Package",
-  "prompt": "整理 input/raw-transcript.vtt 与 input/speakers.json，输出 transcript.md、segments.csv（start,end,speaker,text）、summary.md。时间戳单调，文本完整。",
+  "prompt": "整理 input/raw-transcript.vtt 与 input/speakers.json，输出 output/transcript.md、output/segments.csv（start,end,speaker,text）、output/summary.md。时间戳单调，文本完整。",
   "profile": "general",
   "capabilities": [
     "read-project",

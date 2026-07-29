@@ -33,13 +33,17 @@ function splitCsvLine(line) {
   return out.map((v) => v.trim());
 }
 
+function normalizeEol(buf) {
+  return Buffer.from(buf.toString('utf8').replace(/\r\n/g, '\n'));
+}
+
 async function hashTree(rel) {
   const base = join(workspace, rel);
   const names = await readdir(base, { withFileTypes: true });
   const parts = [];
   for (const e of names.sort((a, b) => a.name.localeCompare(b.name))) {
     if (e.isFile()) {
-      const buf = await readFile(join(base, e.name));
+      const buf = normalizeEol(await readFile(join(base, e.name)));
       parts.push(`${e.name}:${createHash('sha256').update(buf).digest('hex')}`);
     }
   }
@@ -58,15 +62,15 @@ const expectedLogs = await (async () => {
   const names = await readdir(base);
   const parts = [];
   for (const n of names.sort()) {
-    const buf = await readFile(join(base, n));
+    const buf = normalizeEol(await readFile(join(base, n)));
     parts.push(`${n}:${createHash('sha256').update(buf).digest('hex')}`);
   }
   return parts.join('|');
 })();
 if (fixtureLogs !== expectedLogs) fail('input/logs modified');
 
-const fixtureEvents = await readFile(join(taskDir, 'fixture/input/events.json'), 'utf8');
-if (fixtureEvents !== events) fail('input/events.json modified');
+const fixtureEvents = normalizeEol(await readFile(join(taskDir, 'fixture/input/events.json'), 'utf8')).toString('utf8');
+if (fixtureEvents !== normalizeEol(Buffer.from(events, 'utf8')).toString('utf8')) fail('input/events.json modified');
 
 const report = await readFile(join(workspace, 'output/incident-report.md'), 'utf8');
 if (!report.includes('## Facts')) fail('incident-report.md missing ## Facts');

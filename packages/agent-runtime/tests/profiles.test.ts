@@ -11,8 +11,9 @@ describe('runtime profiles', () => {
   it('maps office-pptx policy to agent query options with fast path', () => {
     const policy = getRuntimeProfilePolicy('office-pptx');
     expect(policy?.appendSystemPrompt).toContain('officecli batch');
-    expect(policy?.appendSystemPrompt).toContain('禁止用 python-pptx');
-    expect(policy?.appendSystemPrompt).toContain('officecli open');
+    expect(policy?.appendSystemPrompt).toContain('禁止 python-pptx');
+    expect(policy?.appendSystemPrompt).toContain('officecli create');
+    expect(policy?.appendSystemPrompt).toContain('batch 不会自动建文件');
     expect(policy?.appendSystemPrompt).toContain('相对路径');
     expect(policy?.maxTurns).toBe(8);
     expect(profilePolicyToAgentOptions(policy)).toEqual(expect.objectContaining({

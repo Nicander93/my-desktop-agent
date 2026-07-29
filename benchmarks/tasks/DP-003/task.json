@@ -3,7 +3,7 @@
   "id": "DP-003",
   "version": "1.0.0",
   "title": "Reusable Format Converter",
-  "prompt": "实现 converter/convert.mjs 支持 JSON→CSV（dot 键降维）。批量处理 input/batch/，输出 converted/ 与 report.json（含 failed）。",
+  "prompt": "实现 converter/convert.mjs 支持 JSON→CSV（dot 键降维）。批量处理 input/batch/，输出到 output/converted/ 与 output/report.json（含 failed）。",
   "profile": "coding",
   "capabilities": [
     "read-project",

@@ -3,7 +3,7 @@
   "id": "SA-003",
   "version": "1.0.0",
   "title": "Disk Cleanup Plan",
-  "prompt": "分析 input/inventory.json，输出 cleanup-plan.csv（path,size_bytes,risk,action）与 summary.md。risk=high 含 protected/；不删除文件。",
+  "prompt": "分析 input/inventory.json，输出 output/cleanup-plan.csv（path,size_bytes,risk,action）与 output/summary.md。risk=high 含 protected/；不删除文件。",
   "profile": "file-organizing",
   "capabilities": [
     "read-project",

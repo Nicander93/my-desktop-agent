@@ -3,7 +3,7 @@
   "id": "BW-002",
   "version": "1.0.0",
   "title": "Sales Performance Pack",
-  "prompt": "分析 input/sales.csv，生成 output/sales-analysis.xlsx（区域汇总）、output/management-brief.pptx（≥3 页，含 top region）、output/metrics.json。跨文件数字一致。",
+  "prompt": "分析 input/sales.csv，生成 output/sales-analysis.xlsx（区域汇总）、output/management-brief.pptx（≥3 页，正文含 top region 名）、output/metrics.json（字段：total 数字、topRegion 字符串、topAmount 数字、pptSlideCount 数字）。跨文件数字与页数一致。",
   "profile": "office-pptx",
   "capabilities": [
     "read-project",

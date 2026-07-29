@@ -4,6 +4,7 @@ import { readFile, access, readdir, copyFile, mkdir } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { zipXmlText } from '../../../lib/officeZipText.mjs';
 
 const workspace = process.cwd();
 const taskDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -61,7 +62,7 @@ async function main() {
   if (hand.includes('SECRET_KEY') || hand.includes('super-secret')) fail('secret leaked');
   const ev = JSON.parse(await readFile(join(workspace, 'output/evidence.json'), 'utf8'));
   if (!ev.risks?.length) fail('risks evidence');
-  const xlsx = await readFile(join(workspace, 'output/risks.xlsx'));
-  if (!xlsx.toString('latin1').includes('No CI')) fail('risk row');
+  const xlsx = zipXmlText(await readFile(join(workspace, 'output/risks.xlsx')));
+  if (!xlsx.includes('No CI')) fail('risk row');
 }
 await main(); console.log('DWB_VERIFY_PASS');

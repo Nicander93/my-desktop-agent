@@ -1,11 +1,11 @@
 /**
- * Verifier：必存文件 → 保护文件未改 → 命令 → 声明式 checks。
+ * Verifier：必存文件 → 保护文件/目录未改 → 命令 → 声明式 checks。
  * 若存在 hidden-fixtures/<taskId>，命令执行前注入 DWB_HIDDEN_ROOT（不进 workspace）。
  * 路径都走 resolveInside，不许逃出 workspace。
  */
-import { access, readFile } from 'node:fs/promises';
+import { access, readdir, readFile, stat } from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { dirname, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import type { EvaluationCheck, EvaluationTask, EvaluationVerification } from '@desktop-agent/shared';
 import { resolveHiddenFixtureRoot } from './metadata.js';
@@ -47,18 +47,67 @@ async function requiredFileCheck(path: string, workspacePath: string): Promise<E
   }
 }
 
-/** 和 baseline 比字节，防改测试 / package.json */
+/** 和 baseline 比：文件比字节；目录递归比相对路径与内容 */
 async function unchangedFileCheck(path: string, workspacePath: string, baselinePath: string): Promise<EvaluationCheck> {
   const started = performance.now();
   try {
-    const [current, baseline] = await Promise.all([
-      readFile(resolveInside(workspacePath, path)),
-      readFile(resolveInside(baselinePath, path)),
-    ]);
+    const currentPath = resolveInside(workspacePath, path);
+    const baselineResolved = resolveInside(baselinePath, path);
+    const [currentStat, baselineStat] = await Promise.all([stat(currentPath), stat(baselineResolved)]);
+    if (currentStat.isDirectory() || baselineStat.isDirectory()) {
+      if (!currentStat.isDirectory() || !baselineStat.isDirectory()) {
+        return result(`unchanged:${path}`, false, `Protected path type mismatch (file vs directory): ${path}`, started);
+      }
+      const diff = await diffDirectories(currentPath, baselineResolved);
+      return result(
+        `unchanged:${path}`,
+        diff === undefined,
+        diff === undefined ? `Protected directory unchanged: ${path}` : `Protected directory changed: ${path} (${diff})`,
+        started,
+      );
+    }
+    const [current, baseline] = await Promise.all([readFile(currentPath), readFile(baselineResolved)]);
     return result(`unchanged:${path}`, current.equals(baseline), current.equals(baseline) ? `Protected file unchanged: ${path}` : `Protected file changed: ${path}`, started);
   } catch (error) {
     return result(`unchanged:${path}`, false, error instanceof Error ? error.message : String(error), started);
   }
+}
+
+async function diffDirectories(currentRoot: string, baselineRoot: string): Promise<string | undefined> {
+  const [currentFiles, baselineFiles] = await Promise.all([
+    listRelativeFiles(currentRoot),
+    listRelativeFiles(baselineRoot),
+  ]);
+  const currentSet = new Set(currentFiles);
+  const baselineSet = new Set(baselineFiles);
+  for (const file of baselineFiles) {
+    if (!currentSet.has(file)) return `missing ${file}`;
+  }
+  for (const file of currentFiles) {
+    if (!baselineSet.has(file)) return `extra ${file}`;
+  }
+  for (const file of baselineFiles) {
+    const [a, b] = await Promise.all([
+      readFile(join(currentRoot, file)),
+      readFile(join(baselineRoot, file)),
+    ]);
+    if (!a.equals(b)) return `modified ${file}`;
+  }
+  return undefined;
+}
+
+async function listRelativeFiles(root: string): Promise<string[]> {
+  const files: string[] = [];
+  async function walk(dir: string, prefix: string): Promise<void> {
+    const entries = await readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) await walk(join(dir, entry.name), rel);
+      else if (entry.isFile()) files.push(rel.replace(/\\/g, '/'));
+    }
+  }
+  await walk(root, '');
+  return files.sort();
 }
 
 /** pnpm 自动加 --ignore-workspace；resolveArgsFromTaskDir 把相对 args 锚到 task 目录 */

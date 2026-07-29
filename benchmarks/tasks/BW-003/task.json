@@ -3,7 +3,7 @@
   "id": "BW-003",
   "version": "1.0.0",
   "title": "Contract Obligation Register",
-  "prompt": "从 input/contracts/*.txt 提取字段到 output/contract-register.xlsx、output/evidence.json（字段→文件:行号）、output/review-notes.md。缺失不补造。",
+  "prompt": "从 input/contracts/*.txt 提取 Party/Amount/Renewal 到 output/contract-register.xlsx（需含 Acme Corp 与金额数字 50000）、output/evidence.json（形如 {\"party\":{\"file\":\"c1.txt\",\"line\":1},\"amount\":{\"file\":\"c1.txt\",\"line\":1}}）、output/review-notes.md（注明 c2 缺失字段）。缺失不补造。",
   "profile": "office",
   "capabilities": [
     "read-project",

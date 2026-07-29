@@ -17,6 +17,7 @@ import { prepareWorkspace, writeDiff } from './workspace.js';
 export interface AgentExecution {
   text: string;
   trace: unknown[];
+  error?: string;
 }
 
 export interface AgentExecutor {
@@ -44,8 +45,7 @@ export class RuntimeAgentExecutor implements AgentExecutor {
     try {
       const evaluationPrompt = [
         'This is an isolated evaluation workspace. Work only inside the current working directory.',
-        'Do not modify tests or package.json. Inspect the source and tests, make the smallest correct source change, and verify it.',
-        'When this fixture uses pnpm, run its scripts as `pnpm --ignore-workspace <script>` so it stays isolated from the host repository.',
+        ...codingEvalConstraints(task),
         task.prompt,
       ].join('\n\n');
       const stream = await runtime.sendMessage(
@@ -78,8 +78,11 @@ export class RuntimeAgentExecutor implements AgentExecutor {
           }
         }
       }
-      if (executionError) throw new Error(executionError);
-      return { text, trace: runtime.getAgent(sessionId)?.getTrace() ?? [] };
+      return {
+        text,
+        trace: runtime.getAgent(sessionId)?.getTrace() ?? [],
+        ...(executionError ? { error: executionError } : {}),
+      };
     } finally {
       this.sessions.delete(sessionId);
       await runtime.close(sessionId);
@@ -129,6 +132,7 @@ export async function runTask(task: LoadedEvaluationTask, options: {
       task.limits?.timeoutMs,
       () => options.executor.cancel?.(sessionId),
     );
+    if (execution.error) error = execution.error;
   } catch (cause) {
     timedOut = cause instanceof EvaluationTimeoutError;
     error = cause instanceof Error ? cause.message : String(cause);
@@ -187,6 +191,20 @@ function classifyFailure(timedOut: boolean, error: string | undefined, trace: un
     return { category: 'environment', reason: 'A required tool process could not be started.' };
   }
   return verifierPassed ? undefined : { category: 'verifier', reason: 'One or more deterministic verification checks failed.' };
+}
+
+/** coding 任务才禁改 package.json/tests；SD-003 等依赖升级任务以 task.prompt 为准 */
+function codingEvalConstraints(task: EvaluationTask): string[] {
+  if (task.profile !== 'coding') {
+    return ['Prefer creating outputs under the paths named in the task. Do not modify protected input fixtures.'];
+  }
+  const mayTouchPackageJson = /\bpackage\.json\b/i.test(task.prompt) && /(升级|upgrade|dependenc)/i.test(task.prompt);
+  return [
+    mayTouchPackageJson
+      ? 'You may update package.json when the task requires a dependency upgrade. Do not modify tests unless the task explicitly asks.'
+      : 'Do not modify tests or package.json. Inspect the source and tests, make the smallest correct source change, and verify it.',
+    'When this fixture uses pnpm, run its scripts as `pnpm --ignore-workspace <script>` so it stays isolated from the host repository.',
+  ];
 }
 
 class EvaluationTimeoutError extends Error {}

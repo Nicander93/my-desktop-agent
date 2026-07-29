@@ -7,16 +7,19 @@
 根目录：
 
 ```bash
-pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json --model <m> --base-url <url>
-pnpm eval:coding:smoke -- --model <m> --base-url <url>
-pnpm eval:dwb -- --model <m> --base-url <url>
-pnpm eval -- --task-id DP-001 --repeat 5 --model <m> --base-url <url>
+# 模型/BaseURL 优先读仓库根 .env（CODEANY_MODEL / CODEANY_BASE_URL）
+pnpm eval -- --task benchmarks/tasks/coding-bugfix-basic/task.json
+pnpm eval:coding:smoke
+pnpm eval:dwb
+pnpm eval -- --task-id DP-001 --repeat 5
+# 多现场并行：拆成 N 个独立子进程，各跑一批任务
+pnpm eval -- --all --concurrency 4 --output eval-results/_full-run
 pnpm eval:report -- --group-by domain,difficulty
 ```
 
-常用 flag：`--suite` / `--task-id` / `--tag` / `--domain` / `--difficulty` / `--repeat` / `--diagnose` / `--dry-run` / `--quiet`。
+常用 flag：`--suite` / `--task-id` / `--tag` / `--domain` / `--difficulty` / `--repeat` / `--concurrency` / `--diagnose` / `--dry-run` / `--quiet` / `--all`。
 
-Key：`AGENT_EVAL_API_KEY` 或 `.env` 的 `CODEANY_API_KEY`。模型：`--model` / `--base-url` 或 `CODEANY_MODEL` / `CODEANY_BASE_URL`。
+Key：`AGENT_EVAL_API_KEY` 或 `.env` 的 `CODEANY_API_KEY`。模型：`.env` 的 `CODEANY_MODEL` / `CODEANY_BASE_URL`（也可 `--model` / `--base-url` 覆盖）。
 
 Windows 下 Bash 工具走 `~/.desktop-agent/binaries/git-bash`（与 Electron 相同）；没有就先 `pnpm setup:binaries`。
 
