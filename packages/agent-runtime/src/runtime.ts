@@ -55,6 +55,8 @@ export interface AgentQueryOptions {
   subprocessEnv?: Record<string, string>;
   allowedTools?: string[];
   disallowedTools?: string[];
+  /** 显式回合上限；优先于 profile 默认（如 office-pptx=8） */
+  maxTurns?: number;
 }
 
 /** 给 pathGuard 用的检查参数 */
@@ -319,7 +321,7 @@ export class AgentRuntime {
   /**
    * 拼本轮 AgentOptions。
    * 工具名单：显式覆盖 > profile > capability 默认表。
-   * office 不加 skill hint，免得和 OFFICE_FAST_PATH 打架。
+   * office-pptx 不加 skill hint，免得和 OFFICE_FAST_PATH 打架。
    */
   private buildQueryOverrides(
     queryOptions?: AgentQueryOptions,
@@ -327,7 +329,10 @@ export class AgentRuntime {
     const policy = getRuntimeProfilePolicy(queryOptions?.profile);
     const resolvedPolicy = resolveExecutionPolicy({ requestedProfile: queryOptions?.profile, capabilities: queryOptions?.capabilities });
     const profileOptions = profilePolicyToAgentOptions(policy);
-    const skipSkillHint = policy?.profile === 'office';
+    const { maxTurns: _profileMaxTurns, ...profileOptionsRest } = profileOptions;
+    // query / 任务显式 maxTurns > profile 默认 > Runtime 构造参数
+    const maxTurns = queryOptions?.maxTurns ?? policy?.maxTurns ?? this.options.maxTurns;
+    const skipSkillHint = policy?.profile === 'office-pptx';
     const parts = [
       policy?.appendSystemPrompt,
       skipSkillHint ? undefined : buildSkillMentionHint(queryOptions?.skillMentions ?? []),
@@ -336,9 +341,10 @@ export class AgentRuntime {
     ].filter(Boolean);
     const subprocessEnvOverride = queryOptions?.subprocessEnv;
     const toolOverrides = queryOptions?.allowedTools || queryOptions?.disallowedTools;
-    if (parts.length === 0 && Object.keys(profileOptions).length === 0 && !subprocessEnvOverride && !toolOverrides && !queryOptions?.capabilities?.length) return undefined;
+    if (parts.length === 0 && Object.keys(profileOptionsRest).length === 0 && !subprocessEnvOverride && !toolOverrides && !queryOptions?.capabilities?.length && queryOptions?.maxTurns == null && !policy?.maxTurns) return undefined;
     return {
-      ...profileOptions,
+      ...profileOptionsRest,
+      maxTurns,
       ...(queryOptions?.allowedTools ? { allowedTools: queryOptions.allowedTools } : policy?.allowedTools ? {} : { allowedTools: resolvedPolicy.tools.allowed }),
       ...(queryOptions?.disallowedTools ? { disallowedTools: queryOptions.disallowedTools } : {}),
       ...(parts.length > 0 ? { appendSystemPrompt: parts.join('\n\n') } : {}),

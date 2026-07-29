@@ -3,8 +3,8 @@
  */
 
 import { readFile, writeFile } from 'fs/promises'
-import { resolve } from 'path'
 import { defineTool } from './types.js'
+import { resolveToolPath } from '../utils/toolPath.js'
 
 export const NotebookEditTool = defineTool({
   name: 'NotebookEdit',
@@ -40,7 +40,7 @@ export const NotebookEditTool = defineTool({
   isReadOnly: false,
   isConcurrencySafe: false,
   async call(input, context) {
-    const filePath = resolve(context.cwd, input.file_path)
+    const filePath = resolveToolPath(context.cwd, input.file_path)
 
     try {
       const content = await readFile(filePath, 'utf-8')

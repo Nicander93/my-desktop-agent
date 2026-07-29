@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "title": "Sales Reporting Pipeline",
   "prompt": "清洗 input/sales-raw.csv（去空白、数值化 amount），生成 sales-report.xlsx、sales-review.pptx、consistency.json。三处 total 必须一致。",
-  "profile": "office",
+  "profile": "office-pptx",
   "capabilities": [
     "read-project",
     "transform-data",

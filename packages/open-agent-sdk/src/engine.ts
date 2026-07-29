@@ -345,8 +345,9 @@ export class QueryEngine {
       try {
         if (useStreaming) {
           // Streaming path: consume chunks and yield partial messages
+          // async generator 的 fetch 在首次 next() 才执行；先 prime 再交给 withRetry
           const makeStream = async () => {
-            return this.provider.createStreamingMessage!({
+            const gen = this.provider.createStreamingMessage!({
               model: this.config.model,
               maxTokens: this.config.maxTokens,
               system: systemPrompt,
@@ -362,6 +363,16 @@ export class QueryEngine {
                   : undefined,
               promptCache,
             })
+            const iterator = gen[Symbol.asyncIterator]()
+            const first = await iterator.next()
+            return (async function* () {
+              if (!first.done) yield first.value
+              while (true) {
+                const next = await iterator.next()
+                if (next.done) break
+                yield next.value
+              }
+            })()
           }
 
           const stream = await withRetry(makeStream, undefined, this.config.abortSignal)

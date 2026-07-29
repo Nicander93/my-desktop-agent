@@ -214,6 +214,50 @@ export class OpenAIProvider implements LLMProvider {
     let stopReason: string = 'end_turn'
     let usage: CreateMessageResponse['usage'] = { input_tokens: 0, output_tokens: 0 }
 
+    const buildStopContent = (): NormalizedResponseBlock[] => {
+      const content: NormalizedResponseBlock[] = []
+      const textToolCall = toolCalls.size === 0
+        ? parseTextToolCall(fullContent, tools)
+        : undefined
+
+      if (fullReasoning) {
+        content.push({ type: 'thinking', thinking: fullReasoning })
+      }
+
+      if (fullContent && !textToolCall) {
+        content.push({ type: 'text', text: fullContent })
+      }
+
+      if (textToolCall) {
+        content.push({
+          type: 'tool_use',
+          id: textToolCall.id,
+          name: textToolCall.function.name,
+          input: JSON.parse(textToolCall.function.arguments),
+        })
+        stopReason = 'tool_calls'
+      }
+
+      const sortedToolCalls = Array.from(toolCalls.entries()).sort(
+        ([a], [b]) => a - b,
+      )
+      for (const [, tc] of sortedToolCalls) {
+        const input = parseToolArguments(tc.arguments)
+        content.push({
+          type: 'tool_use',
+          id: tc.id,
+          name: tc.name,
+          input,
+        })
+      }
+
+      if (content.length === 0) {
+        content.push({ type: 'text', text: '' })
+      }
+      return content
+    }
+
+    let stopped = false
     try {
       while (true) {
         const { done, value } = await reader.read()
@@ -229,53 +273,12 @@ export class OpenAIProvider implements LLMProvider {
 
           const data = trimmed.slice(6)
           if (data === '[DONE]') {
-            // Build final content blocks
-            const content: NormalizedResponseBlock[] = []
-            const textToolCall = toolCalls.size === 0
-              ? parseTextToolCall(fullContent, tools)
-              : undefined
-
-            if (fullReasoning) {
-              content.push({ type: 'thinking', thinking: fullReasoning })
-            }
-
-            if (fullContent && !textToolCall) {
-              content.push({ type: 'text', text: fullContent })
-            }
-
-            if (textToolCall) {
-              content.push({
-                type: 'tool_use',
-                id: textToolCall.id,
-                name: textToolCall.function.name,
-                input: JSON.parse(textToolCall.function.arguments),
-              })
-              stopReason = 'tool_calls'
-            }
-
-            // Sort tool calls by index and add them
-            const sortedToolCalls = Array.from(toolCalls.entries()).sort(
-              ([a], [b]) => a - b,
-            )
-            for (const [, tc] of sortedToolCalls) {
-              const input = parseToolArguments(tc.arguments)
-              content.push({
-                type: 'tool_use',
-                id: tc.id,
-                name: tc.name,
-                input,
-              })
-            }
-
-            if (content.length === 0) {
-              content.push({ type: 'text', text: '' })
-            }
-
+            stopped = true
             yield {
               type: 'message_stop',
               stopReason: this.mapFinishReason(stopReason),
               usage,
-              content,
+              content: buildStopContent(),
             }
             return
           }
@@ -349,6 +352,16 @@ export class OpenAIProvider implements LLMProvider {
           } catch {
             // Skip malformed JSON lines
           }
+        }
+      }
+
+      // 部分本地服务不发 [DONE]，流结束后仍要交出累积内容
+      if (!stopped) {
+        yield {
+          type: 'message_stop',
+          stopReason: this.mapFinishReason(stopReason),
+          usage,
+          content: buildStopContent(),
         }
       }
     } finally {

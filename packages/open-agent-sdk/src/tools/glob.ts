@@ -2,8 +2,8 @@
  * GlobTool - File pattern matching
  */
 
-import { resolve } from 'path'
 import { defineTool } from './types.js'
+import { resolveToolPath } from '../utils/toolPath.js'
 
 export const GlobTool = defineTool({
   name: 'Glob',
@@ -25,7 +25,7 @@ export const GlobTool = defineTool({
   isReadOnly: true,
   isConcurrencySafe: true,
   async call(input, context) {
-    const searchDir = input.path ? resolve(context.cwd, input.path) : context.cwd
+    const searchDir = input.path ? resolveToolPath(context.cwd, input.path) : context.cwd
     const { pattern } = input
 
     try {

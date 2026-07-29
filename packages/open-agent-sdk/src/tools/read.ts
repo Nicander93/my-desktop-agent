@@ -3,8 +3,8 @@
  */
 
 import { readFile, stat } from 'fs/promises'
-import { resolve } from 'path'
 import { defineTool } from './types.js'
+import { resolveToolPath } from '../utils/toolPath.js'
 
 export const FileReadTool = defineTool({
   name: 'Read',
@@ -14,7 +14,7 @@ export const FileReadTool = defineTool({
     properties: {
       file_path: {
         type: 'string',
-        description: 'The absolute path to the file to read',
+        description: 'Path to the file (prefer workspace-relative, e.g. input/a.csv). Absolute Windows or Git Bash /d/... paths also work.',
       },
       offset: {
         type: 'number',
@@ -30,7 +30,7 @@ export const FileReadTool = defineTool({
   isReadOnly: true,
   isConcurrencySafe: true,
   async call(input, context) {
-    const filePath = resolve(context.cwd, input.file_path)
+    const filePath = resolveToolPath(context.cwd, input.file_path)
 
     try {
       const fileStat = await stat(filePath)

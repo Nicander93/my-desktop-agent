@@ -18,6 +18,8 @@ pnpm eval:report -- --group-by domain,difficulty
 
 Key：`AGENT_EVAL_API_KEY` 或 `.env` 的 `CODEANY_API_KEY`。模型：`--model` / `--base-url` 或 `CODEANY_MODEL` / `CODEANY_BASE_URL`。
 
+Windows 下 Bash 工具走 `~/.desktop-agent/binaries/git-bash`（与 Electron 相同）；没有就先 `pnpm setup:binaries`。
+
 ## 文档
 
 - 任务与跑法：[benchmarks/README.md](../../benchmarks/README.md)

@@ -4,7 +4,7 @@
  */
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { EvaluationTask } from '@desktop-agent/shared';
+import { isAgentRuntimeProfile, type EvaluationTask } from '@desktop-agent/shared';
 import { loadTaskMetadata, type TaskMetadata } from './metadata.js';
 
 export interface LoadedEvaluationTask extends EvaluationTask {
@@ -25,6 +25,9 @@ function validateTask(task: Partial<EvaluationTask>, path: string): asserts task
   const requiredText: Array<keyof EvaluationTask> = ['id', 'version', 'title', 'prompt', 'profile', 'fixture'];
   for (const field of requiredText) {
     if (typeof task[field] !== 'string' || !task[field]) throw new Error(`${path}: task.${field} must be a non-empty string.`);
+  }
+  if (typeof task.profile !== 'string' || !isAgentRuntimeProfile(task.profile)) {
+    throw new Error(`${path}: task.profile must be a known AgentRuntimeProfile.`);
   }
   if (task.schemaVersion !== 1) throw new Error(`${path}: unsupported task schemaVersion.`);
   if (!Array.isArray(task.capabilities)) throw new Error(`${path}: task.capabilities must be an array.`);

@@ -6,7 +6,7 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import {
   AgentRuntime,
-  inferRuntimeProfile,
+  classifyRuntimeProfile,
   type RuntimeOptions,
 } from '@desktop-agent/agent-runtime';
 import type { AgentSendMessageOptions } from '@desktop-agent/shared';
@@ -131,9 +131,31 @@ export function registerAgentHandlers(
     };
   }
 
-  /** 推断 profile，并按它重建 subprocessEnv */
-  function buildAgentQueryOptions(content: string, options?: AgentSendMessageOptions) {
-    const profile = inferRuntimeProfile(content, options?.profile);
+  /** 显式 profile 优先，否则模型分类；再按 profile 重建 subprocessEnv */
+  async function buildAgentQueryOptions(
+    sessionId: string,
+    content: string,
+    options?: AgentSendMessageOptions,
+  ) {
+    let profile = options?.profile;
+    if (!profile) {
+      const conversation = conversationService.getConversation(sessionId);
+      const modelConfig = conversation?.modelConfigId
+        ? modelConfigService.getModelConfig(conversation.modelConfigId)
+        : modelConfigService.getDefaultModelConfig();
+      const model = modelConfig?.model || readEnv('CODEANY_MODEL') || 'gpt-4o-mini';
+      profile = await classifyRuntimeProfile(content, {
+        model,
+        apiKey: modelConfig?.apiKey || readEnv('CODEANY_API_KEY') || undefined,
+        baseURL: modelConfig?.baseURL || readEnv('CODEANY_BASE_URL') || undefined,
+        apiType: (readEnv('CODEANY_API_TYPE') as 'anthropic-messages' | 'openai-completions' | undefined)
+          || 'openai-completions',
+      });
+      console.log(`[profile] classified=${profile}`);
+    } else {
+      console.log(`[profile] explicit=${profile}`);
+    }
+
     return {
       mcpMentions: options?.mcpMentions,
       fileRefs: options?.fileRefs,
@@ -173,7 +195,7 @@ export function registerAgentHandlers(
           sessionId,
           promptContent,
           sessionOptions,
-          buildAgentQueryOptions(content, options),
+          await buildAgentQueryOptions(sessionId, content, options),
         );
         const messages: any[] = [];
 
@@ -216,7 +238,7 @@ export function registerAgentHandlers(
           sessionId,
           content,
           sessionOptions,
-          buildAgentQueryOptions(content, options),
+          await buildAgentQueryOptions(sessionId, content, options),
         );
         return { success: true, content: result };
       } catch (error) {

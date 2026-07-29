@@ -12,7 +12,8 @@ import type { ResolvedExecutionPolicy, RuntimeExecutionRequest } from './types.j
 const PROFILE_DEFAULTS: Record<RuntimeProfile, { tools: string[]; maxTurns: number; maxToolResultChars: number }> = {
   general: { tools: [], maxTurns: 30, maxToolResultChars: 8000 },
   coding: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash', 'TodoWrite'], maxTurns: 40, maxToolResultChars: 6000 },
-  office: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 8, maxToolResultChars: 4000 },
+  office: { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 24, maxToolResultChars: 4000 },
+  'office-pptx': { tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'], maxTurns: 8, maxToolResultChars: 4000 },
   'file-organizing': { tools: ['Read', 'Glob', 'Grep'], maxTurns: 12, maxToolResultChars: 4000 },
   mcp: { tools: ['Read', 'Glob', 'Grep'], maxTurns: 16, maxToolResultChars: 6000 },
 };
@@ -53,7 +54,7 @@ export function resolveExecutionPolicy(request: RuntimeExecutionRequest = {}): R
     capabilities,
     tools: { allowed: [...allowed].sort(), disallowed: [] },
     context: { maxEstimatedTokens: model?.contextWindow ? Math.min(16_000, Math.floor(model.contextWindow * 0.6)) : 12_000, maxToolResultChars, injectProjectContext: 'once', injectGitStatus: 'on-change' },
-    execution: { maxTurns, maxInvalidToolRetries: 1, maxSameToolRetries: 2, allowProfileFallback: profile === 'office' },
+    execution: { maxTurns, maxInvalidToolRetries: 1, maxSameToolRetries: 2, allowProfileFallback: profile === 'office' || profile === 'office-pptx' },
     risk: { allowNetwork: workspace?.allowNetwork ?? false, allowedWritePaths: [...(workspace?.allowedWritePaths ?? [])].sort(), destructiveActions: workspace?.destructiveActions ?? 'deny' },
     resolutionReasons: reasons,
   };

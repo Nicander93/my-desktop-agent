@@ -35,6 +35,7 @@ export type {
   AgentRuntimeProfile,
   AgentSendMessageOptions,
 } from './types/mcp.js';
+export { AGENT_RUNTIME_PROFILES, isAgentRuntimeProfile } from './types/mcp.js';
 export { MCP_CATALOG, getCatalogEntry } from './mcp/catalog.js';
 export {
   buildMcpServersForSdk,

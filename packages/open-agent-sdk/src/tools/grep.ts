@@ -3,8 +3,8 @@
  */
 
 import { spawn } from 'child_process'
-import { resolve } from 'path'
 import { defineTool } from './types.js'
+import { resolveToolPath } from '../utils/toolPath.js'
 
 export const GrepTool = defineTool({
   name: 'Grep',
@@ -52,7 +52,7 @@ export const GrepTool = defineTool({
   isReadOnly: true,
   isConcurrencySafe: true,
   async call(input, context) {
-    const searchPath = input.path ? resolve(context.cwd, input.path) : context.cwd
+    const searchPath = input.path ? resolveToolPath(context.cwd, input.path) : context.cwd
     const outputMode = input.output_mode || 'files_with_matches'
     const headLimit = input.head_limit ?? 250
 
