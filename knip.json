@@ -39,6 +39,7 @@
   },
   "ignore": [
     "benchmarks/**",
+    "scripts/check-comment-coverage.mjs",
     "vitest.config.ts",
     "scripts/migrate-renderer-features.mjs",
     "apps/electron/src/runtime/index.ts",
