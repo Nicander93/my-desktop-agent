@@ -1,17 +1,22 @@
 /** 右侧 Trace：展示当前会话最新 trace 时间线 */
-import { useMemo } from 'react';
-import { Copy, Loader2, ListTodo } from 'lucide-react';
-import type { AgentTrace } from '@desktop-agent/shared';
-import { useChatStore } from '@/stores/chatStore';
-import { TraceTimeline } from '@/features/chat/TraceSection';
+import { useMemo } from "react";
+import { Copy, Loader2, ListTodo } from "lucide-react";
+import type { AgentTrace } from "@desktop-agent/shared";
+import { useChatStore } from "@/stores/chatStore";
+import { TraceTimeline } from "@/features/chat/TraceSection";
 import {
   formatTraceSummaryLabel,
   getTraceRunFromAgentTrace,
   getTraceSummary,
   isTraceActive,
-} from '@/lib/traceUtils';
+} from "@/lib/traceUtils";
 
-function getActiveTrace(messages: ReturnType<typeof useChatStore.getState>['messages']): AgentTrace | null {
+/**
+ * 从最新消息向前寻找首个非空 trace，以展示当前会话最近一次运行诊断。
+ */
+function getActiveTrace(
+  messages: ReturnType<typeof useChatStore.getState>["messages"],
+): AgentTrace | null {
   for (let i = messages.length - 1; i >= 0; i -= 1) {
     const trace = messages[i].trace;
     if (trace && trace.spans.length > 0) {
@@ -26,15 +31,22 @@ export function TracePanel() {
   const messages = useChatStore((s) => s.messages);
   const isProcessing = useChatStore((s) => s.isProcessing);
   const trace = useMemo(() => getActiveTrace(messages), [messages]);
-  const summary = useMemo(() => (trace ? getTraceSummary(trace) : null), [trace]);
+  const summary = useMemo(
+    () => (trace ? getTraceSummary(trace) : null),
+    [trace],
+  );
   const isLive = isTraceActive(trace, isProcessing);
 
   if (!trace) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center p-6">
         <ListTodo size={40} className="text-[var(--color-text-muted)] mb-3" />
-        <p className="text-sm text-[var(--color-text-secondary)]">暂无原始 Trace</p>
-        <p className="text-xs text-[var(--color-text-muted)] mt-1">Agent 执行任务后会在这里显示详细追踪</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">
+          暂无原始 Trace
+        </p>
+        <p className="text-xs text-[var(--color-text-muted)] mt-1">
+          Agent 执行任务后会在这里显示详细追踪
+        </p>
       </div>
     );
   }
@@ -43,6 +55,9 @@ export function TracePanel() {
     ? formatTraceSummaryLabel(summary, isLive)
     : `${trace.spans.length} 条记录`;
 
+  /**
+   * 优先复制从消息 trace 归并出的 run，便于离线诊断完整执行过程。
+   */
   const handleCopy = async () => {
     const run = getTraceRunFromAgentTrace(trace);
     await navigator.clipboard.writeText(JSON.stringify(run ?? trace, null, 2));
@@ -52,13 +67,23 @@ export function TracePanel() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--color-border-default)] bg-[var(--color-primary-50)]">
         {isLive ? (
-          <Loader2 size={14} className="animate-spin flex-shrink-0 text-[var(--color-primary-500)]" />
+          <Loader2
+            size={14}
+            className="animate-spin flex-shrink-0 text-[var(--color-primary-500)]"
+          />
         ) : (
-          <ListTodo size={14} className="flex-shrink-0 text-[var(--color-primary-600)]" />
+          <ListTodo
+            size={14}
+            className="flex-shrink-0 text-[var(--color-primary-600)]"
+          />
         )}
         <div className="flex-1 min-w-0">
-          <div className="text-[13px] font-medium text-[var(--color-primary-700)]">Agent Trace</div>
-          <div className="text-[12px] text-[var(--color-primary-600)] truncate">{label}</div>
+          <div className="text-[13px] font-medium text-[var(--color-primary-700)]">
+            Agent Trace
+          </div>
+          <div className="text-[12px] text-[var(--color-primary-600)] truncate">
+            {label}
+          </div>
         </div>
         <button
           type="button"

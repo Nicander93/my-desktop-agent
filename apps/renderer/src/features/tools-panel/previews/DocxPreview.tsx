@@ -1,13 +1,18 @@
 /** docx-preview 渲染 Word 文档 */
-import { useEffect, useRef, useState } from 'react';
-import { renderAsync } from 'docx-preview';
-import { base64ToArrayBuffer } from '@/lib/binaryUtils';
+import { useEffect, useRef, useState } from "react";
+import { renderAsync } from "docx-preview";
+import { base64ToArrayBuffer } from "@/lib/binaryUtils";
 
+/**
+ * 以 Base64 传入的 .docx 二进制内容。
+ */
 interface DocxPreviewProps {
   content: string;
 }
 
-/** .docx 内联预览 */
+/**
+ * 将 Word 二进制内容渲染到本地容器，并把渲染失败转换为可见错误文本。
+ */
 export function DocxPreview({ content }: DocxPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,15 +22,15 @@ export function DocxPreview({ content }: DocxPreviewProps) {
     if (!el) return;
 
     setError(null);
-    el.innerHTML = '';
+    el.innerHTML = "";
 
     renderAsync(base64ToArrayBuffer(content), el, undefined, {
-      className: 'docx-preview',
+      className: "docx-preview",
       inWrapper: true,
       ignoreWidth: true,
       ignoreHeight: true,
     }).catch((err) => {
-      setError(err instanceof Error ? err.message : 'Word 文档渲染失败');
+      setError(err instanceof Error ? err.message : "Word 文档渲染失败");
     });
   }, [content]);
 

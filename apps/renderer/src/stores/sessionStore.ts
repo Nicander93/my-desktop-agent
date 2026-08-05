@@ -3,8 +3,11 @@
  *
  * Session 对应主进程 Conversation，id 同时作为 Agent sessionId
  */
-import { create } from 'zustand';
+import { create } from "zustand";
 
+/**
+ * 渲染进程使用的会话视图，与主进程 Conversation 保持相同稳定标识。
+ */
 export interface Session {
   id: string;
   workspaceId: string;
@@ -14,6 +17,9 @@ export interface Session {
   updatedAt: number;
 }
 
+/**
+ * 会话集合、当前选择项及其跨进程加载与变更操作。
+ */
 interface SessionState {
   sessions: Session[];
   currentSessionId: string | null;
@@ -23,7 +29,11 @@ interface SessionState {
   removeSession: (id: string) => void;
   setCurrentSession: (id: string | null) => void;
   updateSession: (id: string, updates: Partial<Session>) => Promise<void>;
-  createSession: (workspaceId: string, title?: string, model?: string) => Promise<Session | null>;
+  createSession: (
+    workspaceId: string,
+    title?: string,
+    model?: string,
+  ) => Promise<Session | null>;
   deleteSession: (id: string) => Promise<void>;
 }
 
@@ -38,8 +48,12 @@ export const useSessionStore = create<SessionState>((set) => ({
       const result = await window.electronAPI?.conversation.getAll(workspaceId);
       if (result?.success && result.conversations) {
         const sessions = result.conversations.map((c: any) => ({
-          id: c.id, workspaceId: c.workspaceId, title: c.title,
-          model: c.model, createdAt: c.createdAt, updatedAt: c.updatedAt
+          id: c.id,
+          workspaceId: c.workspaceId,
+          title: c.title,
+          model: c.model,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
         }));
         set((state) => ({
           sessions: [
@@ -56,9 +70,11 @@ export const useSessionStore = create<SessionState>((set) => ({
     }
   },
 
-  addSession: (session) => set((state) => ({ sessions: [session, ...state.sessions] })),
+  addSession: (session) =>
+    set((state) => ({ sessions: [session, ...state.sessions] })),
 
-  removeSession: (id) => set((state) => ({ sessions: state.sessions.filter(s => s.id !== id) })),
+  removeSession: (id) =>
+    set((state) => ({ sessions: state.sessions.filter((s) => s.id !== id) })),
 
   setCurrentSession: (id) => set({ currentSessionId: id }),
 
@@ -67,11 +83,13 @@ export const useSessionStore = create<SessionState>((set) => ({
       const result = await window.electronAPI?.conversation.update(id, updates);
       if (result?.success) {
         set((state) => ({
-          sessions: state.sessions.map(s => s.id === id ? { ...s, ...updates } : s)
+          sessions: state.sessions.map((s) =>
+            s.id === id ? { ...s, ...updates } : s,
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to update session:', error);
+      console.error("Failed to update session:", error);
     }
   },
 
@@ -81,20 +99,30 @@ export const useSessionStore = create<SessionState>((set) => ({
    */
   createSession: async (workspaceId, title, model) => {
     try {
-      const result = await window.electronAPI?.conversation.create(workspaceId, title, model);
+      const result = await window.electronAPI?.conversation.create(
+        workspaceId,
+        title,
+        model,
+      );
       if (result?.success && result.conversation) {
         const session: Session = {
-          id: result.conversation.id, workspaceId: result.conversation.workspaceId,
-          title: result.conversation.title, model: result.conversation.model,
-          createdAt: result.conversation.createdAt, updatedAt: result.conversation.updatedAt
+          id: result.conversation.id,
+          workspaceId: result.conversation.workspaceId,
+          title: result.conversation.title,
+          model: result.conversation.model,
+          createdAt: result.conversation.createdAt,
+          updatedAt: result.conversation.updatedAt,
         };
-        set((state) => ({ sessions: [session, ...state.sessions], currentSessionId: session.id }));
+        set((state) => ({
+          sessions: [session, ...state.sessions],
+          currentSessionId: session.id,
+        }));
         await window.electronAPI?.agent.createSession(session.id);
         return session;
       }
       return null;
     } catch (error) {
-      console.error('Failed to create session:', error);
+      console.error("Failed to create session:", error);
       return null;
     }
   },
@@ -106,12 +134,13 @@ export const useSessionStore = create<SessionState>((set) => ({
       if (result?.success) {
         await window.electronAPI?.agent.closeSession(id);
         set((state) => ({
-          sessions: state.sessions.filter(s => s.id !== id),
-          currentSessionId: state.currentSessionId === id ? null : state.currentSessionId
+          sessions: state.sessions.filter((s) => s.id !== id),
+          currentSessionId:
+            state.currentSessionId === id ? null : state.currentSessionId,
         }));
       }
     } catch (error) {
-      console.error('Failed to delete session:', error);
+      console.error("Failed to delete session:", error);
     }
-  }
+  },
 }));

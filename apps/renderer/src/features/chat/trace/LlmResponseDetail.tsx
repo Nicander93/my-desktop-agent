@@ -1,17 +1,22 @@
 /** LLM 响应 span：content block 分类展示 */
-import type { LlmResponsePayload } from '@desktop-agent/shared';
-import { parseContentBlocks, summarizeLlmResponse } from '@/lib/llmTraceFormat';
-import { formatTokenCount } from '@/lib/traceUtils';
-import { Badge } from '@/components/ui/badge';
-import { MarkdownBlock } from '../MarkdownBlock';
-import { CodeBlock } from '../CodeBlock';
-import { TraceCollapsibleSection } from './TraceCollapsibleSection';
+import type { LlmResponsePayload } from "@desktop-agent/shared";
+import { parseContentBlocks, summarizeLlmResponse } from "@/lib/llmTraceFormat";
+import { formatTokenCount } from "@/lib/traceUtils";
+import { Badge } from "@/components/ui/badge";
+import { MarkdownBlock } from "../MarkdownBlock";
+import { CodeBlock } from "../CodeBlock";
+import { TraceCollapsibleSection } from "./TraceCollapsibleSection";
 
+/**
+ * LLM 响应 trace 中记录的结构化 payload。
+ */
 interface LlmResponseDetailProps {
   payload: LlmResponsePayload;
 }
 
-/** llm_response payload 展示 */
+/**
+ * 按文本、工具调用、思考和未知内容块分类渲染 LLM 响应及 token 摘要。
+ */
 export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
   const summary = summarizeLlmResponse(payload);
   const content = Array.isArray(payload.content) ? payload.content : [];
@@ -25,7 +30,8 @@ export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
         )}
         {(summary.inputTokens != null || summary.outputTokens != null) && (
           <span className="text-gray-500">
-            {formatTokenCount(summary.inputTokens)} → {formatTokenCount(summary.outputTokens)} tokens
+            {formatTokenCount(summary.inputTokens)} →{" "}
+            {formatTokenCount(summary.outputTokens)} tokens
           </span>
         )}
         {summary.blockCount > 0 && (
@@ -36,10 +42,13 @@ export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
       {blocks.length > 0 ? (
         <div className="space-y-2">
           {blocks.map((block, i) => {
-            if (block.type === 'text' && block.text) {
+            if (block.type === "text" && block.text) {
               const isShort = block.text.length < 500;
               return (
-                <div key={i} className="rounded border border-gray-100 bg-white/80 p-2">
+                <div
+                  key={i}
+                  className="rounded border border-gray-100 bg-white/80 p-2"
+                >
                   <div className="text-[11px] text-gray-400 mb-1">text</div>
                   {isShort ? (
                     <div className="text-[12px] text-gray-700 whitespace-pre-wrap break-words max-h-48 overflow-y-auto">
@@ -54,12 +63,17 @@ export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
               );
             }
 
-            if (block.type === 'tool_use') {
+            if (block.type === "tool_use") {
               return (
-                <div key={i} className="rounded border border-indigo-100 bg-indigo-50/30 p-2">
+                <div
+                  key={i}
+                  className="rounded border border-indigo-100 bg-indigo-50/30 p-2"
+                >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[11px] text-gray-400">tool_use</span>
-                    {block.name && <Badge variant="outline">{block.name}</Badge>}
+                    {block.name && (
+                      <Badge variant="outline">{block.name}</Badge>
+                    )}
                   </div>
                   {block.input != null && (
                     <CodeBlock language="json">
@@ -70,7 +84,7 @@ export function LlmResponseDetail({ payload }: LlmResponseDetailProps) {
               );
             }
 
-            if (block.type === 'thinking' && block.text) {
+            if (block.type === "thinking" && block.text) {
               return (
                 <TraceCollapsibleSection
                   key={i}

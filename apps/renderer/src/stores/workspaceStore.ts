@@ -3,8 +3,11 @@
  *
  * 对应主进程 workspaceService，管理当前选中的工作区
  */
-import { create } from 'zustand';
+import { create } from "zustand";
 
+/**
+ * 渲染进程工作区实体，包含文件根路径和用于导航展示的元数据。
+ */
 export interface Workspace {
   id: string;
   name: string;
@@ -17,16 +20,31 @@ export interface Workspace {
   lastAccessedAt: number;
 }
 
+/**
+ * 工作区列表、当前选择状态及其持久化管理操作。
+ */
 interface WorkspaceState {
   workspaces: Workspace[];
   currentWorkspaceId: string | null;
   isLoading: boolean;
   error: string | null;
   loadWorkspaces: () => Promise<void>;
-  createWorkspace: (name: string, description?: string) => Promise<Workspace | null>;
-  createWorkspaceFromPath: (name: string, path: string, description?: string) => Promise<Workspace | null>;
+  createWorkspace: (
+    name: string,
+    description?: string,
+  ) => Promise<Workspace | null>;
+  createWorkspaceFromPath: (
+    name: string,
+    path: string,
+    description?: string,
+  ) => Promise<Workspace | null>;
   selectWorkspace: (id: string | null) => void;
-  updateWorkspace: (id: string, updates: Partial<Pick<Workspace, 'name' | 'description' | 'icon' | 'color'>>) => Promise<void>;
+  updateWorkspace: (
+    id: string,
+    updates: Partial<
+      Pick<Workspace, "name" | "description" | "icon" | "color">
+    >,
+  ) => Promise<void>;
   deleteWorkspace: (id: string) => Promise<void>;
 }
 
@@ -43,37 +61,54 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       if (result?.success) {
         set({ workspaces: result.workspaces, isLoading: false });
       } else {
-        set({ error: result?.error || 'Failed to load workspaces', isLoading: false });
+        set({
+          error: result?.error || "Failed to load workspaces",
+          isLoading: false,
+        });
       }
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : 'Unknown error', isLoading: false });
+      set({
+        error: error instanceof Error ? error.message : "Unknown error",
+        isLoading: false,
+      });
     }
   },
 
   createWorkspace: async (name, description) => {
     try {
-      const result = await window.electronAPI?.workspace.create(name, description);
+      const result = await window.electronAPI?.workspace.create(
+        name,
+        description,
+      );
       if (result?.success && result.workspace) {
-        set((state) => ({ workspaces: [result.workspace!, ...state.workspaces] }));
+        set((state) => ({
+          workspaces: [result.workspace!, ...state.workspaces],
+        }));
         return result.workspace;
       }
       return null;
     } catch (error) {
-      console.error('Failed to create workspace:', error);
+      console.error("Failed to create workspace:", error);
       return null;
     }
   },
 
   createWorkspaceFromPath: async (name, path, description) => {
     try {
-      const result = await window.electronAPI?.workspace.createFromPath(name, path, description);
+      const result = await window.electronAPI?.workspace.createFromPath(
+        name,
+        path,
+        description,
+      );
       if (result?.success && result.workspace) {
-        set((state) => ({ workspaces: [result.workspace!, ...state.workspaces] }));
+        set((state) => ({
+          workspaces: [result.workspace!, ...state.workspaces],
+        }));
         return result.workspace;
       }
       return null;
     } catch (error) {
-      console.error('Failed to create workspace:', error);
+      console.error("Failed to create workspace:", error);
       return null;
     }
   },
@@ -81,19 +116,23 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   /** 选中工作区并更新最近访问时间 */
   selectWorkspace: (id) => {
     set({ currentWorkspaceId: id });
-    if (id) { window.electronAPI?.workspace.touch(id); }
+    if (id) {
+      window.electronAPI?.workspace.touch(id);
+    }
   },
-  
+
   updateWorkspace: async (id, updates) => {
     try {
       const result = await window.electronAPI?.workspace.update(id, updates);
       if (result?.success && result.workspace) {
         set((state) => ({
-          workspaces: state.workspaces.map(w => w.id === id ? result.workspace! : w)
+          workspaces: state.workspaces.map((w) =>
+            w.id === id ? result.workspace! : w,
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to update workspace:', error);
+      console.error("Failed to update workspace:", error);
     }
   },
 
@@ -102,12 +141,13 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       const result = await window.electronAPI?.workspace.delete(id);
       if (result?.success) {
         set((state) => ({
-          workspaces: state.workspaces.filter(w => w.id !== id),
-          currentWorkspaceId: state.currentWorkspaceId === id ? null : state.currentWorkspaceId
+          workspaces: state.workspaces.filter((w) => w.id !== id),
+          currentWorkspaceId:
+            state.currentWorkspaceId === id ? null : state.currentWorkspaceId,
         }));
       }
     } catch (error) {
-      console.error('Failed to delete workspace:', error);
+      console.error("Failed to delete workspace:", error);
     }
-  }
+  },
 }));

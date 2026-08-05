@@ -2,11 +2,22 @@
  * 评测 workspace：fixture 复制到 baseline 与 workspace，跑完写简易 diff。
  * 单文件超 1MB 在 diff 里标为 <binary>。
  */
-import { cp, readdir, readFile, mkdir, stat, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import {
+  cp,
+  readdir,
+  readFile,
+  mkdir,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import { join, relative } from "node:path";
 
 /** baseline 与 workspace 各一份 fixture 快照，供 verifier 对比 */
-export async function prepareWorkspace(fixturePath: string, baselinePath: string, workspacePath: string): Promise<void> {
+export async function prepareWorkspace(
+  fixturePath: string,
+  baselinePath: string,
+  workspacePath: string,
+): Promise<void> {
   await mkdir(baselinePath, { recursive: true });
   await mkdir(workspacePath, { recursive: true });
   await cp(fixturePath, baselinePath, { recursive: true, force: true });
@@ -14,26 +25,45 @@ export async function prepareWorkspace(fixturePath: string, baselinePath: string
 }
 
 /** 简易 unified diff 文本，返回变更文件数 */
-export async function writeDiff(before: string, after: string, destination: string): Promise<number> {
+export async function writeDiff(
+  before: string,
+  after: string,
+  destination: string,
+): Promise<number> {
   const beforeFiles = await listFiles(before);
   const afterFiles = await listFiles(after);
-  const paths = [...new Set([...beforeFiles.keys(), ...afterFiles.keys()])].sort();
+  const paths = [
+    ...new Set([...beforeFiles.keys(), ...afterFiles.keys()]),
+  ].sort();
   const entries: string[] = [];
   for (const path of paths) {
     const oldValue = beforeFiles.get(path);
     const newValue = afterFiles.get(path);
     if (oldValue === newValue) continue;
-    entries.push(`--- a/${path}\n+++ b/${path}\n@@\n-${oldValue ?? ''}\n+${newValue ?? ''}`);
+    entries.push(
+      `--- a/${path}\n+++ b/${path}\n@@\n-${oldValue ?? ""}\n+${newValue ?? ""}`,
+    );
   }
-  await writeFile(destination, `${entries.join('\n')}\n`, 'utf8');
+  await writeFile(destination, `${entries.join("\n")}\n`, "utf8");
   return entries.length;
 }
 
-async function listFiles(root: string, current = root, result = new Map<string, string>()): Promise<Map<string, string>> {
+/**
+ * 递归读取可安全作为文本比较的文件；大文件或无法 UTF-8 读取的内容以 binary 占位。
+ */
+async function listFiles(
+  root: string,
+  current = root,
+  result = new Map<string, string>(),
+): Promise<Map<string, string>> {
   for (const entry of await readdir(current, { withFileTypes: true })) {
     const path = join(current, entry.name);
     if (entry.isDirectory()) await listFiles(root, path, result);
-    else if (entry.isFile() && (await stat(path)).size <= 1_000_000) result.set(relative(root, path).replace(/\\/g, '/'), await readFile(path, 'utf8').catch(() => '<binary>'));
+    else if (entry.isFile() && (await stat(path)).size <= 1_000_000)
+      result.set(
+        relative(root, path).replace(/\\/g, "/"),
+        await readFile(path, "utf8").catch(() => "<binary>"),
+      );
   }
   return result;
 }

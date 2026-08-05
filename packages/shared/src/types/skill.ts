@@ -1,8 +1,11 @@
 /**
  * Skill 持久化与运行时形状；catalog 安装走 SkillCatalogEntry，自定义走 url/local。
  */
-export type SkillSource = 'catalog' | 'url' | 'local';
-export type SkillCatalogCategory = 'office' | 'dev' | 'writing' | 'other';
+export type SkillSource = "catalog" | "url" | "local";
+/**
+ * 内置 Skill 目录中用于筛选和展示的稳定分类。
+ */
+export type SkillCatalogCategory = "office" | "dev" | "writing" | "other";
 
 /** 设置页与 DB 中的 Skill 记录 */
 export interface SkillRecord {
@@ -20,6 +23,9 @@ export interface SkillRecord {
   updatedAt: number;
 }
 
+/**
+ * 可安装的内置 Skill 目录项及其可选打包内容。
+ */
 export interface SkillCatalogEntry {
   id: string;
   name: string;
@@ -43,6 +49,9 @@ export interface SkillInput {
   enabled?: boolean;
 }
 
+/**
+ * 从 SKILL.md 解析出的 frontmatter 字段与去除头部后的正文。
+ */
 export interface ParsedSkillMarkdown {
   frontmatter: Record<string, string>;
   body: string;

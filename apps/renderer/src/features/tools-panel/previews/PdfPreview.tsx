@@ -1,13 +1,18 @@
 /** object URL 嵌入 PDF */
-import { useEffect, useState } from 'react';
-import { base64ToBlob } from '@/lib/binaryUtils';
+import { useEffect, useState } from "react";
+import { base64ToBlob } from "@/lib/binaryUtils";
 
+/**
+ * 用于创建浏览器 object URL 的 PDF Base64 内容和 MIME 类型。
+ */
 interface PdfPreviewProps {
   content: string;
   mimeType: string;
 }
 
-/** PDF 预览 */
+/**
+ * 将 PDF 二进制转换为生命周期受控的 object URL，并嵌入 iframe 预览。
+ */
 export function PdfPreview({ content, mimeType }: PdfPreviewProps) {
   const [url, setUrl] = useState<string | null>(null);
 

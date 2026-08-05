@@ -1,18 +1,27 @@
 /**
  * 一次性迁移：components/* 挪到 features/* 并批量改 import 路径
  */
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const srcRoot = join(root, 'apps/renderer/src');
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const srcRoot = join(root, "apps/renderer/src");
 
 const copies = [
-  ['components/chat', 'features/chat'],
-  ['components/workspace', 'features/workspace'],
-  ['components/settings', 'features/settings'],
-  ['components/tools', 'features/tools-panel'],
+  ["components/chat", "features/chat"],
+  ["components/workspace", "features/workspace"],
+  ["components/settings", "features/settings"],
+  ["components/tools", "features/tools-panel"],
 ];
 
 for (const [from, to] of copies) {
@@ -33,6 +42,9 @@ const replacements = [
   ['from "../layout/', 'from "@/components/layout/'],
 ];
 
+/**
+ * 递归收集 renderer 源树中的 TypeScript 文件，供导入路径迁移处理。
+ */
 function walk(dir, files = []) {
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
@@ -46,13 +58,15 @@ function walk(dir, files = []) {
 }
 
 for (const file of walk(srcRoot)) {
-  let content = readFileSync(file, 'utf8');
+  let content = readFileSync(file, "utf8");
   let updated = content;
   for (const [from, to] of replacements) {
     updated = updated.split(from).join(to);
   }
   if (updated !== content) {
-    writeFileSync(file, updated, 'utf8');
-    console.log(`updated ${file.replace(root + '\\', '').replace(root + '/', '')}`);
+    writeFileSync(file, updated, "utf8");
+    console.log(
+      `updated ${file.replace(root + "\\", "").replace(root + "/", "")}`,
+    );
   }
 }

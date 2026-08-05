@@ -4,23 +4,35 @@
  * 展示所有工作区，支持折叠模式下的图标视图。
  * 切换工作区时会清空当前对话和消息状态。
  */
-import { useEffect, useState } from 'react';
-import { FolderPlus, Folder } from 'lucide-react';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { useSessionStore } from '@/stores/sessionStore';
-import { useChatStore } from '@/stores/chatStore';
-import { useGoToChat } from '@/hooks/useGoToChat';
-import { WorkspaceItem } from './WorkspaceItem';
-import { CreateWorkspaceDialog } from './CreateWorkspaceDialog';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from "react";
+import { FolderPlus, Folder } from "lucide-react";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useSessionStore } from "@/stores/sessionStore";
+import { useChatStore } from "@/stores/chatStore";
+import { useGoToChat } from "@/hooks/useGoToChat";
+import { WorkspaceItem } from "./WorkspaceItem";
+import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
+/**
+ * 侧栏工作区列表的折叠显示状态。
+ */
 interface WorkspaceListProps {
   collapsed: boolean;
 }
 
+/**
+ * 载入并呈现工作区列表；折叠时提供紧凑图标导航，常规模式显示完整条目。
+ */
 export function WorkspaceList({ collapsed }: WorkspaceListProps) {
-  const { workspaces, currentWorkspaceId, selectWorkspace, loadWorkspaces, isLoading } = useWorkspaceStore();
+  const {
+    workspaces,
+    currentWorkspaceId,
+    selectWorkspace,
+    loadWorkspaces,
+    isLoading,
+  } = useWorkspaceStore();
   const { setCurrentSession } = useSessionStore();
   const { clearMessages, setCurrentConversation } = useChatStore();
   const goToChat = useGoToChat();
@@ -31,6 +43,9 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
   }, [loadWorkspaces]);
 
   /** 切换工作区：重置对话和聊天状态 */
+  /**
+   * 切换工作区并清空与旧工作区绑定的会话、消息和当前会话指针。
+   */
   const handleSelectWorkspace = (id: string) => {
     goToChat();
     selectWorkspace(id);
@@ -48,10 +63,10 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
             type="button"
             onClick={() => handleSelectWorkspace(workspace.id)}
             className={cn(
-              'w-full flex items-center justify-center p-2 rounded-[var(--radius-md)] transition-colors',
+              "w-full flex items-center justify-center p-2 rounded-[var(--radius-md)] transition-colors",
               currentWorkspaceId === workspace.id
-                ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)]'
-                : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]'
+                ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)]",
             )}
             title={workspace.name}
           >
@@ -88,9 +103,13 @@ export function WorkspaceList({ collapsed }: WorkspaceListProps) {
       </div>
 
       {isLoading ? (
-        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">加载中...</div>
+        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">
+          加载中...
+        </div>
       ) : workspaces.length === 0 ? (
-        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">暂无工作区，点击 + 创建</div>
+        <div className="px-3 py-2 text-sm text-[var(--color-text-muted)]">
+          暂无工作区，点击 + 创建
+        </div>
       ) : (
         <div className="space-y-1">
           {workspaces.map((workspace) => (

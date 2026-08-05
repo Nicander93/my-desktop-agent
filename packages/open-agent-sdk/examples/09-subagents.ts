@@ -6,43 +6,48 @@
  *
  * Run: npx tsx examples/09-subagents.ts
  */
-import { query } from '../src/index.js'
+import { query } from "../src/index.js";
 
+/**
+ * 运行创建和协调子 Agent 的示例主流程。
+ */
 async function main() {
-  console.log('--- Example 9: Subagents ---\n')
+  console.log("--- Example 9: Subagents ---\n");
 
   for await (const message of query({
-    prompt: 'Use the code-reviewer agent to review src/agent.ts',
+    prompt: "Use the code-reviewer agent to review src/agent.ts",
     options: {
-      allowedTools: ['Read', 'Glob', 'Grep', 'Agent'],
+      allowedTools: ["Read", "Glob", "Grep", "Agent"],
       agents: {
-        'code-reviewer': {
-          description: 'Expert code reviewer for quality and security reviews.',
+        "code-reviewer": {
+          description: "Expert code reviewer for quality and security reviews.",
           prompt:
-            'Analyze code quality and suggest improvements. Focus on ' +
-            'security, performance, and maintainability. Be concise.',
-          tools: ['Read', 'Glob', 'Grep'],
+            "Analyze code quality and suggest improvements. Focus on " +
+            "security, performance, and maintainability. Be concise.",
+          tools: ["Read", "Glob", "Grep"],
         },
       },
     },
   })) {
-    const msg = message as any
+    const msg = message as any;
 
-    if (msg.type === 'assistant') {
+    if (msg.type === "assistant") {
       for (const block of msg.message?.content || []) {
-        if ('text' in block && block.text?.trim()) {
-          console.log(block.text)
+        if ("text" in block && block.text?.trim()) {
+          console.log(block.text);
         }
-        if ('name' in block) {
-          console.log(`[${block.name}] ${JSON.stringify(block.input || {}).slice(0, 80)}`)
+        if ("name" in block) {
+          console.log(
+            `[${block.name}] ${JSON.stringify(block.input || {}).slice(0, 80)}`,
+          );
         }
       }
     }
 
-    if (msg.type === 'result') {
-      console.log(`\n--- ${msg.subtype} ---`)
+    if (msg.type === "result") {
+      console.log(`\n--- ${msg.subtype} ---`);
     }
   }
 }
 
-main().catch(console.error)
+main().catch(console.error);

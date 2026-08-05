@@ -4,11 +4,14 @@ function basename(path: string): string {
   return parts[parts.length - 1] || path;
 }
 
+/**
+ * 从 Read 工具输入提取文件名和可选行范围，生成紧凑的活动标签。
+ */
 function formatReadLabel(inp: Record<string, unknown>): string {
-  const path = inp.file_path ? String(inp.file_path) : '';
-  const name = path ? basename(path) : 'file';
-  const offset = typeof inp.offset === 'number' ? inp.offset : undefined;
-  const limit = typeof inp.limit === 'number' ? inp.limit : undefined;
+  const path = inp.file_path ? String(inp.file_path) : "";
+  const name = path ? basename(path) : "file";
+  const offset = typeof inp.offset === "number" ? inp.offset : undefined;
+  const limit = typeof inp.limit === "number" ? inp.limit : undefined;
 
   if (offset !== undefined) {
     const start = offset + 1;
@@ -18,38 +21,47 @@ function formatReadLabel(inp: Record<string, unknown>): string {
     return `Read ${name} L${start}`;
   }
 
-  return path ? `Read ${name}` : 'Read';
+  return path ? `Read ${name}` : "Read";
 }
 
-function formatPathAction(action: string, inp: Record<string, unknown>): string {
-  const path = inp.file_path ? String(inp.file_path) : '';
+/**
+ * 以统一格式为接收 file_path 的工具生成“动作 + 文件名”标签。
+ */
+function formatPathAction(
+  action: string,
+  inp: Record<string, unknown>,
+): string {
+  const path = inp.file_path ? String(inp.file_path) : "";
   return path ? `${action} ${basename(path)}` : action;
 }
 
 /** 根据工具名和 input 生成展示文案 */
 export function getToolActivityLabel(toolName: string, input: unknown): string {
-  const inp = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  const inp = (input && typeof input === "object" ? input : {}) as Record<
+    string,
+    unknown
+  >;
 
   switch (toolName) {
-    case 'Bash':
-      return inp.command ? String(inp.command) : 'Bash';
-    case 'Read':
+    case "Bash":
+      return inp.command ? String(inp.command) : "Bash";
+    case "Read":
       return formatReadLabel(inp);
-    case 'Write':
-      return formatPathAction('Write', inp);
-    case 'Edit':
-      return formatPathAction('Edit', inp);
-    case 'Glob':
-      return inp.pattern ? `Glob ${inp.pattern}` : 'Glob';
-    case 'Grep':
-      return inp.pattern ? `Grep ${inp.pattern}` : 'Grep';
-    case 'WebFetch':
-      return inp.url ? `WebFetch ${inp.url}` : 'WebFetch';
-    case 'WebSearch':
-      return inp.query ? `WebSearch ${inp.query}` : 'WebSearch';
+    case "Write":
+      return formatPathAction("Write", inp);
+    case "Edit":
+      return formatPathAction("Edit", inp);
+    case "Glob":
+      return inp.pattern ? `Glob ${inp.pattern}` : "Glob";
+    case "Grep":
+      return inp.pattern ? `Grep ${inp.pattern}` : "Grep";
+    case "WebFetch":
+      return inp.url ? `WebFetch ${inp.url}` : "WebFetch";
+    case "WebSearch":
+      return inp.query ? `WebSearch ${inp.query}` : "WebSearch";
     default:
-      if (toolName.startsWith('mcp__')) {
-        const parts = toolName.split('__');
+      if (toolName.startsWith("mcp__")) {
+        const parts = toolName.split("__");
         return parts.length >= 3 ? `${parts[1]} ${parts[2]}` : toolName;
       }
       return toolName;
@@ -60,7 +72,9 @@ export function getToolActivityLabel(toolName: string, input: unknown): string {
 export function summarizeCompletedTools(
   toolCalls: Array<{ toolName: string; input: unknown }>,
 ): string {
-  const labels = toolCalls.map((t) => getToolActivityLabel(t.toolName, t.input));
+  const labels = toolCalls.map((t) =>
+    getToolActivityLabel(t.toolName, t.input),
+  );
   if (labels.length === 1) return labels[0];
-  return labels.join('，');
+  return labels.join("，");
 }

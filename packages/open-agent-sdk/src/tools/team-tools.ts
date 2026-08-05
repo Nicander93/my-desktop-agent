@@ -5,47 +5,47 @@
  * Manages team composition, task lists, and inter-agent messaging.
  */
 
-import type { ToolDefinition, ToolResult } from '../types.js'
+import type { ToolDefinition, ToolResult } from "../types.js";
 
 /**
  * Team definition.
  */
 export interface Team {
-  id: string
-  name: string
-  members: string[]
-  leaderId: string
-  taskListId?: string
-  createdAt: string
-  status: 'active' | 'disbanded'
+  id: string;
+  name: string;
+  members: string[];
+  leaderId: string;
+  taskListId?: string;
+  createdAt: string;
+  status: "active" | "disbanded";
 }
 
 /**
  * Global team store.
  */
-const teamStore = new Map<string, Team>()
-let teamCounter = 0
+const teamStore = new Map<string, Team>();
+let teamCounter = 0;
 
 /**
  * Get all teams.
  */
 export function getAllTeams(): Team[] {
-  return Array.from(teamStore.values())
+  return Array.from(teamStore.values());
 }
 
 /**
  * Get a team by ID.
  */
 export function getTeam(id: string): Team | undefined {
-  return teamStore.get(id)
+  return teamStore.get(id);
 }
 
 /**
  * Clear all teams.
  */
 export function clearTeams(): void {
-  teamStore.clear()
-  teamCounter = 0
+  teamStore.clear();
+  teamCounter = 0;
 }
 
 // ============================================================================
@@ -53,76 +53,101 @@ export function clearTeams(): void {
 // ============================================================================
 
 export const TeamCreateTool: ToolDefinition = {
-  name: 'TeamCreate',
-  description: 'Create a multi-agent team for coordinated work. Assigns a lead and manages member composition.',
+  name: "TeamCreate",
+  description:
+    "Create a multi-agent team for coordinated work. Assigns a lead and manages member composition.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      name: { type: 'string', description: 'Team name' },
+      name: { type: "string", description: "Team name" },
       members: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'List of agent/teammate names',
+        type: "array",
+        items: { type: "string" },
+        description: "List of agent/teammate names",
       },
-      task_description: { type: 'string', description: 'Description of the team\'s mission' },
+      task_description: {
+        type: "string",
+        description: "Description of the team's mission",
+      },
     },
-    required: ['name'],
+    required: ["name"],
   },
   isReadOnly: () => false,
   isConcurrencySafe: () => false,
   isEnabled: () => true,
-  async prompt() { return 'Create a team for multi-agent coordination.' },
+  /**
+   * 告知模型此工具创建用于多 Agent 协调的团队。
+   */
+  async prompt() {
+    return "Create a team for multi-agent coordination.";
+  },
+  /**
+   * 创建团队及其初始配置，并将可展示的团队信息返回给调用方。
+   */
   async call(input: any): Promise<ToolResult> {
-    const id = `team_${++teamCounter}`
+    const id = `team_${++teamCounter}`;
     const team: Team = {
       id,
       name: input.name,
       members: input.members || [],
-      leaderId: 'self',
+      leaderId: "self",
       createdAt: new Date().toISOString(),
-      status: 'active',
-    }
-    teamStore.set(id, team)
+      status: "active",
+    };
+    teamStore.set(id, team);
 
     return {
-      type: 'tool_result',
-      tool_use_id: '',
+      type: "tool_result",
+      tool_use_id: "",
       content: `Team created: ${id} "${team.name}" with ${team.members.length} members`,
-    }
+    };
   },
-}
+};
 
 // ============================================================================
 // TeamDeleteTool
 // ============================================================================
 
 export const TeamDeleteTool: ToolDefinition = {
-  name: 'TeamDelete',
-  description: 'Disband a team and clean up resources.',
+  name: "TeamDelete",
+  description: "Disband a team and clean up resources.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      id: { type: 'string', description: 'Team ID to disband' },
+      id: { type: "string", description: "Team ID to disband" },
     },
-    required: ['id'],
+    required: ["id"],
   },
   isReadOnly: () => false,
   isConcurrencySafe: () => false,
   isEnabled: () => true,
-  async prompt() { return 'Delete/disband a team.' },
+  /**
+   * 告知模型此工具会解散现有团队。
+   */
+  async prompt() {
+    return "Delete/disband a team.";
+  },
+  /**
+   * 删除目标团队并清理其协调状态；不存在的名称会转换为工具错误。
+   */
   async call(input: any): Promise<ToolResult> {
-    const team = teamStore.get(input.id)
+    const team = teamStore.get(input.id);
     if (!team) {
-      return { type: 'tool_result', tool_use_id: '', content: `Team not found: ${input.id}`, is_error: true }
+      return {
+        type: "tool_result",
+        tool_use_id: "",
+        content: `Team not found: ${input.id}`,
+        is_error: true,
+      };
     }
 
-    team.status = 'disbanded'
-    teamStore.delete(input.id)
+    team.status = "disbanded";
+    teamStore.delete(input.id);
 
     return {
-      type: 'tool_result',
-      tool_use_id: '',
+      type: "tool_result",
+      tool_use_id: "",
       content: `Team disbanded: ${team.name}`,
-    }
+    };
   },
-}
+};

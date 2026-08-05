@@ -1,69 +1,85 @@
 /** tool_call / tool_result span 的输入输出展示 */
-import type { TraceSpan } from '@desktop-agent/shared';
+import type { TraceSpan } from "@desktop-agent/shared";
 import {
   formatToolInputValue,
   isSimpleToolInput,
   summarizeToolPayload,
-} from '@/lib/llmTraceFormat';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { CodeBlock } from '../CodeBlock';
+} from "@/lib/llmTraceFormat";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { CodeBlock } from "../CodeBlock";
 
+/**
+ * 单个工具调用或结果 trace span。
+ */
 interface ToolSpanDetailProps {
   span: TraceSpan;
 }
 
-/** 工具 span 详情面板 */
+/**
+ * 根据工具调用或结果 span 类型选择输入字段、格式化 JSON 或错误输出视图。
+ */
 export function ToolSpanDetail({ span }: ToolSpanDetailProps) {
   const payload = span.payload;
   const summary = summarizeToolPayload(payload, span.type);
 
-  if (span.type === 'tool_call') {
+  if (span.type === "tool_call") {
     const input = (payload as { input?: unknown })?.input;
 
     return (
       <div className="space-y-2">
-        {input != null && (
-          isSimpleToolInput(input) ? (
+        {input != null &&
+          (isSimpleToolInput(input) ? (
             <dl className="space-y-1 text-[12px]">
-              {Object.entries(input as Record<string, unknown>).map(([key, value]) => (
-                <div key={key} className="flex gap-2">
-                  <dt className="flex-shrink-0 font-medium text-gray-500">{key}</dt>
-                  <dd className="text-gray-700 break-all whitespace-pre-wrap">
-                    {formatToolInputValue(value)}
-                  </dd>
-                </div>
-              ))}
+              {Object.entries(input as Record<string, unknown>).map(
+                ([key, value]) => (
+                  <div key={key} className="flex gap-2">
+                    <dt className="flex-shrink-0 font-medium text-gray-500">
+                      {key}
+                    </dt>
+                    <dd className="text-gray-700 break-all whitespace-pre-wrap">
+                      {formatToolInputValue(value)}
+                    </dd>
+                  </div>
+                ),
+              )}
             </dl>
           ) : (
             <CodeBlock language="json">
               {JSON.stringify(input, null, 2)}
             </CodeBlock>
-          )
-        )}
+          ))}
       </div>
     );
   }
 
-  if (span.type === 'tool_result') {
-    const output = (payload as { output?: string })?.output ?? '';
+  if (span.type === "tool_result") {
+    const output = (payload as { output?: string })?.output ?? "";
     const isError = summary.isError;
 
     return (
       <div
         className={cn(
-          'rounded border p-2',
-          isError ? 'border-red-200 bg-red-50/50' : 'border-gray-100 bg-white/80',
+          "rounded border p-2",
+          isError
+            ? "border-red-200 bg-red-50/50"
+            : "border-gray-100 bg-white/80",
         )}
       >
         <div className="flex flex-wrap items-center gap-2 mb-1.5">
           {isError && (
-            <Badge variant="outline" className="border-red-200 text-red-700 bg-red-50">
+            <Badge
+              variant="outline"
+              className="border-red-200 text-red-700 bg-red-50"
+            >
               错误
             </Badge>
           )}
           {summary.truncated && (
-            <Badge variant="outline" className="text-amber-700 border-amber-200 bg-amber-50">
+            <Badge
+              variant="outline"
+              className="text-amber-700 border-amber-200 bg-amber-50"
+            >
               已截断
             </Badge>
           )}
@@ -75,11 +91,11 @@ export function ToolSpanDetail({ span }: ToolSpanDetailProps) {
         </div>
         <pre
           className={cn(
-            'text-[12px] whitespace-pre-wrap break-words max-h-64 overflow-y-auto font-sans leading-relaxed',
-            isError ? 'text-red-800' : 'text-gray-700',
+            "text-[12px] whitespace-pre-wrap break-words max-h-64 overflow-y-auto font-sans leading-relaxed",
+            isError ? "text-red-800" : "text-gray-700",
           )}
         >
-          {output || '—'}
+          {output || "—"}
         </pre>
       </div>
     );

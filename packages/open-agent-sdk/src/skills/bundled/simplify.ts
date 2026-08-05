@@ -5,8 +5,8 @@
  * and efficiency improvements, then fixes any issues found.
  */
 
-import { registerSkill } from '../registry.js'
-import type { SkillContentBlock } from '../types.js'
+import { registerSkill } from "../registry.js";
+import type { SkillContentBlock } from "../types.js";
 
 const SIMPLIFY_PROMPT = `Review the recently changed code for three categories of improvements. Launch 3 parallel Agent sub-tasks:
 
@@ -33,19 +33,26 @@ Look for:
 - Inefficient data structures for the access pattern
 - Unnecessary re-computation
 
-After all three analyses complete, fix any issues found. Prioritize by impact.`
+After all three analyses complete, fix any issues found. Prioritize by impact.`;
 
+/**
+ * 注册围绕复用、质量和效率三类改进的代码简化 Skill。
+ */
 export function registerSimplifySkill(): void {
   registerSkill({
-    name: 'simplify',
-    description: 'Review changed code for reuse, quality, and efficiency, then fix any issues found.',
+    name: "simplify",
+    description:
+      "Review changed code for reuse, quality, and efficiency, then fix any issues found.",
     userInvocable: true,
+    /**
+     * 返回并行改进流程提示，并追加用户的额外关注点。
+     */
     async getPrompt(args): Promise<SkillContentBlock[]> {
-      let prompt = SIMPLIFY_PROMPT
+      let prompt = SIMPLIFY_PROMPT;
       if (args.trim()) {
-        prompt += `\n\n## Additional Focus\n${args}`
+        prompt += `\n\n## Additional Focus\n${args}`;
       }
-      return [{ type: 'text', text: prompt }]
+      return [{ type: "text", text: prompt }];
     },
-  })
+  });
 }

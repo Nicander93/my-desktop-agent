@@ -1,14 +1,23 @@
 /**
  * SQLite 迁移：_migrations 记版本，只追加、不改旧 version 正文。
  */
-import { Database as SqlJsDatabase } from 'sql.js';
+import { Database as SqlJsDatabase } from "sql.js";
 
+/**
+ * 一次不可变的 SQLite schema 升级。
+ *
+ * `up` 只在数据库尚未记录对应 version 时执行，因此发布后不得重写已有迁移正文。
+ */
 interface Migration {
   version: number;
   up: string;
 }
 
-/** 迁移脚本列表，version 必须递增 */
+/**
+ * 按版本递增排列的 schema 迁移列表。
+ *
+ * 新表或列必须通过末尾新增 version 引入；编辑历史条目会使已安装用户的数据库状态与新安装不一致。
+ */
 const migrations: Migration[] = [
   {
     version: 1,
@@ -57,7 +66,7 @@ const migrations: Migration[] = [
         restrictedMode INTEGER DEFAULT 1,
         FOREIGN KEY (workspaceId) REFERENCES workspaces(id) ON DELETE CASCADE
       );
-    `
+    `,
   },
   {
     version: 2,
@@ -80,7 +89,7 @@ const migrations: Migration[] = [
         updatedAt INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_mcp_servers_enabled ON mcp_servers(enabled);
-    `
+    `,
   },
   {
     version: 3,
@@ -100,7 +109,7 @@ const migrations: Migration[] = [
         updatedAt INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_skills_enabled ON skills(enabled);
-    `
+    `,
   },
   {
     version: 4,
@@ -124,7 +133,7 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_attachments_conversation ON attachments(conversationId, createdAt);
       CREATE INDEX IF NOT EXISTS idx_attachments_message ON attachments(messageId);
       CREATE INDEX IF NOT EXISTS idx_attachments_status ON attachments(status);
-    `
+    `,
   },
   {
     version: 5,
@@ -143,11 +152,15 @@ const migrations: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS idx_model_configs_enabled ON model_configs(enabled);
       ALTER TABLE conversations ADD COLUMN modelConfigId TEXT;
-    `
-  }
+    `,
+  },
 ];
 
-/** 执行尚未应用的迁移 */
+/**
+ * 为当前 SQLite 数据库执行所有尚未记录的迁移。
+ *
+ * 每条迁移在 schema 语句成功后才写入 `_migrations`，确保下次启动不会跳过失败的升级。
+ */
 export function runMigrations(db: SqlJsDatabase): void {
   db.run(`
     CREATE TABLE IF NOT EXISTS _migrations (
@@ -156,7 +169,7 @@ export function runMigrations(db: SqlJsDatabase): void {
     )
   `);
 
-  const appliedResult = db.exec('SELECT version FROM _migrations');
+  const appliedResult = db.exec("SELECT version FROM _migrations");
   const appliedVersions = new Set<number>();
   if (appliedResult.length > 0) {
     for (const row of appliedResult[0].values) {
@@ -167,7 +180,10 @@ export function runMigrations(db: SqlJsDatabase): void {
   for (const migration of migrations) {
     if (!appliedVersions.has(migration.version)) {
       db.run(migration.up);
-      db.run('INSERT INTO _migrations (version, appliedAt) VALUES (?, ?)', [migration.version, Date.now()]);
+      db.run("INSERT INTO _migrations (version, appliedAt) VALUES (?, ?)", [
+        migration.version,
+        Date.now(),
+      ]);
     }
   }
 }

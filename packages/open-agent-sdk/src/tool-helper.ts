@@ -17,18 +17,18 @@
  *   )
  */
 
-import { z, type ZodRawShape, type ZodObject } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
-import type { ToolDefinition, ToolResult, ToolContext } from './types.js'
+import { z, type ZodRawShape, type ZodObject } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
+import type { ToolDefinition, ToolResult, ToolContext } from "./types.js";
 
 /**
  * Tool annotations (MCP standard).
  */
 export interface ToolAnnotations {
-  readOnlyHint?: boolean
-  destructiveHint?: boolean
-  idempotentHint?: boolean
-  openWorldHint?: boolean
+  readOnlyHint?: boolean;
+  destructiveHint?: boolean;
+  idempotentHint?: boolean;
+  openWorldHint?: boolean;
 }
 
 /**
@@ -36,22 +36,28 @@ export interface ToolAnnotations {
  */
 export interface CallToolResult {
   content: Array<
-    | { type: 'text'; text: string }
-    | { type: 'image'; data: string; mimeType: string }
-    | { type: 'resource'; resource: { uri: string; text?: string; blob?: string } }
-  >
-  isError?: boolean
+    | { type: "text"; text: string }
+    | { type: "image"; data: string; mimeType: string }
+    | {
+        type: "resource";
+        resource: { uri: string; text?: string; blob?: string };
+      }
+  >;
+  isError?: boolean;
 }
 
 /**
  * SDK MCP tool definition.
  */
 export interface SdkMcpToolDefinition<T extends ZodRawShape = ZodRawShape> {
-  name: string
-  description: string
-  inputSchema: ZodObject<T>
-  handler: (args: z.infer<ZodObject<T>>, extra: unknown) => Promise<CallToolResult>
-  annotations?: ToolAnnotations
+  name: string;
+  description: string;
+  inputSchema: ZodObject<T>;
+  handler: (
+    args: z.infer<ZodObject<T>>,
+    extra: unknown,
+  ) => Promise<CallToolResult>;
+  annotations?: ToolAnnotations;
 }
 
 /**
@@ -63,7 +69,10 @@ export function tool<T extends ZodRawShape>(
   name: string,
   description: string,
   inputSchema: T,
-  handler: (args: z.infer<ZodObject<T>>, extra: unknown) => Promise<CallToolResult>,
+  handler: (
+    args: z.infer<ZodObject<T>>,
+    extra: unknown,
+  ) => Promise<CallToolResult>,
   extras?: { annotations?: ToolAnnotations },
 ): SdkMcpToolDefinition<T> {
   return {
@@ -72,56 +81,69 @@ export function tool<T extends ZodRawShape>(
     inputSchema: z.object(inputSchema),
     handler,
     annotations: extras?.annotations,
-  }
+  };
 }
 
 /**
  * Convert an SdkMcpToolDefinition to a ToolDefinition for the engine.
  */
-export function sdkToolToToolDefinition(sdkTool: SdkMcpToolDefinition<any>): ToolDefinition {
-  const jsonSchema = zodToJsonSchema(sdkTool.inputSchema, { target: 'openApi3' }) as any
+export function sdkToolToToolDefinition(
+  sdkTool: SdkMcpToolDefinition<any>,
+): ToolDefinition {
+  const jsonSchema = zodToJsonSchema(sdkTool.inputSchema, {
+    target: "openApi3",
+  }) as any;
 
   return {
     name: sdkTool.name,
     description: sdkTool.description,
     inputSchema: {
-      type: 'object',
+      type: "object",
       properties: jsonSchema.properties || {},
       required: jsonSchema.required || [],
     },
     isReadOnly: () => sdkTool.annotations?.readOnlyHint ?? false,
     isConcurrencySafe: () => sdkTool.annotations?.readOnlyHint ?? false,
     isEnabled: () => true,
-    async prompt() { return sdkTool.description },
+    /**
+     * 复用 SDK MCP 工具的描述作为模型可见提示。
+     */
+    async prompt() {
+      return sdkTool.description;
+    },
+    /**
+     * 校验输入、调用 SDK handler，并把 MCP 内容块或异常归一化为引擎工具结果。
+     */
     async call(input: any, _context: ToolContext): Promise<ToolResult> {
       try {
-        const parsed = sdkTool.inputSchema.parse(input)
-        const result = await sdkTool.handler(parsed, {})
+        const parsed = sdkTool.inputSchema.parse(input);
+        const result = await sdkTool.handler(parsed, {});
 
         // Convert MCP content blocks to string
         const text = result.content
           .map((block) => {
-            if (block.type === 'text') return block.text
-            if (block.type === 'image') return `[Image: ${block.mimeType}]`
-            if (block.type === 'resource') return block.resource.text || `[Resource: ${block.resource.uri}]`
-            return JSON.stringify(block)
+            if (block.type === "text") return block.text;
+            if (block.type === "image") return `[Image: ${block.mimeType}]`;
+            if (block.type === "resource")
+              return block.resource.text || `[Resource: ${block.resource.uri}]`;
+            return JSON.stringify(block);
           })
-          .join('\n')
+          .join("\n");
 
         return {
-          type: 'tool_result',
-          tool_use_id: '',
+          type: "tool_result",
+          tool_use_id: "",
           content: text,
           is_error: result.isError || false,
-        }
+        };
       } catch (err: any) {
         return {
-          type: 'tool_result',
-          tool_use_id: '',
+          type: "tool_result",
+          tool_use_id: "",
           content: `Error: ${err.message}`,
           is_error: true,
-        }
+        };
       }
     },
-  }
+  };
 }

@@ -1,8 +1,11 @@
 /** trace 详情里的可折叠小节 */
-import { useState, type ReactNode } from 'react';
-import { ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, type ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
+/**
+ * trace 折叠节的标题、摘要、初始展开状态与内容。
+ */
 interface TraceCollapsibleSectionProps {
   title: string;
   summary?: string;
@@ -11,7 +14,9 @@ interface TraceCollapsibleSectionProps {
   className?: string;
 }
 
-/** 带标题与摘要的折叠块 */
+/**
+ * 提供可访问的诊断内容折叠容器，默认保持昂贵细节收起。
+ */
 export function TraceCollapsibleSection({
   title,
   summary,
@@ -22,7 +27,9 @@ export function TraceCollapsibleSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className={cn('rounded border border-gray-100 bg-white/60', className)}>
+    <div
+      className={cn("rounded border border-gray-100 bg-white/60", className)}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -30,7 +37,10 @@ export function TraceCollapsibleSection({
       >
         <ChevronRight
           size={13}
-          className={cn('flex-shrink-0 text-gray-400 transition-transform', open && 'rotate-90')}
+          className={cn(
+            "flex-shrink-0 text-gray-400 transition-transform",
+            open && "rotate-90",
+          )}
         />
         <span className="font-medium text-gray-700">{title}</span>
         {summary && <span className="text-gray-400 truncate">{summary}</span>}

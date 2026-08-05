@@ -1,7 +1,7 @@
 /**
  * 消息内 Agent trace：摘要、时间线与 span 详情
  */
-import { type MouseEvent, useEffect, useMemo, useState } from 'react';
+import { type MouseEvent, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   Brain,
@@ -12,14 +12,14 @@ import {
   Maximize2,
   Wrench,
   Zap,
-} from 'lucide-react';
+} from "lucide-react";
 import type {
   AgentTrace,
   LlmRequestPayload,
   LlmResponsePayload,
   TraceSpan,
   TraceTurn,
-} from '@desktop-agent/shared';
+} from "@desktop-agent/shared";
 import {
   formatTraceDuration,
   formatTraceSummaryLabel,
@@ -27,45 +27,55 @@ import {
   getSpanTypeLabel,
   getTraceRunFromAgentTrace,
   getTraceSummary,
-} from '@/lib/traceUtils';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+} from "@/lib/traceUtils";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { LlmRequestDetail } from './trace/LlmRequestDetail';
-import { LlmResponseDetail } from './trace/LlmResponseDetail';
-import { ToolSpanDetail } from './trace/ToolSpanDetail';
-import { TraceRawToggle } from './trace/TraceRawToggle';
+} from "@/components/ui/dialog";
+import { LlmRequestDetail } from "./trace/LlmRequestDetail";
+import { LlmResponseDetail } from "./trace/LlmResponseDetail";
+import { ToolSpanDetail } from "./trace/ToolSpanDetail";
+import { TraceRawToggle } from "./trace/TraceRawToggle";
 
+/**
+ * 附着在一条 Agent 消息上的完整 trace 记录。
+ */
 interface TraceSectionProps {
   trace: AgentTrace;
 }
 
+/**
+ * 选择 span 类型对应的结构化详情渲染器，并保留原始 payload 切换入口。
+ */
 function SpanDetail({ span }: { span: TraceSpan }) {
   const payload = span.payload;
   const toolName =
-    span.type === 'tool_call' || span.type === 'tool_result'
+    span.type === "tool_call" || span.type === "tool_result"
       ? (payload as { name?: string })?.name
       : undefined;
   const model =
-    span.type === 'llm_request' ? (payload as { model?: string })?.model : undefined;
+    span.type === "llm_request"
+      ? (payload as { model?: string })?.model
+      : undefined;
 
   return (
     <div className="rounded-md border border-gray-100 bg-gray-50/80 p-3 text-[12px]">
       <div className="mb-2 flex flex-wrap items-center gap-2 text-gray-500">
-        <span className="font-medium text-gray-700">{getSpanTypeLabel(span.type)}</span>
+        <span className="font-medium text-gray-700">
+          {getSpanTypeLabel(span.type)}
+        </span>
         {model && <Badge variant="secondary">{model}</Badge>}
         {toolName && <Badge variant="outline">{toolName}</Badge>}
         {span.durationMs != null && (
           <span
             className={cn(
-              span.type === 'tool_result' && 'font-medium text-emerald-700',
+              span.type === "tool_result" && "font-medium text-emerald-700",
             )}
-            title={span.type === 'tool_result' ? '工具真实执行耗时' : undefined}
+            title={span.type === "tool_result" ? "工具真实执行耗时" : undefined}
           >
             {formatTraceDuration(span.durationMs)}
           </span>
@@ -73,13 +83,13 @@ function SpanDetail({ span }: { span: TraceSpan }) {
       </div>
       {payload != null && (
         <TraceRawToggle payload={payload}>
-          {span.type === 'llm_request' && (
+          {span.type === "llm_request" && (
             <LlmRequestDetail payload={payload as LlmRequestPayload} />
           )}
-          {span.type === 'llm_response' && (
+          {span.type === "llm_response" && (
             <LlmResponseDetail payload={payload as LlmResponsePayload} />
           )}
-          {(span.type === 'tool_call' || span.type === 'tool_result') && (
+          {(span.type === "tool_call" || span.type === "tool_result") && (
             <ToolSpanDetail span={span} />
           )}
         </TraceRawToggle>
@@ -88,6 +98,9 @@ function SpanDetail({ span }: { span: TraceSpan }) {
   );
 }
 
+/**
+ * 渲染单轮 Agent trace 的时间线节点，可展开查看该轮工具与 LLM span。
+ */
 function TurnBlock({
   turn,
   open,
@@ -102,7 +115,7 @@ function TurnBlock({
   const startedAt = formatTraceTime(turn.startedAt);
   const toolDurationLabels = turn.toolCalls.flatMap(({ call, result }) => {
     if (result?.durationMs == null) return [];
-    const name = (call.payload as { name?: string })?.name ?? 'tool';
+    const name = (call.payload as { name?: string })?.name ?? "tool";
     return [`${name} ${formatTraceDuration(result.durationMs)}`];
   });
 
@@ -125,19 +138,24 @@ function TurnBlock({
         >
           <ChevronRight
             size={14}
-            className={cn('flex-shrink-0 text-gray-400 transition-transform', open && 'rotate-90')}
+            className={cn(
+              "flex-shrink-0 text-gray-400 transition-transform",
+              open && "rotate-90",
+            )}
           />
           <span className="font-medium">Turn {turn.turn}</span>
-          {startedAt && (
-            <span className="text-gray-400">{startedAt}</span>
-          )}
+          {startedAt && <span className="text-gray-400">{startedAt}</span>}
           {llmDuration != null && (
             <span className="text-gray-400" title="LLM 响应耗时">
               LLM {formatTraceDuration(llmDuration)}
             </span>
           )}
           {toolDurationLabels.map((label) => (
-            <span key={label} className="text-emerald-600" title="工具真实执行耗时">
+            <span
+              key={label}
+              className="text-emerald-600"
+              title="工具真实执行耗时"
+            >
               {label}
             </span>
           ))}
@@ -185,10 +203,15 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
 
   if (!run) return null;
 
-  const compactSpans = trace.spans.filter((s) => s.type === 'compact');
+  const compactSpans = trace.spans.filter((s) => s.type === "compact");
 
+  /**
+   * 将当前 run 的全部轮次显式标记为收起，覆盖直播轮次的默认展开逻辑。
+   */
   const handleCollapseAll = () => {
-    setOpenTurns(Object.fromEntries(run.turns.map((turn) => [turn.turn, false])));
+    setOpenTurns(
+      Object.fromEntries(run.turns.map((turn) => [turn.turn, false])),
+    );
   };
 
   return (
@@ -215,7 +238,7 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
           </div>
           <div className="mt-1 truncate text-indigo-600/80">
             {(run.startSpan.payload as { model?: string })?.model}
-            {' · '}
+            {" · "}
             {(run.startSpan.payload as { cwd?: string })?.cwd}
           </div>
         </div>
@@ -235,18 +258,25 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
         <TurnBlock
           key={turn.turn}
           turn={turn}
-          open={openTurns[turn.turn] ?? (trace.isLive && idx === run.turns.length - 1)}
-          onOpenChange={(open) => setOpenTurns((current) => ({ ...current, [turn.turn]: open }))}
+          open={
+            openTurns[turn.turn] ??
+            (trace.isLive && idx === run.turns.length - 1)
+          }
+          onOpenChange={(open) =>
+            setOpenTurns((current) => ({ ...current, [turn.turn]: open }))
+          }
         />
       ))}
 
       {run.endSpan && (
-        <div className={cn(
-          'mt-2 rounded-md border px-3 py-2 text-[12px]',
-          (run.endSpan.payload as { isError?: boolean })?.isError
-            ? 'border-red-100 bg-red-50/60 text-red-800'
-            : 'border-green-100 bg-green-50/60 text-green-800',
-        )}>
+        <div
+          className={cn(
+            "mt-2 rounded-md border px-3 py-2 text-[12px]",
+            (run.endSpan.payload as { isError?: boolean })?.isError
+              ? "border-red-100 bg-red-50/60 text-red-800"
+              : "border-green-100 bg-green-50/60 text-green-800",
+          )}
+        >
           <div className="flex items-center gap-1.5 font-medium">
             {(run.endSpan.payload as { isError?: boolean })?.isError ? (
               <AlertCircle size={13} />
@@ -257,7 +287,8 @@ export function TraceTimeline({ trace }: { trace: AgentTrace }) {
           </div>
           <div className="mt-1 opacity-80">
             {(run.endSpan.payload as { numTurns?: number })?.numTurns} 轮
-            {run.durationMs != null && ` · ${formatTraceDuration(run.durationMs)}`}
+            {run.durationMs != null &&
+              ` · ${formatTraceDuration(run.durationMs)}`}
           </div>
         </div>
       )}
@@ -281,6 +312,9 @@ export function TraceSection({ trace }: TraceSectionProps) {
     ? formatTraceSummaryLabel(summary, trace.isLive)
     : `${trace.spans.length} 条记录`;
 
+  /**
+   * 优先复制归并后的 run；无法归并时回退复制原始消息 trace。
+   */
   const handleCopy = async () => {
     const run = getTraceRunFromAgentTrace(trace);
     await navigator.clipboard.writeText(JSON.stringify(run ?? trace, null, 2));
@@ -296,11 +330,17 @@ export function TraceSection({ trace }: TraceSectionProps) {
             className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] text-indigo-700 transition-colors hover:text-indigo-900"
           >
             {trace.isLive ? (
-              <Loader2 size={13} className="flex-shrink-0 animate-spin text-indigo-400" />
+              <Loader2
+                size={13}
+                className="flex-shrink-0 animate-spin text-indigo-400"
+              />
             ) : (
               <ChevronRight
                 size={14}
-                className={cn('flex-shrink-0 text-gray-400 transition-transform', open && 'rotate-90')}
+                className={cn(
+                  "flex-shrink-0 text-gray-400 transition-transform",
+                  open && "rotate-90",
+                )}
               />
             )}
             <Wrench size={13} className="flex-shrink-0 text-indigo-500" />

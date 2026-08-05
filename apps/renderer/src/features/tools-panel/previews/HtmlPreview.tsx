@@ -1,14 +1,19 @@
 /** iframe 加载工作区 HTML 文件预览 */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { Button } from '@/components/ui/button';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { Button } from "@/components/ui/button";
 
+/**
+ * 请求受限工作区预览协议时使用的 HTML 文件绝对路径。
+ */
 interface HtmlPreviewProps {
   filePath: string;
 }
 
-/** HTML 文件预览 */
+/**
+ * 通过主进程授权的预览 URL 在 sandbox iframe 中显示工作区 HTML 文件。
+ */
 export function HtmlPreview({ filePath }: HtmlPreviewProps) {
   const workspaceId = useWorkspaceStore((s) => s.currentWorkspaceId);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -18,7 +23,7 @@ export function HtmlPreview({ filePath }: HtmlPreviewProps) {
 
   const loadPreviewUrl = useCallback(async () => {
     if (!workspaceId) {
-      setError('请先选择工作区');
+      setError("请先选择工作区");
       setLoading(false);
       return;
     }
@@ -27,15 +32,18 @@ export function HtmlPreview({ filePath }: HtmlPreviewProps) {
     setError(null);
 
     try {
-      const result = await window.electronAPI?.workspaceFs.getPreviewUrl(workspaceId, filePath);
+      const result = await window.electronAPI?.workspaceFs.getPreviewUrl(
+        workspaceId,
+        filePath,
+      );
       if (!result?.success || !result.url) {
-        setError(result?.error || '无法加载预览');
+        setError(result?.error || "无法加载预览");
         setPreviewUrl(null);
         return;
       }
       setPreviewUrl(result.url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '无法加载预览');
+      setError(err instanceof Error ? err.message : "无法加载预览");
       setPreviewUrl(null);
     } finally {
       setLoading(false);
@@ -46,6 +54,9 @@ export function HtmlPreview({ filePath }: HtmlPreviewProps) {
     loadPreviewUrl();
   }, [loadPreviewUrl]);
 
+  /**
+   * 优先刷新既有 iframe；跨上下文无法访问时重新获取受控预览 URL。
+   */
   const handleRefresh = () => {
     if (iframeRef.current?.contentWindow && previewUrl) {
       try {
@@ -69,7 +80,7 @@ export function HtmlPreview({ filePath }: HtmlPreviewProps) {
   if (error || !previewUrl) {
     return (
       <div className="flex flex-col items-center justify-center flex-1 p-4 text-center gap-2">
-        <p className="text-sm text-red-600">{error || '预览不可用'}</p>
+        <p className="text-sm text-red-600">{error || "预览不可用"}</p>
         <Button variant="outline" size="sm" onClick={loadPreviewUrl}>
           重试
         </Button>
@@ -80,7 +91,12 @@ export function HtmlPreview({ filePath }: HtmlPreviewProps) {
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center justify-end px-2 py-1 border-b border-gray-200 shrink-0">
-        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={handleRefresh}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs gap-1"
+          onClick={handleRefresh}
+        >
           <RefreshCw size={12} />
           刷新
         </Button>

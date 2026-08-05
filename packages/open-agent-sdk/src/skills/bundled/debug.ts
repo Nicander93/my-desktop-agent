@@ -4,8 +4,8 @@
  * Systematic debugging of an issue using structured investigation.
  */
 
-import { registerSkill } from '../registry.js'
-import type { SkillContentBlock } from '../types.js'
+import { registerSkill } from "../registry.js";
+import type { SkillContentBlock } from "../types.js";
 
 const DEBUG_PROMPT = `Debug the described issue using a systematic approach:
 
@@ -27,22 +27,29 @@ const DEBUG_PROMPT = `Debug the described issue using a systematic approach:
 
 5. **Verify**: Confirm the fix works
    - Run relevant tests
-   - Check for regressions`
+   - Check for regressions`;
 
+/**
+ * 注册系统化排障 Skill，使模型按复现、调查、假设、修复和验证顺序工作。
+ */
 export function registerDebugSkill(): void {
   registerSkill({
-    name: 'debug',
-    description: 'Systematic debugging of an issue using structured investigation.',
-    aliases: ['investigate', 'diagnose'],
+    name: "debug",
+    description:
+      "Systematic debugging of an issue using structured investigation.",
+    aliases: ["investigate", "diagnose"],
     userInvocable: true,
+    /**
+     * 返回排障流程，并在用户未给出问题时要求模型先请求问题描述。
+     */
     async getPrompt(args): Promise<SkillContentBlock[]> {
-      let prompt = DEBUG_PROMPT
+      let prompt = DEBUG_PROMPT;
       if (args.trim()) {
-        prompt += `\n\n## Issue Description\n${args}`
+        prompt += `\n\n## Issue Description\n${args}`;
       } else {
-        prompt += `\n\nAsk the user to describe the issue they're experiencing.`
+        prompt += `\n\nAsk the user to describe the issue they're experiencing.`;
       }
-      return [{ type: 'text', text: prompt }]
+      return [{ type: "text", text: prompt }];
     },
-  })
+  });
 }

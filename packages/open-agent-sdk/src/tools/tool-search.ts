@@ -5,83 +5,96 @@
  * Supports keyword search and exact name selection.
  */
 
-import type { ToolDefinition, ToolResult } from '../types.js'
+import type { ToolDefinition, ToolResult } from "../types.js";
 
 // Registry of deferred tools (set by the agent)
-let deferredTools: ToolDefinition[] = []
+let deferredTools: ToolDefinition[] = [];
 
 /**
  * Set deferred tools available for search.
  */
 export function setDeferredTools(tools: ToolDefinition[]): void {
-  deferredTools = tools
+  deferredTools = tools;
 }
 
 export const ToolSearchTool: ToolDefinition = {
-  name: 'ToolSearch',
-  description: 'Search for additional tools that may be available but not yet loaded. Use keyword search or exact name selection.',
+  name: "ToolSearch",
+  description:
+    "Search for additional tools that may be available but not yet loaded. Use keyword search or exact name selection.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       query: {
-        type: 'string',
-        description: 'Search query. Use "select:ToolName" for exact match or keywords for search.',
+        type: "string",
+        description:
+          'Search query. Use "select:ToolName" for exact match or keywords for search.',
       },
       max_results: {
-        type: 'number',
-        description: 'Maximum results to return (default: 5)',
+        type: "number",
+        description: "Maximum results to return (default: 5)",
       },
     },
-    required: ['query'],
+    required: ["query"],
   },
   isReadOnly: () => true,
   isConcurrencySafe: () => true,
   isEnabled: () => true,
-  async prompt() { return 'Search for available tools.' },
+  /**
+   * 告知模型此工具在已注册工具目录中按查询发现候选能力。
+   */
+  async prompt() {
+    return "Search for available tools.";
+  },
+  /**
+   * 基于查询筛选可用工具，并返回便于模型选择的名称与描述摘要。
+   */
   async call(input: any): Promise<ToolResult> {
-    const { query, max_results = 5 } = input
+    const { query, max_results = 5 } = input;
 
     if (deferredTools.length === 0) {
       return {
-        type: 'tool_result',
-        tool_use_id: '',
-        content: 'No deferred tools available.',
-      }
+        type: "tool_result",
+        tool_use_id: "",
+        content: "No deferred tools available.",
+      };
     }
 
-    let matches: ToolDefinition[]
+    let matches: ToolDefinition[];
 
-    if (query.startsWith('select:')) {
+    if (query.startsWith("select:")) {
       // Exact name selection
-      const names = query.slice(7).split(',').map((n: string) => n.trim())
-      matches = deferredTools.filter(t => names.includes(t.name))
+      const names = query
+        .slice(7)
+        .split(",")
+        .map((n: string) => n.trim());
+      matches = deferredTools.filter((t) => names.includes(t.name));
     } else {
       // Keyword search
-      const keywords: string[] = query.toLowerCase().split(/\s+/)
+      const keywords: string[] = query.toLowerCase().split(/\s+/);
       matches = deferredTools
-        .filter(t => {
-          const searchText = `${t.name} ${t.description}`.toLowerCase()
-          return keywords.some((kw: string) => searchText.includes(kw))
+        .filter((t) => {
+          const searchText = `${t.name} ${t.description}`.toLowerCase();
+          return keywords.some((kw: string) => searchText.includes(kw));
         })
-        .slice(0, max_results)
+        .slice(0, max_results);
     }
 
     if (matches.length === 0) {
       return {
-        type: 'tool_result',
-        tool_use_id: '',
+        type: "tool_result",
+        tool_use_id: "",
         content: `No tools found matching "${query}"`,
-      }
+      };
     }
 
-    const lines = matches.map(t =>
-      `- ${t.name}: ${t.description.slice(0, 200)}`
-    )
+    const lines = matches.map(
+      (t) => `- ${t.name}: ${t.description.slice(0, 200)}`,
+    );
 
     return {
-      type: 'tool_result',
-      tool_use_id: '',
-      content: `Found ${matches.length} tool(s):\n${lines.join('\n')}`,
-    }
+      type: "tool_result",
+      tool_use_id: "",
+      content: `Found ${matches.length} tool(s):\n${lines.join("\n")}`,
+    };
   },
-}
+};

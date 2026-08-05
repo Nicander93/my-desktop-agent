@@ -7,8 +7,8 @@
  * 3. 路径在「始终允许」内存白名单 → 放行
  * 4. 否则弹窗让用户选择
  */
-import { BrowserWindow, dialog } from 'electron';
-import * as workspaceService from './workspaceService';
+import { BrowserWindow, dialog } from "electron";
+import * as workspaceService from "./workspaceService";
 
 /** 路径访问检查请求 */
 export interface PathAccessRequest {
@@ -17,6 +17,9 @@ export interface PathAccessRequest {
   toolName: string;
 }
 
+/**
+ * 路径访问判定的结果；`alwaysAllow` 表示用户本次选择了进程内白名单。
+ */
 export interface PathAccessResult {
   allowed: boolean;
   alwaysAllow?: boolean;
@@ -39,24 +42,26 @@ export function grantAlwaysAllow(workspaceId: string, path: string): void {
  */
 export async function showPathAccessDialog(
   window: BrowserWindow | null,
-  options: { workspacePath: string; targetPath: string; toolName?: string }
+  options: { workspacePath: string; targetPath: string; toolName?: string },
 ): Promise<{ allowed: boolean; alwaysAllow?: boolean }> {
   if (!window) return { allowed: false };
 
   const result = await dialog.showMessageBox(window, {
-    type: 'warning',
-    title: '路径访问请求',
-    message: 'Agent 尝试访问工作区外的文件',
+    type: "warning",
+    title: "路径访问请求",
+    message: "Agent 尝试访问工作区外的文件",
     detail: [
       options.toolName ? `工具：${options.toolName}` : null,
       `工作区：${options.workspacePath}`,
       `目标路径：${options.targetPath}`,
-      '',
-      '是否允许本次访问？'
-    ].filter(Boolean).join('\n'),
-    buttons: ['允许本次', '始终允许', '拒绝'],
+      "",
+      "是否允许本次访问？",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    buttons: ["允许本次", "始终允许", "拒绝"],
     defaultId: 2,
-    cancelId: 2
+    cancelId: 2,
   });
 
   if (result.response === 2) return { allowed: false };
@@ -70,7 +75,7 @@ export async function showPathAccessDialog(
  */
 export async function checkPathAccess(
   request: PathAccessRequest,
-  window: BrowserWindow | null
+  window: BrowserWindow | null,
 ): Promise<PathAccessResult> {
   const workspace = workspaceService.getWorkspace(request.workspaceId);
   if (!workspace) return { allowed: false };
@@ -80,7 +85,9 @@ export async function checkPathAccess(
   if (settings && !settings.restrictedMode) return { allowed: true };
 
   const isWithinWorkspace = workspaceService.isPathInWorkspace(
-    workspace.path, request.targetPath, settings?.allowedPaths
+    workspace.path,
+    request.targetPath,
+    settings?.allowedPaths,
   );
   if (isWithinWorkspace) return { allowed: true };
 
@@ -88,7 +95,10 @@ export async function checkPathAccess(
   const workspaceAllowed = alwaysAllowedPaths.get(request.workspaceId);
   if (workspaceAllowed) {
     for (const allowedPath of workspaceAllowed) {
-      if (request.targetPath.startsWith(allowedPath) || request.targetPath === allowedPath) {
+      if (
+        request.targetPath.startsWith(allowedPath) ||
+        request.targetPath === allowedPath
+      ) {
         return { allowed: true };
       }
     }
@@ -97,7 +107,7 @@ export async function checkPathAccess(
   const dialogResult = await showPathAccessDialog(window, {
     workspacePath: workspace.path,
     targetPath: request.targetPath,
-    toolName: request.toolName
+    toolName: request.toolName,
   });
 
   if (!dialogResult.allowed) return { allowed: false };

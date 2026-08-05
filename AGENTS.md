@@ -1,20 +1,20 @@
 # Agent Instructions
 
-这是仓库级入口，只放必须遵守的规则与文档导航。详细规范按主题拆分，修改代码前按需阅读：
+先读 [Agent 上下文与任务路由](docs/agent-context.md)。它说明产品边界、分层、核心链路，以及不同任务该读哪些文档。
 
-- [开发入口与仓库地图](docs/developer-guide.md)：安装、运行、评测、质量门禁和 Review 清单。
-- [代码风格](contributing/code-style.md)：格式化、命名、导入和注释风格。
-- [架构与文件放置](contributing/architecture.md)：Electron / Runtime / SDK 分层及依赖边界。
-- [IPC 契约](contributing/ipc-contract.md)：跨进程类型、handler、preload 和 renderer 的同步流程。
-- [测试原则](contributing/testing.md)：测试位置、覆盖重点和运行命令。
-- [注释细则](contributing/comments.md)：源码注释的范围、内容和策略变更检查清单。
+## 必须遵守
 
-改评测任务看 [benchmarks/README.md](benchmarks/README.md)；评测设计看 [docs/eval/](docs/eval/)。
+- 保留现有文件编码；新文件优先 UTF-8。
+- 尽量局部修改；不要以整文件重写或无关格式化制造噪音。
+- 改代码前，按任务阅读上下文文档所路由的专题规范；代码和测试是当前行为的事实来源。
+- 提交前运行 `pnpm check`。若无法运行，说明未运行的原因和已完成的替代验证。
+- 改动 session、profile 或流式逻辑时，同步检查并更新相关源码注释；具体清单见 [注释细则](contributing/comments.md)。
 
-提交前运行：
+## 任务入口
 
-```bash
-pnpm check
-```
-
-改 session / profile / 流式相关逻辑时，注释跟着改。
+- 开发、运行、排障、质量门禁： [开发者手册](docs/developer-guide.md)
+- 代码风格： [代码风格](contributing/code-style.md)
+- 分层、文件放置和依赖边界： [架构](contributing/architecture.md)
+- 跨进程能力： [IPC 契约](contributing/ipc-contract.md)
+- 测试： [测试原则](contributing/testing.md)
+- 评测任务： [benchmarks/README.md](benchmarks/README.md)；评测设计： [docs/eval/](docs/eval/)

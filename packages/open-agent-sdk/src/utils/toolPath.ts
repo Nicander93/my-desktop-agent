@@ -2,24 +2,36 @@
  * 工具路径解析：cwd 相对路径 + Windows 下 Git Bash/MSYS 盘符路径。
  * 只改 Read/Write/Edit 等 Node 工具入参，不改 Bash 命令字符串。
  */
-import path from 'node:path'
+import path from "node:path";
 
-/** /d 或 /d/foo → D:\...；/usr、/workspace 首段不是单字母，原样返回 */
-const MSYS_DRIVE = /^\/([a-zA-Z])(?:\/(.*))?$/
-const CYGDRIVE = /^\/cygdrive\/([a-zA-Z])(?:\/(.*))?$/i
+/**
+ * Git Bash/MSYS 与 Cygwin 的 Windows 盘符路径匹配规则。
+ *
+ * `/usr`、`/workspace` 等首段不是单字母的 POSIX 路径必须保留，不能误转为宿主盘符。
+ */
+const MSYS_DRIVE = /^\/([a-zA-Z])(?:\/(.*))?$/;
+const CYGDRIVE = /^\/cygdrive\/([a-zA-Z])(?:\/(.*))?$/i;
 
+/**
+ * 将 Git Bash/MSYS/Cygwin 盘符路径转换为 Windows 宿主路径。
+ *
+ * 不匹配的输入原样返回，随后由 `resolveToolPath` 按运行平台处理。
+ */
 export function msysPathToHost(inputPath: string): string {
-  const trimmed = inputPath.trim()
-  const cyg = trimmed.match(CYGDRIVE)
-  if (cyg) return toWinDrive(cyg[1], cyg[2])
-  const msys = trimmed.match(MSYS_DRIVE)
-  if (msys) return toWinDrive(msys[1], msys[2])
-  return trimmed
+  const trimmed = inputPath.trim();
+  const cyg = trimmed.match(CYGDRIVE);
+  if (cyg) return toWinDrive(cyg[1], cyg[2]);
+  const msys = trimmed.match(MSYS_DRIVE);
+  if (msys) return toWinDrive(msys[1], msys[2]);
+  return trimmed;
 }
 
+/**
+ * 以 Windows 规范形式拼接一个盘符根路径。
+ */
 function toWinDrive(letter: string, rest?: string): string {
-  const tail = rest && rest.length > 0 ? rest.replace(/\//g, '\\') : ''
-  return path.win32.normalize(`${letter.toUpperCase()}:\\${tail}`)
+  const tail = rest && rest.length > 0 ? rest.replace(/\//g, "\\") : "";
+  return path.win32.normalize(`${letter.toUpperCase()}:\\${tail}`);
 }
 
 /**
@@ -32,13 +44,13 @@ export function resolveToolPath(
   inputPath: string,
   platform: NodeJS.Platform = process.platform,
 ): string {
-  const trimmed = inputPath.trim()
-  if (platform === 'win32') {
-    const normalized = msysPathToHost(trimmed)
-    if (normalized.startsWith('/')) {
-      return path.win32.resolve(cwd, normalized.replace(/^\/+/, ''))
+  const trimmed = inputPath.trim();
+  if (platform === "win32") {
+    const normalized = msysPathToHost(trimmed);
+    if (normalized.startsWith("/")) {
+      return path.win32.resolve(cwd, normalized.replace(/^\/+/, ""));
     }
-    return path.win32.resolve(cwd, normalized)
+    return path.win32.resolve(cwd, normalized);
   }
-  return path.posix.resolve(cwd, trimmed)
+  return path.posix.resolve(cwd, trimmed);
 }

@@ -27,16 +27,13 @@ import type {
   Message,
   PermissionMode,
   ContentBlockParam,
-} from './types.js'
-import { QueryEngine } from './engine.js'
-import { getAllBaseTools, filterTools } from './tools/index.js'
-import { connectMCPServer, type MCPConnection } from './mcp/client.js'
-import { isSdkServerConfig } from './sdk-mcp-server.js'
-import { registerAgents } from './tools/agent-tool.js'
-import {
-  saveSession,
-  loadSession,
-} from './session.js'
+} from "./types.js";
+import { QueryEngine } from "./engine.js";
+import { getAllBaseTools, filterTools } from "./tools/index.js";
+import { connectMCPServer, type MCPConnection } from "./mcp/client.js";
+import { isSdkServerConfig } from "./sdk-mcp-server.js";
+import { registerAgents } from "./tools/agent-tool.js";
+import { saveSession, loadSession } from "./session.js";
 import {
   TraceRecorder,
   resolveTraceConfig,
@@ -45,65 +42,81 @@ import {
   replayRunTrace,
   groupTraceByRun,
   groupTraceByTurn,
-} from './trace.js'
-import type { TraceSpan, TraceRun, TraceTurn } from './trace.js'
-import { createHookRegistry, type HookRegistry } from './hooks.js'
-import { initBundledSkills } from './skills/index.js'
-import { createProvider, type LLMProvider, type ApiType } from './providers/index.js'
-import type { NormalizedMessageParam } from './providers/types.js'
+} from "./trace.js";
+import type { TraceSpan, TraceRun, TraceTurn } from "./trace.js";
+import { createHookRegistry, type HookRegistry } from "./hooks.js";
+import { initBundledSkills } from "./skills/index.js";
+import {
+  createProvider,
+  type LLMProvider,
+  type ApiType,
+} from "./providers/index.js";
+import type { NormalizedMessageParam } from "./providers/types.js";
 
 // --------------------------------------------------------------------------
 // Agent class
 // --------------------------------------------------------------------------
 
+/**
+ * 按名称去重并排序工具定义，使模型可见工具集在跨运行时保持确定性顺序。
+ */
 function stabilizeTools(tools: ToolDefinition[]): ToolDefinition[] {
-  const byName = new Map<string, ToolDefinition>()
+  const byName = new Map<string, ToolDefinition>();
   for (const tool of tools) {
-    byName.set(tool.name, tool)
+    byName.set(tool.name, tool);
   }
-  return Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name))
+  return Array.from(byName.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 }
 
+/**
+ * SDK 的高层会话对象：管理 provider、工具池、MCP 连接、历史、权限钩子和 trace。
+ */
 export class Agent {
-  private cfg: AgentOptions
-  private toolPool: ToolDefinition[]
-  private modelId: string
-  private apiType: ApiType
-  private apiCredentials: { key?: string; baseUrl?: string }
-  private provider: LLMProvider
-  private mcpLinks: MCPConnection[] = []
-  private history: NormalizedMessageParam[] = []
-  private messageLog: Message[] = []
-  private setupDone: Promise<void>
-  private sid: string
-  private abortCtrl: AbortController | null = null
-  private currentEngine: QueryEngine | null = null
-  private hookRegistry: HookRegistry
-  private traceRecorder: TraceRecorder | null = null
+  private cfg: AgentOptions;
+  private toolPool: ToolDefinition[];
+  private modelId: string;
+  private apiType: ApiType;
+  private apiCredentials: { key?: string; baseUrl?: string };
+  private provider: LLMProvider;
+  private mcpLinks: MCPConnection[] = [];
+  private history: NormalizedMessageParam[] = [];
+  private messageLog: Message[] = [];
+  private setupDone: Promise<void>;
+  private sid: string;
+  private abortCtrl: AbortController | null = null;
+  private currentEngine: QueryEngine | null = null;
+  private hookRegistry: HookRegistry;
+  private traceRecorder: TraceRecorder | null = null;
 
+  /**
+   * 从调用方选项初始化独立会话状态，并立即启动不会阻塞首个调用的异步准备工作。
+   */
   constructor(options: AgentOptions = {}) {
     // Shallow copy to avoid mutating caller's object
-    this.cfg = { ...options }
+    this.cfg = { ...options };
 
     // Merge credentials from options.env map, direct options, and process.env
-    this.apiCredentials = this.pickCredentials()
-    this.modelId = this.cfg.model ?? this.readEnv('CODEANY_MODEL') ?? 'claude-sonnet-4-6'
-    this.sid = this.cfg.sessionId ?? crypto.randomUUID()
+    this.apiCredentials = this.pickCredentials();
+    this.modelId =
+      this.cfg.model ?? this.readEnv("CODEANY_MODEL") ?? "claude-sonnet-4-6";
+    this.sid = this.cfg.sessionId ?? crypto.randomUUID();
 
     // Resolve API type
-    this.apiType = this.resolveApiType()
+    this.apiType = this.resolveApiType();
 
     // Create LLM provider
     this.provider = createProvider(this.apiType, {
       apiKey: this.apiCredentials.key,
       baseURL: this.apiCredentials.baseUrl,
-    })
+    });
 
     // Initialize bundled skills
-    initBundledSkills()
+    initBundledSkills();
 
     // Build hook registry from options
-    this.hookRegistry = createHookRegistry()
+    this.hookRegistry = createHookRegistry();
     if (this.cfg.hooks) {
       // Convert AgentOptions hooks format to HookConfig
       for (const [event, defs] of Object.entries(this.cfg.hooks)) {
@@ -113,28 +126,29 @@ export class Agent {
               matcher: def.matcher,
               timeout: def.timeout,
               handler: async (input) => {
-                const result = await handler(input, input.toolUseId || '', {
-                  signal: this.abortCtrl?.signal || new AbortController().signal,
-                })
-                return result || undefined
+                const result = await handler(input, input.toolUseId || "", {
+                  signal:
+                    this.abortCtrl?.signal || new AbortController().signal,
+                });
+                return result || undefined;
               },
-            })
+            });
           }
         }
       }
     }
 
     // Build tool pool from options (supports ToolDefinition[], string[], or preset)
-    this.toolPool = this.buildToolPool()
+    this.toolPool = this.buildToolPool();
 
     // Initialize trace recorder if enabled
-    const traceCfg = resolveTraceConfig(this.cfg.trace)
+    const traceCfg = resolveTraceConfig(this.cfg.trace);
     if (traceCfg) {
-      this.traceRecorder = new TraceRecorder(this.sid, traceCfg)
+      this.traceRecorder = new TraceRecorder(this.sid, traceCfg);
     }
 
     // Kick off async setup (MCP connections, agent registration, session resume)
-    this.setupDone = this.setup()
+    this.setupDone = this.setup();
   }
 
   /**
@@ -142,72 +156,80 @@ export class Agent {
    */
   private resolveApiType(): ApiType {
     // Explicit option
-    if (this.cfg.apiType) return this.cfg.apiType
+    if (this.cfg.apiType) return this.cfg.apiType;
 
     // Env var
     const envType =
-      this.cfg.env?.CODEANY_API_TYPE ??
-      this.readEnv('CODEANY_API_TYPE')
-    if (envType === 'openai-completions' || envType === 'anthropic-messages') {
-      return envType
+      this.cfg.env?.CODEANY_API_TYPE ?? this.readEnv("CODEANY_API_TYPE");
+    if (envType === "openai-completions" || envType === "anthropic-messages") {
+      return envType;
     }
 
     // Heuristic from model name
-    const model = this.modelId.toLowerCase()
+    const model = this.modelId.toLowerCase();
     if (
-      model.includes('gpt-') ||
-      model.includes('o1') ||
-      model.includes('o3') ||
-      model.includes('o4') ||
-      model.includes('deepseek') ||
-      model.includes('qwen') ||
-      model.includes('yi-') ||
-      model.includes('glm') ||
-      model.includes('mistral') ||
-      model.includes('gemma')
+      model.includes("gpt-") ||
+      model.includes("o1") ||
+      model.includes("o3") ||
+      model.includes("o4") ||
+      model.includes("deepseek") ||
+      model.includes("qwen") ||
+      model.includes("yi-") ||
+      model.includes("glm") ||
+      model.includes("mistral") ||
+      model.includes("gemma")
     ) {
-      return 'openai-completions'
+      return "openai-completions";
     }
 
-    return 'anthropic-messages'
+    return "anthropic-messages";
   }
 
   /** Pick API key and base URL from options or CODEANY_* env vars. */
   private pickCredentials(): { key?: string; baseUrl?: string } {
-    const envMap = this.cfg.env
+    const envMap = this.cfg.env;
     return {
       key:
         this.cfg.apiKey ??
         envMap?.CODEANY_API_KEY ??
         envMap?.CODEANY_AUTH_TOKEN ??
-        this.readEnv('CODEANY_API_KEY') ??
-        this.readEnv('CODEANY_AUTH_TOKEN'),
+        this.readEnv("CODEANY_API_KEY") ??
+        this.readEnv("CODEANY_AUTH_TOKEN"),
       baseUrl:
         this.cfg.baseURL ??
         envMap?.CODEANY_BASE_URL ??
-        this.readEnv('CODEANY_BASE_URL'),
-    }
+        this.readEnv("CODEANY_BASE_URL"),
+    };
   }
 
   /** Read a value from process.env (returns undefined if missing). */
   private readEnv(key: string): string | undefined {
-    return process.env[key] || undefined
+    return process.env[key] || undefined;
   }
 
   /** Assemble the available tool set based on options. */
   private buildToolPool(): ToolDefinition[] {
-    const raw = this.cfg.tools
-    let pool: ToolDefinition[]
+    const raw = this.cfg.tools;
+    let pool: ToolDefinition[];
 
-    if (!raw || (typeof raw === 'object' && !Array.isArray(raw) && 'type' in raw)) {
-      pool = getAllBaseTools()
-    } else if (Array.isArray(raw) && raw.length > 0 && typeof raw[0] === 'string') {
-      pool = filterTools(getAllBaseTools(), raw as string[])
+    if (
+      !raw ||
+      (typeof raw === "object" && !Array.isArray(raw) && "type" in raw)
+    ) {
+      pool = getAllBaseTools();
+    } else if (
+      Array.isArray(raw) &&
+      raw.length > 0 &&
+      typeof raw[0] === "string"
+    ) {
+      pool = filterTools(getAllBaseTools(), raw as string[]);
     } else {
-      pool = raw as ToolDefinition[]
+      pool = raw as ToolDefinition[];
     }
 
-    return stabilizeTools(filterTools(pool, this.cfg.allowedTools, this.cfg.disallowedTools))
+    return stabilizeTools(
+      filterTools(pool, this.cfg.allowedTools, this.cfg.disallowedTools),
+    );
   }
 
   /**
@@ -216,7 +238,7 @@ export class Agent {
   private async setup(): Promise<void> {
     // Register custom agent definitions
     if (this.cfg.agents) {
-      registerAgents(this.cfg.agents)
+      registerAgents(this.cfg.agents);
     }
 
     // Connect MCP servers (supports stdio, SSE, HTTP, and in-process SDK servers)
@@ -225,32 +247,35 @@ export class Agent {
         try {
           if (isSdkServerConfig(config)) {
             // In-process SDK MCP server - directly add tools
-            this.toolPool = [...this.toolPool, ...config.tools]
+            this.toolPool = [...this.toolPool, ...config.tools];
           } else {
             // External MCP server
-            const connection = await connectMCPServer(name, config)
-            this.mcpLinks.push(connection)
+            const connection = await connectMCPServer(name, config);
+            this.mcpLinks.push(connection);
 
-            if (connection.status === 'connected' && connection.tools.length > 0) {
-              this.toolPool = [...this.toolPool, ...connection.tools]
+            if (
+              connection.status === "connected" &&
+              connection.tools.length > 0
+            ) {
+              this.toolPool = [...this.toolPool, ...connection.tools];
             }
           }
         } catch (err: any) {
-          console.error(`[MCP] Failed to connect to "${name}": ${err.message}`)
+          console.error(`[MCP] Failed to connect to "${name}": ${err.message}`);
         }
       }
     }
 
     // Resume or continue session
     if (this.cfg.resume) {
-      const sessionData = await loadSession(this.cfg.resume)
+      const sessionData = await loadSession(this.cfg.resume);
       if (sessionData) {
-        this.history = sessionData.messages
-        this.sid = this.cfg.resume
+        this.history = sessionData.messages;
+        this.sid = this.cfg.resume;
         // Reload persisted trace spans
         if (this.traceRecorder) {
-          const spans = await loadSessionTrace(this.cfg.resume)
-          this.traceRecorder.loadSpans(spans)
+          const spans = await loadSessionTrace(this.cfg.resume);
+          this.traceRecorder.loadSpans(spans);
         }
       }
     }
@@ -263,64 +288,82 @@ export class Agent {
     prompt: string | ContentBlockParam[],
     overrides?: Partial<AgentOptions>,
   ): AsyncGenerator<SDKMessage, void> {
-    await this.setupDone
+    await this.setupDone;
 
-    const opts = { ...this.cfg, ...overrides }
-    const cwd = opts.cwd || process.cwd()
+    const opts = { ...this.cfg, ...overrides };
+    const cwd = opts.cwd || process.cwd();
 
     // Create abort controller for this query
-    this.abortCtrl = opts.abortController || new AbortController()
+    this.abortCtrl = opts.abortController || new AbortController();
     if (opts.abortSignal) {
-      opts.abortSignal.addEventListener('abort', () => this.abortCtrl?.abort(), { once: true })
+      opts.abortSignal.addEventListener(
+        "abort",
+        () => this.abortCtrl?.abort(),
+        { once: true },
+      );
     }
 
     // Resolve systemPrompt (handle preset object)
-    let systemPrompt: string | undefined
-    let appendSystemPrompt = opts.appendSystemPrompt
-    if (typeof opts.systemPrompt === 'object' && opts.systemPrompt?.type === 'preset') {
-      systemPrompt = undefined // Use engine default (default style)
+    let systemPrompt: string | undefined;
+    let appendSystemPrompt = opts.appendSystemPrompt;
+    if (
+      typeof opts.systemPrompt === "object" &&
+      opts.systemPrompt?.type === "preset"
+    ) {
+      systemPrompt = undefined; // Use engine default (default style)
       if (opts.systemPrompt.append) {
-        appendSystemPrompt = (appendSystemPrompt || '') + '\n' + opts.systemPrompt.append
+        appendSystemPrompt =
+          (appendSystemPrompt || "") + "\n" + opts.systemPrompt.append;
       }
     } else {
-      systemPrompt = opts.systemPrompt as string | undefined
+      systemPrompt = opts.systemPrompt as string | undefined;
     }
 
     // Build canUseTool based on permission mode
-    const permMode = opts.permissionMode ?? 'bypassPermissions'
-    const canUseTool: CanUseToolFn = opts.canUseTool ?? (async (_tool, _input) => {
-      if (permMode === 'bypassPermissions' || permMode === 'dontAsk' || permMode === 'auto') {
-        return { behavior: 'allow' }
-      }
-      if (permMode === 'acceptEdits') {
-        return { behavior: 'allow' }
-      }
-      return { behavior: 'allow' }
-    })
+    const permMode = opts.permissionMode ?? "bypassPermissions";
+    const canUseTool: CanUseToolFn =
+      opts.canUseTool ??
+      (async (_tool, _input) => {
+        if (
+          permMode === "bypassPermissions" ||
+          permMode === "dontAsk" ||
+          permMode === "auto"
+        ) {
+          return { behavior: "allow" };
+        }
+        if (permMode === "acceptEdits") {
+          return { behavior: "allow" };
+        }
+        return { behavior: "allow" };
+      });
 
     // Resolve tools with overrides
-    let tools = this.toolPool
+    let tools = this.toolPool;
     if (overrides?.allowedTools || overrides?.disallowedTools) {
-      tools = filterTools(tools, overrides.allowedTools, overrides.disallowedTools)
+      tools = filterTools(
+        tools,
+        overrides.allowedTools,
+        overrides.disallowedTools,
+      );
     }
     if (overrides?.tools) {
-      const ot = overrides.tools
-      if (Array.isArray(ot) && ot.length > 0 && typeof ot[0] === 'string') {
-        tools = filterTools(this.toolPool, ot as string[])
+      const ot = overrides.tools;
+      if (Array.isArray(ot) && ot.length > 0 && typeof ot[0] === "string") {
+        tools = filterTools(this.toolPool, ot as string[]);
       } else if (Array.isArray(ot)) {
-        tools = ot as ToolDefinition[]
+        tools = ot as ToolDefinition[];
       }
     }
-    tools = stabilizeTools(tools)
+    tools = stabilizeTools(tools);
 
     // Recreate provider if overrides change credentials or apiType
-    let provider = this.provider
+    let provider = this.provider;
     if (overrides?.apiType || overrides?.apiKey || overrides?.baseURL) {
-      const resolvedApiType = overrides.apiType ?? this.apiType
+      const resolvedApiType = overrides.apiType ?? this.apiType;
       provider = createProvider(resolvedApiType, {
         apiKey: overrides.apiKey ?? this.apiCredentials.key,
         baseURL: overrides.baseURL ?? this.apiCredentials.baseUrl,
-      })
+      });
     }
 
     // Create query engine with current conversation state
@@ -331,7 +374,8 @@ export class Agent {
       tools,
       systemPrompt,
       appendSystemPrompt,
-      includeEnvironmentContext: overrides?.includeEnvironmentContext ?? opts.includeEnvironmentContext,
+      includeEnvironmentContext:
+        overrides?.includeEnvironmentContext ?? opts.includeEnvironmentContext,
       promptCache: opts.promptCache,
       maxTurns: opts.maxTurns ?? 10,
       maxBudgetUsd: opts.maxBudgetUsd,
@@ -346,80 +390,89 @@ export class Agent {
       sessionId: this.sid,
       traceRecorder: this.traceRecorder ?? undefined,
       subprocessEnv: overrides?.subprocessEnv ?? opts.subprocessEnv,
-      toolResultTransformer: overrides?.toolResultTransformer ?? opts.toolResultTransformer,
+      toolResultTransformer:
+        overrides?.toolResultTransformer ?? opts.toolResultTransformer,
       traceMetadata: overrides?.traceMetadata ?? opts.traceMetadata,
-      maxSameToolRetries: overrides?.maxSameToolRetries ?? opts.maxSameToolRetries,
+      maxSameToolRetries:
+        overrides?.maxSameToolRetries ?? opts.maxSameToolRetries,
       apiRetry: overrides?.apiRetry ?? opts.apiRetry,
-    })
-    this.currentEngine = engine
+    });
+    this.currentEngine = engine;
 
     // Inject existing conversation history
     for (const msg of this.history) {
-      (engine as any).messages.push(msg)
+      (engine as any).messages.push(msg);
     }
 
     // Start trace run
-    const tracePrompt = typeof prompt === 'string' ? prompt : JSON.stringify(prompt)
+    const tracePrompt =
+      typeof prompt === "string" ? prompt : JSON.stringify(prompt);
     const runId = this.traceRecorder?.startRun({
       prompt: tracePrompt,
       model: opts.model || this.modelId,
       cwd,
       toolNames: tools.map((t) => t.name),
       metadata: opts.traceMetadata,
-    })
+    });
     if (runId) {
       const startSpan = this.traceRecorder!.getSpans().find(
-        (s) => s.runId === runId && s.type === 'run_start',
-      )
-      if (startSpan) yield { type: 'trace', span: startSpan }
+        (s) => s.runId === runId && s.type === "run_start",
+      );
+      if (startSpan) yield { type: "trace", span: startSpan };
     }
 
-    let lastResult: SDKMessage | null = null
+    let lastResult: SDKMessage | null = null;
 
     // Run the engine
     for await (const event of engine.submitMessage(prompt)) {
-      yield event
-      if (event.type === 'result') lastResult = event
+      yield event;
+      if (event.type === "result") lastResult = event;
 
       // Track assistant messages for multi-turn persistence
-      if (event.type === 'assistant') {
-        const uuid = crypto.randomUUID()
-        const timestamp = new Date().toISOString()
+      if (event.type === "assistant") {
+        const uuid = crypto.randomUUID();
+        const timestamp = new Date().toISOString();
         this.messageLog.push({
-          type: 'assistant',
+          type: "assistant",
           message: event.message,
           uuid,
           timestamp,
-        })
+        });
       }
     }
 
     // End trace run
     if (this.traceRecorder && runId) {
       this.traceRecorder.endRun({
-        numTurns: lastResult?.type === 'result' ? (lastResult.num_turns ?? 0) : 0,
-        totalCostUsd: lastResult?.type === 'result' ? lastResult.total_cost_usd : undefined,
-        usage: lastResult?.type === 'result' ? lastResult.usage : undefined,
-        subtype: lastResult?.type === 'result' ? (lastResult.subtype ?? 'success') : 'unknown',
-        isError: lastResult?.type === 'result' ? lastResult.is_error : undefined,
-      })
-      const endSpan = this.traceRecorder.getSpans().find(
-        (s) => s.runId === runId && s.type === 'run_end',
-      )
-      if (endSpan) yield { type: 'trace', span: endSpan }
+        numTurns:
+          lastResult?.type === "result" ? (lastResult.num_turns ?? 0) : 0,
+        totalCostUsd:
+          lastResult?.type === "result" ? lastResult.total_cost_usd : undefined,
+        usage: lastResult?.type === "result" ? lastResult.usage : undefined,
+        subtype:
+          lastResult?.type === "result"
+            ? (lastResult.subtype ?? "success")
+            : "unknown",
+        isError:
+          lastResult?.type === "result" ? lastResult.is_error : undefined,
+      });
+      const endSpan = this.traceRecorder
+        .getSpans()
+        .find((s) => s.runId === runId && s.type === "run_end");
+      if (endSpan) yield { type: "trace", span: endSpan };
     }
 
     // Persist conversation state for multi-turn
-    this.history = engine.getMessages()
+    this.history = engine.getMessages();
 
     // Add user message to tracked messages
-    const userUuid = crypto.randomUUID()
+    const userUuid = crypto.randomUUID();
     this.messageLog.push({
-      type: 'user',
-      message: { role: 'user', content: prompt },
+      type: "user",
+      message: { role: "user", content: prompt },
       uuid: userUuid,
       timestamp: new Date().toISOString(),
-    })
+    });
   }
 
   /**
@@ -430,62 +483,71 @@ export class Agent {
     text: string,
     overrides?: Partial<AgentOptions>,
   ): Promise<QueryResult> {
-    const t0 = performance.now()
-    const collected = { text: '', turns: 0, tokens: { in: 0, out: 0 } }
-    let executionError: string | undefined
+    const t0 = performance.now();
+    const collected = { text: "", turns: 0, tokens: { in: 0, out: 0 } };
+    let executionError: string | undefined;
 
     for await (const ev of this.query(text, overrides)) {
       switch (ev.type) {
-        case 'assistant': {
+        case "assistant": {
           // Extract the last assistant text (multi-turn: only final answer matters)
           const fragments = (ev.message.content as any[])
-            .filter((c: any) => c.type === 'text')
-            .map((c: any) => c.text)
-          if (fragments.length) collected.text = fragments.join('')
-          break
+            .filter((c: any) => c.type === "text")
+            .map((c: any) => c.text);
+          if (fragments.length) collected.text = fragments.join("");
+          break;
         }
-        case 'result':
-          collected.turns = ev.num_turns ?? 0
-          collected.tokens.in = ev.usage?.input_tokens ?? 0
-          collected.tokens.out = ev.usage?.output_tokens ?? 0
-          if (ev.is_error || ev.subtype === 'error' || ev.subtype === 'error_during_execution') {
-            executionError = ev.errors?.join('; ') || `Agent execution failed (${ev.subtype}).`
+        case "result":
+          collected.turns = ev.num_turns ?? 0;
+          collected.tokens.in = ev.usage?.input_tokens ?? 0;
+          collected.tokens.out = ev.usage?.output_tokens ?? 0;
+          if (
+            ev.is_error ||
+            ev.subtype === "error" ||
+            ev.subtype === "error_during_execution"
+          ) {
+            executionError =
+              ev.errors?.join("; ") ||
+              `Agent execution failed (${ev.subtype}).`;
           }
-          break
+          break;
       }
     }
 
-    if (executionError) throw new Error(executionError)
+    if (executionError) throw new Error(executionError);
 
     return {
       text: collected.text,
-      usage: { input_tokens: collected.tokens.in, output_tokens: collected.tokens.out },
+      usage: {
+        input_tokens: collected.tokens.in,
+        output_tokens: collected.tokens.out,
+      },
       num_turns: collected.turns,
       duration_ms: Math.round(performance.now() - t0),
       messages: [...this.messageLog],
-    }
+    };
   }
 
   /**
    * Get conversation messages.
    */
   getMessages(): Message[] {
-    return [...this.messageLog]
+    return [...this.messageLog];
   }
 
   /**
    * Reset conversation history.
    */
   clear(): void {
-    this.history = []
-    this.messageLog = []
+    this.history = [];
+    this.messageLog = [];
   }
 
   /**
    * Interrupt the current query.
    */
   async interrupt(): Promise<void> {
-    this.abortCtrl?.abort()
+    this.abortCtrl?.abort();
   }
 
   /**
@@ -493,8 +555,8 @@ export class Agent {
    */
   async setModel(model?: string): Promise<void> {
     if (model) {
-      this.modelId = model
-      this.cfg.model = model
+      this.modelId = model;
+      this.cfg.model = model;
     }
   }
 
@@ -502,7 +564,7 @@ export class Agent {
    * Change the permission mode during a session.
    */
   async setPermissionMode(mode: PermissionMode): Promise<void> {
-    this.cfg.permissionMode = mode
+    this.cfg.permissionMode = mode;
   }
 
   /**
@@ -510,9 +572,9 @@ export class Agent {
    */
   async setMaxThinkingTokens(maxThinkingTokens: number | null): Promise<void> {
     if (maxThinkingTokens === null) {
-      this.cfg.thinking = { type: 'disabled' }
+      this.cfg.thinking = { type: "disabled" };
     } else {
-      this.cfg.thinking = { type: 'enabled', budgetTokens: maxThinkingTokens }
+      this.cfg.thinking = { type: "enabled", budgetTokens: maxThinkingTokens };
     }
   }
 
@@ -520,28 +582,28 @@ export class Agent {
    * Get the session ID.
    */
   getSessionId(): string {
-    return this.sid
+    return this.sid;
   }
 
   /**
    * Get all recorded trace spans for this session (in-memory + loaded from disk).
    */
   getTrace(): TraceSpan[] {
-    return this.traceRecorder?.getSpans() ?? []
+    return this.traceRecorder?.getSpans() ?? [];
   }
 
   /**
    * Get the trace recorder instance (null if trace is disabled).
    */
   getTraceRecorder(): TraceRecorder | null {
-    return this.traceRecorder
+    return this.traceRecorder;
   }
 
   /**
    * Get the current run ID during an active query, or null.
    */
   getCurrentRunId(): string | null {
-    return this.traceRecorder?.getCurrentRunId() ?? null
+    return this.traceRecorder?.getCurrentRunId() ?? null;
   }
 
   /**
@@ -549,54 +611,54 @@ export class Agent {
    */
   async replayTrace(): Promise<TraceRun[]> {
     if (this.traceRecorder) {
-      return groupTraceByRun(this.traceRecorder.getSpans())
+      return groupTraceByRun(this.traceRecorder.getSpans());
     }
-    return replaySessionTrace(this.sid)
+    return replaySessionTrace(this.sid);
   }
 
   /**
    * Replay a specific run from this session.
    */
   async replayRun(runId: string): Promise<TraceRun | null> {
-    const spans = this.traceRecorder?.getSpansForRun(runId)
+    const spans = this.traceRecorder?.getSpansForRun(runId);
     if (spans && spans.length > 0) {
-      return groupTraceByRun(spans)[0] ?? null
+      return groupTraceByRun(spans)[0] ?? null;
     }
-    return replayRunTrace(this.sid, runId)
+    return replayRunTrace(this.sid, runId);
   }
 
   /**
    * Get turns for the most recent run (or a specific runId).
    */
   getTraceTurns(runId?: string): TraceTurn[] {
-    const recorder = this.traceRecorder
-    if (!recorder) return []
+    const recorder = this.traceRecorder;
+    if (!recorder) return [];
 
-    const rid = runId ?? recorder.getCurrentRunId()
+    const rid = runId ?? recorder.getCurrentRunId();
     if (!rid) {
-      const runs = groupTraceByRun(recorder.getSpans())
-      const last = runs[runs.length - 1]
-      return last?.turns ?? []
+      const runs = groupTraceByRun(recorder.getSpans());
+      const last = runs[runs.length - 1];
+      return last?.turns ?? [];
     }
 
-    return groupTraceByTurn(recorder.getSpansForRun(rid))
+    return groupTraceByTurn(recorder.getSpansForRun(rid));
   }
 
   /**
    * Get the current API type.
    */
   getApiType(): ApiType {
-    return this.apiType
+    return this.apiType;
   }
 
   /**
    * Stop a background task.
    */
   async stopTask(taskId: string): Promise<void> {
-    const { getTask } = await import('./tools/task-tools.js')
-    const task = getTask(taskId)
+    const { getTask } = await import("./tools/task-tools.js");
+    const task = getTask(taskId);
     if (task) {
-      task.status = 'cancelled'
+      task.status = "cancelled";
     }
   }
 
@@ -612,16 +674,16 @@ export class Agent {
           cwd: this.cfg.cwd || process.cwd(),
           model: this.modelId,
           summary: undefined,
-        })
+        });
       } catch {
         // Session persistence is best-effort
       }
     }
 
     for (const conn of this.mcpLinks) {
-      await conn.close()
+      await conn.close();
     }
-    this.mcpLinks = []
+    this.mcpLinks = [];
   }
 }
 
@@ -631,7 +693,7 @@ export class Agent {
 
 /** Factory: shorthand for `new Agent(options)`. */
 export function createAgent(options: AgentOptions = {}): Agent {
-  return new Agent(options)
+  return new Agent(options);
 }
 
 // --------------------------------------------------------------------------
@@ -643,13 +705,13 @@ export function createAgent(options: AgentOptions = {}): Agent {
  * The agent is created, used, and cleaned up automatically.
  */
 export async function* query(params: {
-  prompt: string | ContentBlockParam[]
-  options?: AgentOptions
+  prompt: string | ContentBlockParam[];
+  options?: AgentOptions;
 }): AsyncGenerator<SDKMessage, void> {
-  const ephemeral = createAgent(params.options)
+  const ephemeral = createAgent(params.options);
   try {
-    yield* ephemeral.query(params.prompt)
+    yield* ephemeral.query(params.prompt);
   } finally {
-    await ephemeral.close()
+    await ephemeral.close();
   }
 }

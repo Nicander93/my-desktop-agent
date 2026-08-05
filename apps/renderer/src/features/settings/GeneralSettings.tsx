@@ -3,10 +3,13 @@
  *
  * 工作目录只读展示，数据来自 workspaceStore 当前选中项；主题写入 uiStore
  */
-import { Input } from '@/components/ui/input';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { useUIStore, type ThemePreference } from '@/stores/uiStore';
+import { Input } from "@/components/ui/input";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useUIStore, type ThemePreference } from "@/stores/uiStore";
 
+/**
+ * 展示工作区只读上下文并提供全局主题偏好的受控选择入口。
+ */
 export function GeneralSettings() {
   const { currentWorkspaceId, workspaces } = useWorkspaceStore();
   const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
@@ -15,8 +18,10 @@ export function GeneralSettings() {
 
   return (
     <div className="max-w-2xl">
-      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">通用设置</h2>
-      
+      <h2 className="text-lg font-semibold text-[var(--color-text-primary)] mb-6">
+        通用设置
+      </h2>
+
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">
@@ -48,12 +53,14 @@ export function GeneralSettings() {
             当前工作区目录
           </label>
           <Input
-            value={currentWorkspace?.path ?? '未选择工作区'}
+            value={currentWorkspace?.path ?? "未选择工作区"}
             readOnly
             className="flex-1"
           />
           {currentWorkspace && (
-            <p className="text-xs text-[var(--color-text-muted)] mt-1">工作区：{currentWorkspace.name}</p>
+            <p className="text-xs text-[var(--color-text-muted)] mt-1">
+              工作区：{currentWorkspace.name}
+            </p>
           )}
         </div>
       </div>

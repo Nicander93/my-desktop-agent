@@ -9,159 +9,170 @@
  * Run: npx tsx examples/web/server.ts
  */
 
-import { createServer, type IncomingMessage, type ServerResponse } from 'http'
-import { readFile } from 'fs/promises'
-import { join, dirname } from 'path'
-import { fileURLToPath } from 'url'
-import { createAgent, type Agent } from '../../src/index.js'
+import { createServer, type IncomingMessage, type ServerResponse } from "http";
+import { readFile } from "fs/promises";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { createAgent, type Agent } from "../../src/index.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const PORT = parseInt(process.env.PORT || '8081')
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PORT = parseInt(process.env.PORT || "8081");
 
-let agent: Agent | null = null
+let agent: Agent | null = null;
 
+/**
+ * 惰性创建并复用 Web 聊天示例的单个 Agent 会话。
+ */
 function getOrCreateAgent(): Agent {
   if (!agent) {
     agent = createAgent({
-      model: process.env.CODEANY_MODEL || 'claude-sonnet-4-6',
+      model: process.env.CODEANY_MODEL || "claude-sonnet-4-6",
       maxTurns: 20,
-    })
+    });
   }
-  return agent
+  return agent;
 }
 
+/**
+ * 尽力关闭当前 Agent 并清除缓存，以供下一请求创建新会话。
+ */
 function resetAgent(): void {
-  agent?.close().catch(() => {})
-  agent = null
+  agent?.close().catch(() => {});
+  agent = null;
 }
 
 /** Read the full request body as a string. */
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (c: Buffer) => chunks.push(c))
-    req.on('end', () => resolve(Buffer.concat(chunks).toString()))
-    req.on('error', reject)
-  })
+    const chunks: Buffer[] = [];
+    req.on("data", (c: Buffer) => chunks.push(c));
+    req.on("end", () => resolve(Buffer.concat(chunks).toString()));
+    req.on("error", reject);
+  });
 }
 
 /** Handle POST /api/chat — SSE stream */
 async function handleChat(req: IncomingMessage, res: ServerResponse) {
-  const body = JSON.parse(await readBody(req))
-  const prompt = body.message?.trim()
+  const body = JSON.parse(await readBody(req));
+  const prompt = body.message?.trim();
   if (!prompt) {
-    res.writeHead(400, { 'Content-Type': 'application/json' })
-    res.end(JSON.stringify({ error: 'empty message' }))
-    return
+    res.writeHead(400, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "empty message" }));
+    return;
   }
 
   // SSE headers
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
-    'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive',
-    'X-Accel-Buffering': 'no',
-  })
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
 
+  /**
+   * 以 SSE data 帧写出一个序列化的 Agent 事件。
+   */
   const send = (event: string, data: unknown) => {
-    res.write(`data: ${JSON.stringify({ event, data })}\n\n`)
-  }
+    res.write(`data: ${JSON.stringify({ event, data })}\n\n`);
+  };
 
-  const ag = getOrCreateAgent()
-  const startMs = Date.now()
+  const ag = getOrCreateAgent();
+  const startMs = Date.now();
 
   try {
     for await (const ev of ag.query(prompt)) {
       switch (ev.type) {
-        case 'assistant': {
+        case "assistant": {
           for (const block of ev.message.content) {
-            if (block.type === 'text') {
-              send('text', { text: block.text })
-            } else if (block.type === 'thinking') {
-              send('thinking', { thinking: block.thinking })
-            } else if (block.type === 'tool_use') {
-              send('tool_use', {
+            if (block.type === "text") {
+              send("text", { text: block.text });
+            } else if (block.type === "thinking") {
+              send("thinking", { thinking: block.thinking });
+            } else if (block.type === "tool_use") {
+              send("tool_use", {
                 id: block.id,
                 name: block.name,
                 input: block.input,
-              })
-            } else if ('thinking' in block) {
-              send('thinking', { thinking: (block as any).thinking })
+              });
+            } else if ("thinking" in block) {
+              send("thinking", { thinking: (block as any).thinking });
             }
           }
-          break
+          break;
         }
-        case 'partial_message': {
-          if (ev.partial.type === 'thinking' && ev.partial.thinking) {
-            send('thinking_delta', { thinking: ev.partial.thinking })
-          } else if (ev.partial.type === 'text' && ev.partial.text) {
-            send('text_delta', { text: ev.partial.text })
+        case "partial_message": {
+          if (ev.partial.type === "thinking" && ev.partial.thinking) {
+            send("thinking_delta", { thinking: ev.partial.thinking });
+          } else if (ev.partial.type === "text" && ev.partial.text) {
+            send("text_delta", { text: ev.partial.text });
           }
-          break
+          break;
         }
-        case 'tool_result':
-          send('tool_result', {
+        case "tool_result":
+          send("tool_result", {
             tool_use_id: ev.result.tool_use_id,
             content: ev.result.output,
             is_error: false,
-          })
-          break
-        case 'result':
-          send('result', {
+          });
+          break;
+        case "result":
+          send("result", {
             num_turns: ev.num_turns ?? 0,
             input_tokens: ev.usage?.input_tokens ?? 0,
             output_tokens: ev.usage?.output_tokens ?? 0,
             cost: ev.total_cost_usd ?? ev.cost ?? 0,
             duration_ms: Date.now() - startMs,
-          })
-          break
+          });
+          break;
       }
     }
   } catch (err: any) {
-    send('error', { message: err.message })
+    send("error", { message: err.message });
   }
 
-  send('done', null)
-  res.end()
+  send("done", null);
+  res.end();
 }
 
 /** Handle POST /api/new */
 function handleNewSession(_req: IncomingMessage, res: ServerResponse) {
-  resetAgent()
-  res.writeHead(200, { 'Content-Type': 'application/json' })
-  res.end(JSON.stringify({ ok: true }))
+  resetAgent();
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ ok: true }));
 }
 
 /** Serve the static index.html */
 async function serveIndex(_req: IncomingMessage, res: ServerResponse) {
-  const html = await readFile(join(__dirname, 'index.html'), 'utf-8')
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
-  res.end(html)
+  const html = await readFile(join(__dirname, "index.html"), "utf-8");
+  res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+  res.end(html);
 }
 
 // --- HTTP Server ---
 
 const server = createServer(async (req, res) => {
-  const url = req.url || '/'
-  const method = req.method || 'GET'
+  const url = req.url || "/";
+  const method = req.method || "GET";
 
   try {
-    if (url === '/' && method === 'GET') return await serveIndex(req, res)
-    if (url === '/api/chat' && method === 'POST') return await handleChat(req, res)
-    if (url === '/api/new' && method === 'POST') return handleNewSession(req, res)
+    if (url === "/" && method === "GET") return await serveIndex(req, res);
+    if (url === "/api/chat" && method === "POST")
+      return await handleChat(req, res);
+    if (url === "/api/new" && method === "POST")
+      return handleNewSession(req, res);
 
-    res.writeHead(404)
-    res.end('Not Found')
+    res.writeHead(404);
+    res.end("Not Found");
   } catch (err: any) {
-    console.error(err)
+    console.error(err);
     if (!res.headersSent) {
-      res.writeHead(500, { 'Content-Type': 'application/json' })
+      res.writeHead(500, { "Content-Type": "application/json" });
     }
-    res.end(JSON.stringify({ error: err.message }))
+    res.end(JSON.stringify({ error: err.message }));
   }
-})
+});
 
 server.listen(PORT, () => {
-  console.log(`\n  Open Agent SDK — Web Chat`)
-  console.log(`  http://localhost:${PORT}\n`)
-})
+  console.log(`\n  Open Agent SDK — Web Chat`);
+  console.log(`  http://localhost:${PORT}\n`);
+});

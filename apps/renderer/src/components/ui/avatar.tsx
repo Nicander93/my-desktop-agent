@@ -1,7 +1,10 @@
 /** shadcn 原语，无业务。导出 Avatar、AvatarFallback */
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
+/**
+ * 头像容器支持的标准 div 属性。
+ */
 interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
@@ -11,15 +14,18 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
         ref={ref}
         className={cn(
           "relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full",
-          className
+          className,
         )}
         {...props}
       />
-    )
-  }
-)
-Avatar.displayName = "Avatar"
+    );
+  },
+);
+Avatar.displayName = "Avatar";
 
+/**
+ * 头像缺省内容容器支持的标准 div 属性。
+ */
 interface AvatarFallbackProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
@@ -29,13 +35,13 @@ const AvatarFallback = React.forwardRef<HTMLDivElement, AvatarFallbackProps>(
         ref={ref}
         className={cn(
           "flex h-full w-full items-center justify-center rounded-full bg-gray-100",
-          className
+          className,
         )}
         {...props}
       />
-    )
-  }
-)
-AvatarFallback.displayName = "AvatarFallback"
+    );
+  },
+);
+AvatarFallback.displayName = "AvatarFallback";
 
-export { Avatar, AvatarFallback }
+export { Avatar, AvatarFallback };

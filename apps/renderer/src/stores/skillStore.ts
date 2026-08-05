@@ -1,11 +1,17 @@
 /**
  * Skill 配置：列表、目录安装、URL/本地导入
  */
-import { create } from 'zustand';
-import type { SkillCatalogEntry, SkillRecord } from '@desktop-agent/shared';
+import { create } from "zustand";
+import type { SkillCatalogEntry, SkillRecord } from "@desktop-agent/shared";
 
+/**
+ * Skill 目录条目及其在本地的派生安装状态。
+ */
 type CatalogEntry = SkillCatalogEntry & { installed: boolean };
 
+/**
+ * Skill 设置页共享的列表、提及候选、安装、导入和刷新操作。
+ */
 interface SkillStore {
   skills: SkillRecord[];
   catalog: CatalogEntry[];
@@ -14,7 +20,10 @@ interface SkillStore {
   loadAll: () => Promise<void>;
   loadMentionable: () => Promise<void>;
   installCatalog: (catalogId: string) => Promise<{ error?: string }>;
-  updateSkill: (id: string, updates: Partial<SkillRecord>) => Promise<string | null>;
+  updateSkill: (
+    id: string,
+    updates: Partial<SkillRecord>,
+  ) => Promise<string | null>;
   deleteSkill: (id: string) => Promise<string | null>;
   importUrl: (name: string, url: string) => Promise<{ error?: string }>;
   importLocal: (name: string, localPath: string) => Promise<{ error?: string }>;
@@ -37,8 +46,8 @@ export const useSkillStore = create<SkillStore>((set, get) => ({
         window.electronAPI.skill.getCatalog(),
       ]);
       set({
-        skills: allResult.success ? allResult.skills ?? [] : [],
-        catalog: catalogResult.success ? catalogResult.catalog ?? [] : [],
+        skills: allResult.success ? (allResult.skills ?? []) : [],
+        catalog: catalogResult.success ? (catalogResult.catalog ?? []) : [],
       });
       await get().loadMentionable();
     } finally {
@@ -55,54 +64,54 @@ export const useSkillStore = create<SkillStore>((set, get) => ({
   },
 
   installCatalog: async (catalogId) => {
-    if (!window.electronAPI?.skill) return { error: 'Skill API 不可用' };
+    if (!window.electronAPI?.skill) return { error: "Skill API 不可用" };
     const result = await window.electronAPI.skill.installCatalog(catalogId);
-    if (!result.success) return { error: result.error || '安装失败' };
+    if (!result.success) return { error: result.error || "安装失败" };
     await get().loadAll();
     return {};
   },
 
   updateSkill: async (id, updates) => {
-    if (!window.electronAPI?.skill) return 'Skill API 不可用';
+    if (!window.electronAPI?.skill) return "Skill API 不可用";
     const result = await window.electronAPI.skill.update(id, {
       name: updates.name,
       displayName: updates.displayName,
       description: updates.description,
       enabled: updates.enabled,
     });
-    if (!result.success) return result.error || '更新失败';
+    if (!result.success) return result.error || "更新失败";
     await get().loadAll();
     return null;
   },
 
   deleteSkill: async (id) => {
-    if (!window.electronAPI?.skill) return 'Skill API 不可用';
+    if (!window.electronAPI?.skill) return "Skill API 不可用";
     const result = await window.electronAPI.skill.delete(id);
-    if (!result.success) return result.error || '删除失败';
+    if (!result.success) return result.error || "删除失败";
     await get().loadAll();
     return null;
   },
 
   importUrl: async (name, url) => {
-    if (!window.electronAPI?.skill) return { error: 'Skill API 不可用' };
+    if (!window.electronAPI?.skill) return { error: "Skill API 不可用" };
     const result = await window.electronAPI.skill.importUrl(name, url);
-    if (!result.success) return { error: result.error || '导入失败' };
+    if (!result.success) return { error: result.error || "导入失败" };
     await get().loadAll();
     return {};
   },
 
   importLocal: async (name, localPath) => {
-    if (!window.electronAPI?.skill) return { error: 'Skill API 不可用' };
+    if (!window.electronAPI?.skill) return { error: "Skill API 不可用" };
     const result = await window.electronAPI.skill.importLocal(name, localPath);
-    if (!result.success) return { error: result.error || '导入失败' };
+    if (!result.success) return { error: result.error || "导入失败" };
     await get().loadAll();
     return {};
   },
 
   refreshSkill: async (id) => {
-    if (!window.electronAPI?.skill) return { error: 'Skill API 不可用' };
+    if (!window.electronAPI?.skill) return { error: "Skill API 不可用" };
     const result = await window.electronAPI.skill.refresh(id);
-    if (!result.success) return { error: result.error || '刷新失败' };
+    if (!result.success) return { error: result.error || "刷新失败" };
     await get().loadAll();
     return {};
   },

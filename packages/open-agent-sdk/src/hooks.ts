@@ -23,64 +23,67 @@
  * - Notification: system notification
  */
 
-import { spawn, type ChildProcess } from 'child_process'
-import { resolveShellInvocation } from './tools/shell.js'
+import { spawn, type ChildProcess } from "child_process";
+import { resolveShellInvocation } from "./tools/shell.js";
 
 /**
  * All supported hook events.
  */
 export const HOOK_EVENTS = [
-  'PreToolUse',
-  'PostToolUse',
-  'PostToolUseFailure',
-  'SessionStart',
-  'SessionEnd',
-  'Stop',
-  'SubagentStart',
-  'SubagentStop',
-  'UserPromptSubmit',
-  'PermissionRequest',
-  'PermissionDenied',
-  'TaskCreated',
-  'TaskCompleted',
-  'ConfigChange',
-  'CwdChanged',
-  'FileChanged',
-  'Notification',
-  'PreCompact',
-  'PostCompact',
-  'TeammateIdle',
-] as const
+  "PreToolUse",
+  "PostToolUse",
+  "PostToolUseFailure",
+  "SessionStart",
+  "SessionEnd",
+  "Stop",
+  "SubagentStart",
+  "SubagentStop",
+  "UserPromptSubmit",
+  "PermissionRequest",
+  "PermissionDenied",
+  "TaskCreated",
+  "TaskCompleted",
+  "ConfigChange",
+  "CwdChanged",
+  "FileChanged",
+  "Notification",
+  "PreCompact",
+  "PostCompact",
+  "TeammateIdle",
+] as const;
 
-export type HookEvent = typeof HOOK_EVENTS[number]
+/**
+ * 所有可注册的 Agent 生命周期 Hook 事件名。
+ */
+export type HookEvent = (typeof HOOK_EVENTS)[number];
 
 /**
  * Hook definition.
  */
 export interface HookDefinition {
   /** Shell command or function to execute */
-  command?: string
+  command?: string;
   /** Function handler */
-  handler?: (input: HookInput) => Promise<HookOutput | void>
+  handler?: (input: HookInput) => Promise<HookOutput | void>;
   /** Tool name matcher (regex pattern) */
-  matcher?: string
+  matcher?: string;
   /** Timeout in milliseconds */
-  timeout?: number
+  timeout?: number;
 }
 
 /**
  * Hook input passed to handlers.
  */
 export interface HookInput {
-  event: HookEvent
-  toolName?: string
-  toolInput?: unknown
-  toolOutput?: unknown
-  toolUseId?: string
-  sessionId?: string
-  cwd?: string
-  error?: string
-  [key: string]: unknown
+  event: HookEvent;
+  toolName?: string;
+  toolInput?: unknown;
+  toolOutput?: unknown;
+  toolUseId?: string;
+  sessionId?: string;
+  cwd?: string;
+  error?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -88,43 +91,43 @@ export interface HookInput {
  */
 export interface HookOutput {
   /** Message to append to conversation */
-  message?: string
+  message?: string;
   /** Permission update */
   permissionUpdate?: {
-    tool: string
-    behavior: 'allow' | 'deny'
-  }
+    tool: string;
+    behavior: "allow" | "deny";
+  };
   /** Whether to block the action */
-  block?: boolean
+  block?: boolean;
   /** Notification */
   notification?: {
-    title: string
-    body: string
-    level?: 'info' | 'warning' | 'error'
-  }
+    title: string;
+    body: string;
+    level?: "info" | "warning" | "error";
+  };
 }
 
 /**
  * Hook configuration (from settings).
  */
-export type HookConfig = Record<string, HookDefinition[]>
+export type HookConfig = Record<string, HookDefinition[]>;
 
 /**
  * Hook registry for managing and executing hooks.
  */
 export class HookRegistry {
-  private hooks: Map<HookEvent, HookDefinition[]> = new Map()
+  private hooks: Map<HookEvent, HookDefinition[]> = new Map();
 
   /**
    * Register hooks from configuration.
    */
   registerFromConfig(config: HookConfig): void {
     for (const [event, definitions] of Object.entries(config)) {
-      const hookEvent = event as HookEvent
-      if (!HOOK_EVENTS.includes(hookEvent)) continue
+      const hookEvent = event as HookEvent;
+      if (!HOOK_EVENTS.includes(hookEvent)) continue;
 
-      const existing = this.hooks.get(hookEvent) || []
-      this.hooks.set(hookEvent, [...existing, ...definitions])
+      const existing = this.hooks.get(hookEvent) || [];
+      this.hooks.set(hookEvent, [...existing, ...definitions]);
     }
   }
 
@@ -132,68 +135,72 @@ export class HookRegistry {
    * Register a single hook.
    */
   register(event: HookEvent, definition: HookDefinition): void {
-    const existing = this.hooks.get(event) || []
-    existing.push(definition)
-    this.hooks.set(event, existing)
+    const existing = this.hooks.get(event) || [];
+    existing.push(definition);
+    this.hooks.set(event, existing);
   }
 
   /**
    * Execute hooks for an event.
    */
-  async execute(
-    event: HookEvent,
-    input: HookInput,
-  ): Promise<HookOutput[]> {
-    const definitions = this.hooks.get(event) || []
-    const results: HookOutput[] = []
+  async execute(event: HookEvent, input: HookInput): Promise<HookOutput[]> {
+    const definitions = this.hooks.get(event) || [];
+    const results: HookOutput[] = [];
 
     for (const def of definitions) {
       // Check matcher for tool-specific hooks
       if (def.matcher && input.toolName) {
-        const regex = new RegExp(def.matcher)
-        if (!regex.test(input.toolName)) continue
+        const regex = new RegExp(def.matcher);
+        if (!regex.test(input.toolName)) continue;
       }
 
       try {
-        let output: HookOutput | void = undefined
+        let output: HookOutput | void = undefined;
 
         if (def.handler) {
           // Function handler
           output = await Promise.race([
             def.handler(input),
             new Promise<void>((_, reject) =>
-              setTimeout(() => reject(new Error('Hook timeout')), def.timeout || 30000),
+              setTimeout(
+                () => reject(new Error("Hook timeout")),
+                def.timeout || 30000,
+              ),
             ),
-          ])
+          ]);
         } else if (def.command) {
           // Shell command handler
-          output = await executeShellHook(def.command, input, def.timeout || 30000)
+          output = await executeShellHook(
+            def.command,
+            input,
+            def.timeout || 30000,
+          );
         }
 
         if (output) {
-          results.push(output)
+          results.push(output);
         }
       } catch (err: any) {
         // Log but don't fail on hook errors
-        console.error(`[Hook] ${event} hook failed: ${err.message}`)
+        console.error(`[Hook] ${event} hook failed: ${err.message}`);
       }
     }
 
-    return results
+    return results;
   }
 
   /**
    * Check if any hooks are registered for an event.
    */
   hasHooks(event: HookEvent): boolean {
-    return (this.hooks.get(event)?.length || 0) > 0
+    return (this.hooks.get(event)?.length || 0) > 0;
   }
 
   /**
    * Clear all hooks.
    */
   clear(): void {
-    this.hooks.clear()
+    this.hooks.clear();
   }
 }
 
@@ -206,58 +213,58 @@ async function executeShellHook(
   timeout: number,
 ): Promise<HookOutput | void> {
   return new Promise((resolve) => {
-    const shell = resolveShellInvocation(command)
+    const shell = resolveShellInvocation(command);
     const proc = spawn(shell.cmd, shell.args, {
       timeout,
       env: {
         ...process.env,
         HOOK_EVENT: input.event,
-        HOOK_TOOL_NAME: input.toolName || '',
-        HOOK_SESSION_ID: input.sessionId || '',
-        HOOK_CWD: input.cwd || '',
+        HOOK_TOOL_NAME: input.toolName || "",
+        HOOK_SESSION_ID: input.sessionId || "",
+        HOOK_CWD: input.cwd || "",
       },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    })
+      stdio: ["pipe", "pipe", "pipe"],
+    });
 
     // Send input as JSON on stdin
-    proc.stdin?.write(JSON.stringify(input))
-    proc.stdin?.end()
+    proc.stdin?.write(JSON.stringify(input));
+    proc.stdin?.end();
 
-    const chunks: Buffer[] = []
-    proc.stdout?.on('data', (d: Buffer) => chunks.push(d))
+    const chunks: Buffer[] = [];
+    proc.stdout?.on("data", (d: Buffer) => chunks.push(d));
 
-    proc.on('close', (code) => {
+    proc.on("close", (code) => {
       if (code !== 0) {
-        resolve(undefined)
-        return
+        resolve(undefined);
+        return;
       }
 
-      const stdout = Buffer.concat(chunks).toString('utf-8').trim()
+      const stdout = Buffer.concat(chunks).toString("utf-8").trim();
       if (!stdout) {
-        resolve(undefined)
-        return
+        resolve(undefined);
+        return;
       }
 
       try {
-        const output = JSON.parse(stdout) as HookOutput
-        resolve(output)
+        const output = JSON.parse(stdout) as HookOutput;
+        resolve(output);
       } catch {
         // Non-JSON output treated as message
-        resolve({ message: stdout })
+        resolve({ message: stdout });
       }
-    })
+    });
 
-    proc.on('error', () => resolve(undefined))
-  })
+    proc.on("error", () => resolve(undefined));
+  });
 }
 
 /**
  * Create a default hook registry.
  */
 export function createHookRegistry(config?: HookConfig): HookRegistry {
-  const registry = new HookRegistry()
+  const registry = new HookRegistry();
   if (config) {
-    registry.registerFromConfig(config)
+    registry.registerFromConfig(config);
   }
-  return registry
+  return registry;
 }

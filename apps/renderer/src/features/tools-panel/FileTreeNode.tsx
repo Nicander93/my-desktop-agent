@@ -1,24 +1,31 @@
 /** 文件树递归节点：展开目录或打开文件 */
-import { ChevronRight, ChevronDown, Folder, FolderOpen, File, Loader2 } from 'lucide-react';
-import type { FileEntry } from '@desktop-agent/shared';
-import { useFileExplorerStore } from '@/stores/fileExplorerStore';
-import { useEditorStore } from '@/stores/editorStore';
-import { cn } from '@/lib/utils';
+import {
+  ChevronRight,
+  ChevronDown,
+  Folder,
+  FolderOpen,
+  File,
+  Loader2,
+} from "lucide-react";
+import type { FileEntry } from "@desktop-agent/shared";
+import { useFileExplorerStore } from "@/stores/fileExplorerStore";
+import { useEditorStore } from "@/stores/editorStore";
+import { cn } from "@/lib/utils";
 
+/**
+ * 递归文件树节点的条目数据与相对缩进深度。
+ */
 interface FileTreeNodeProps {
   entry: FileEntry;
   depth: number;
 }
 
-/** 单级目录/文件树节点 */
+/**
+ * 渲染单个目录或文件；目录延迟展开子项，文件则交由编辑器 store 打开。
+ */
 export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
-  const {
-    expandedPaths,
-    childrenMap,
-    loadingPaths,
-    toggleExpand,
-    openFile,
-  } = useFileExplorerStore();
+  const { expandedPaths, childrenMap, loadingPaths, toggleExpand, openFile } =
+    useFileExplorerStore();
   const activeFile = useEditorStore((s) => s.activeFile);
 
   const isExpanded = !!expandedPaths[entry.path];
@@ -36,11 +43,20 @@ export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
           style={{ paddingLeft }}
         >
           {isLoading ? (
-            <Loader2 size={14} className="shrink-0 animate-spin text-[var(--color-text-muted)]" />
+            <Loader2
+              size={14}
+              className="shrink-0 animate-spin text-[var(--color-text-muted)]"
+            />
           ) : isExpanded ? (
-            <ChevronDown size={14} className="shrink-0 text-[var(--color-text-muted)]" />
+            <ChevronDown
+              size={14}
+              className="shrink-0 text-[var(--color-text-muted)]"
+            />
           ) : (
-            <ChevronRight size={14} className="shrink-0 text-[var(--color-text-muted)]" />
+            <ChevronRight
+              size={14}
+              className="shrink-0 text-[var(--color-text-muted)]"
+            />
           )}
           {isExpanded ? (
             <FolderOpen size={14} className="shrink-0 text-amber-500" />
@@ -49,9 +65,10 @@ export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
           )}
           <span className="truncate">{entry.name}</span>
         </button>
-        {isExpanded && children?.map((child) => (
-          <FileTreeNode key={child.path} entry={child} depth={depth + 1} />
-        ))}
+        {isExpanded &&
+          children?.map((child) => (
+            <FileTreeNode key={child.path} entry={child} depth={depth + 1} />
+          ))}
       </div>
     );
   }
@@ -61,8 +78,9 @@ export function FileTreeNode({ entry, depth }: FileTreeNodeProps) {
       type="button"
       onClick={() => openFile(entry.path)}
       className={cn(
-        'w-full flex items-center gap-1.5 py-1 pr-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] rounded-md transition-colors',
-        activeFile === entry.path && 'bg-[var(--color-primary-100)] text-[var(--color-primary-700)]'
+        "w-full flex items-center gap-1.5 py-1 pr-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-hover)] rounded-md transition-colors",
+        activeFile === entry.path &&
+          "bg-[var(--color-primary-100)] text-[var(--color-primary-700)]",
       )}
       style={{ paddingLeft: paddingLeft + 18 }}
       title={entry.path}

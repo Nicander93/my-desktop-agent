@@ -4,8 +4,8 @@
  * Review code changes (PR or local diff) for issues and improvements.
  */
 
-import { registerSkill } from '../registry.js'
-import type { SkillContentBlock } from '../types.js'
+import { registerSkill } from "../registry.js";
+import type { SkillContentBlock } from "../types.js";
 
 const REVIEW_PROMPT = `Review the current code changes for potential issues. Follow these steps:
 
@@ -21,21 +21,28 @@ const REVIEW_PROMPT = `Review the current code changes for potential issues. Fol
    - Suggestions (nice to have)
    - Questions (need clarification)
 
-Be specific: reference file names, line numbers, and suggest fixes.`
+Be specific: reference file names, line numbers, and suggest fixes.`;
 
+/**
+ * 注册代码审查 Skill，并声明只读检查阶段可使用的工具集。
+ */
 export function registerReviewSkill(): void {
   registerSkill({
-    name: 'review',
-    description: 'Review code changes for correctness, security, performance, and style issues.',
-    aliases: ['review-pr', 'cr'],
-    allowedTools: ['Bash', 'Read', 'Glob', 'Grep'],
+    name: "review",
+    description:
+      "Review code changes for correctness, security, performance, and style issues.",
+    aliases: ["review-pr", "cr"],
+    allowedTools: ["Bash", "Read", "Glob", "Grep"],
     userInvocable: true,
+    /**
+     * 返回审查检查表，并以用户参数限定可选的关注范围。
+     */
     async getPrompt(args): Promise<SkillContentBlock[]> {
-      let prompt = REVIEW_PROMPT
+      let prompt = REVIEW_PROMPT;
       if (args.trim()) {
-        prompt += `\n\nFocus area: ${args}`
+        prompt += `\n\nFocus area: ${args}`;
       }
-      return [{ type: 'text', text: prompt }]
+      return [{ type: "text", text: prompt }];
     },
-  })
+  });
 }

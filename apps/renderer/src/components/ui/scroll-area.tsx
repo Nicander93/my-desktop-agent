@@ -1,9 +1,12 @@
 /** shadcn 原语，无业务。导出 ScrollArea */
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
+/**
+ * 带溢出滚动行为的容器属性与期望方向。
+ */
 interface ScrollAreaProps extends React.HTMLAttributes<HTMLDivElement> {
-  orientation?: "vertical" | "horizontal"
+  orientation?: "vertical" | "horizontal";
 }
 
 const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
@@ -16,9 +19,9 @@ const ScrollArea = React.forwardRef<HTMLDivElement, ScrollAreaProps>(
       >
         {children}
       </div>
-    )
-  }
-)
-ScrollArea.displayName = "ScrollArea"
+    );
+  },
+);
+ScrollArea.displayName = "ScrollArea";
 
-export { ScrollArea }
+export { ScrollArea };

@@ -6,35 +6,38 @@
  *
  * Run: npx tsx examples/10-permissions.ts
  */
-import { query } from '../src/index.js'
+import { query } from "../src/index.js";
 
+/**
+ * 运行自定义工具权限决策的示例主流程。
+ */
 async function main() {
-  console.log('--- Example 10: Read-Only Agent ---\n')
+  console.log("--- Example 10: Read-Only Agent ---\n");
 
   // Read-only agent: can only use Read, Glob, Grep
   for await (const message of query({
-    prompt: 'Review the code in src/agent.ts for best practices. Be concise.',
+    prompt: "Review the code in src/agent.ts for best practices. Be concise.",
     options: {
-      allowedTools: ['Read', 'Glob', 'Grep'],
+      allowedTools: ["Read", "Glob", "Grep"],
     },
   })) {
-    const msg = message as any
+    const msg = message as any;
 
-    if (msg.type === 'assistant') {
+    if (msg.type === "assistant") {
       for (const block of msg.message?.content || []) {
-        if ('text' in block && block.text?.trim()) {
-          console.log(block.text)
+        if ("text" in block && block.text?.trim()) {
+          console.log(block.text);
         }
-        if ('name' in block) {
-          console.log(`[${block.name}]`)
+        if ("name" in block) {
+          console.log(`[${block.name}]`);
         }
       }
     }
 
-    if (msg.type === 'result') {
-      console.log(`\n--- ${msg.subtype} ---`)
+    if (msg.type === "result") {
+      console.log(`\n--- ${msg.subtype} ---`);
     }
   }
 }
 
-main().catch(console.error)
+main().catch(console.error);

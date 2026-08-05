@@ -8,13 +8,13 @@
  * - Date injection
  */
 
-import { execSync } from 'child_process'
-import { readFile, stat } from 'fs/promises'
-import { join, resolve } from 'path'
+import { execSync } from "child_process";
+import { readFile, stat } from "fs/promises";
+import { join, resolve } from "path";
 
 // Memoization cache
-let cachedGitStatus: string | null = null
-let cachedGitStatusCwd: string | null = null
+let cachedGitStatus: string | null = null;
+let cachedGitStatusCwd: string | null = null;
 
 /**
  * Get git status info for system prompt.
@@ -22,59 +22,66 @@ let cachedGitStatusCwd: string | null = null
  */
 export async function getGitStatus(cwd: string): Promise<string> {
   if (cachedGitStatus && cachedGitStatusCwd === cwd) {
-    return cachedGitStatus
+    return cachedGitStatus;
   }
 
   try {
-    const parts: string[] = []
+    const parts: string[] = [];
 
+    /**
+     * 在当前工作目录内执行受超时保护的 Git 查询；失败时返回空值而非中断提示构建。
+     */
     const gitExec = (cmd: string, timeoutMs = 5000): string | null => {
       try {
         return execSync(cmd, {
-          cwd, timeout: timeoutMs, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
-        }).trim()
+          cwd,
+          timeout: timeoutMs,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        }).trim();
       } catch {
-        return null
+        return null;
       }
-    }
+    };
 
     // Check if this is a git repo at all
-    if (!gitExec('git rev-parse --git-dir')) return ''
+    if (!gitExec("git rev-parse --git-dir")) return "";
 
     // Current branch
-    const branch = gitExec('git rev-parse --abbrev-ref HEAD')
-    if (branch) parts.push(`Current branch: ${branch}`)
+    const branch = gitExec("git rev-parse --abbrev-ref HEAD");
+    if (branch) parts.push(`Current branch: ${branch}`);
 
     // Main branch detection
-    const mainBranch = detectMainBranch(cwd)
-    if (mainBranch) parts.push(`Main branch: ${mainBranch}`)
+    const mainBranch = detectMainBranch(cwd);
+    if (mainBranch) parts.push(`Main branch: ${mainBranch}`);
 
     // Git user
-    const user = gitExec('git config user.name', 3000)
-    if (user) parts.push(`Git user: ${user}`)
+    const user = gitExec("git config user.name", 3000);
+    if (user) parts.push(`Git user: ${user}`);
 
     // Status (staged + unstaged)
-    const status = gitExec('git status --short')
+    const status = gitExec("git status --short");
     if (status) {
-      const truncated = status.length > 2000
-        ? status.slice(0, 2000) + '\n...(truncated)'
-        : status
-      parts.push(`Status:\n${truncated}`)
+      const truncated =
+        status.length > 2000
+          ? status.slice(0, 2000) + "\n...(truncated)"
+          : status;
+      parts.push(`Status:\n${truncated}`);
     }
 
     // Recent commits (only if HEAD exists)
-    const hasHead = gitExec('git rev-parse HEAD')
+    const hasHead = gitExec("git rev-parse HEAD");
     if (hasHead) {
-      const log = gitExec('git log --oneline -5 --no-decorate')
-      if (log) parts.push(`Recent commits:\n${log}`)
+      const log = gitExec("git log --oneline -5 --no-decorate");
+      if (log) parts.push(`Recent commits:\n${log}`);
     }
 
-    cachedGitStatus = parts.join('\n\n')
-    cachedGitStatusCwd = cwd
+    cachedGitStatus = parts.join("\n\n");
+    cachedGitStatusCwd = cwd;
 
-    return cachedGitStatus
+    return cachedGitStatus;
   } catch {
-    return ''
+    return "";
   }
 }
 
@@ -83,114 +90,120 @@ export async function getGitStatus(cwd: string): Promise<string> {
  */
 function detectMainBranch(cwd: string): string | null {
   try {
-    const branches = execSync('git branch -l main master', {
-      cwd, timeout: 3000, encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'],
-    }).trim()
-    if (branches.includes('main')) return 'main'
-    if (branches.includes('master')) return 'master'
-    return null
+    const branches = execSync("git branch -l main master", {
+      cwd,
+      timeout: 3000,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (branches.includes("main")) return "main";
+    if (branches.includes("master")) return "master";
+    return null;
   } catch {
-    return null
+    return null;
   }
 }
 
 /**
  * Discover project context files (AGENT.md, CLAUDE.md) in the project.
  */
-export async function discoverProjectContextFiles(cwd: string): Promise<string[]> {
+export async function discoverProjectContextFiles(
+  cwd: string,
+): Promise<string[]> {
   const candidates = [
-    join(cwd, 'AGENTS.md'),
-    join(cwd, 'AGENT.md'),
-    join(cwd, 'CLAUDE.md'),
-    join(cwd, '.claude', 'CLAUDE.md'),
-    join(cwd, 'claude.md'),
-  ]
+    join(cwd, "AGENTS.md"),
+    join(cwd, "AGENT.md"),
+    join(cwd, "CLAUDE.md"),
+    join(cwd, ".claude", "CLAUDE.md"),
+    join(cwd, "claude.md"),
+  ];
 
   // Also check home directory
-  const home = process.env.HOME || process.env.USERPROFILE || ''
+  const home = process.env.HOME || process.env.USERPROFILE || "";
   if (home) {
-    candidates.push(
-      join(home, '.claude', 'CLAUDE.md'),
-    )
+    candidates.push(join(home, ".claude", "CLAUDE.md"));
   }
 
-  const found: string[] = []
+  const found: string[] = [];
   for (const path of candidates) {
     try {
-      const s = await stat(path)
+      const s = await stat(path);
       if (s.isFile()) {
-        found.push(path)
+        found.push(path);
       }
     } catch {
       // File doesn't exist
     }
   }
 
-  return found
+  return found;
 }
 
 /**
  * Read project context file content from discovered files.
  */
 export async function readProjectContextContent(cwd: string): Promise<string> {
-  const files = await discoverProjectContextFiles(cwd)
-  if (files.length === 0) return ''
+  const files = await discoverProjectContextFiles(cwd);
+  if (files.length === 0) return "";
 
-  const parts: string[] = []
+  const parts: string[] = [];
   for (const file of files) {
     try {
-      const content = await readFile(file, 'utf-8')
+      const content = await readFile(file, "utf-8");
       if (content.trim()) {
-        parts.push(`# From ${file}:\n${content.trim()}`)
+        parts.push(`# From ${file}:\n${content.trim()}`);
       }
     } catch {
       // Skip unreadable files
     }
   }
 
-  return parts.join('\n\n')
+  return parts.join("\n\n");
 }
 
 /**
  * Get system context for the system prompt.
  */
 export async function getSystemContext(cwd: string): Promise<string> {
-  const parts: string[] = []
+  const parts: string[] = [];
 
-  const gitStatus = await getGitStatus(cwd)
+  const gitStatus = await getGitStatus(cwd);
   if (gitStatus) {
-    parts.push(`gitStatus: ${gitStatus}`)
+    parts.push(`gitStatus: ${gitStatus}`);
   }
 
-  return parts.join('\n\n')
+  return parts.join("\n\n");
 }
 
+/**
+ * 返回稳定格式的当天日期系统上下文，用于提示中不依赖本地化的时间引用。
+ */
 export function getCurrentDateContext(): string {
-  return `# currentDate\nToday's date is ${new Date().toISOString().split('T')[0]}.`
+  return `# currentDate\nToday's date is ${new Date().toISOString().split("T")[0]}.`;
 }
 
 /**
  * Get user context (AGENT.md, date, etc).
  */
 export async function getUserContext(cwd: string): Promise<string> {
-  const parts: string[] = []
+  const parts: string[] = [];
 
   // Current date
-  parts.push(getCurrentDateContext())
+  parts.push(getCurrentDateContext());
 
   // Project context files
-  const projectCtx = await readProjectContextContent(cwd)
+  const projectCtx = await readProjectContextContent(cwd);
   if (projectCtx) {
-    parts.push(projectCtx)
+    parts.push(projectCtx);
   }
 
-  return parts.join('\n\n')
+  return parts.join("\n\n");
 }
 
 /**
  * Clear memoized context (call between sessions).
  */
 export function clearContextCache(): void {
-  cachedGitStatus = null
-  cachedGitStatusCwd = null
+  cachedGitStatus = null;
+  cachedGitStatusCwd = null;
 }

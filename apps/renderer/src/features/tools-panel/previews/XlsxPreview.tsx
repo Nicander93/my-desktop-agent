@@ -1,29 +1,36 @@
 /** SheetJS 把首个工作表转成 HTML 表格 */
-import { useMemo } from 'react';
-import * as XLSX from 'xlsx';
-import { base64ToArrayBuffer } from '@/lib/binaryUtils';
+import { useMemo } from "react";
+import * as XLSX from "xlsx";
+import { base64ToArrayBuffer } from "@/lib/binaryUtils";
 
+/**
+ * 以 Base64 提供的 Excel 工作簿内容。
+ */
 interface XlsxPreviewProps {
   content: string;
 }
 
-/** .xlsx 表格预览 */
+/**
+ * 解析工作簿首个工作表为只读 HTML 表格，并对空工作簿与解析异常给出可见反馈。
+ */
 export function XlsxPreview({ content }: XlsxPreviewProps) {
   const { html, sheetNames, error } = useMemo(() => {
     try {
-      const wb = XLSX.read(base64ToArrayBuffer(content), { type: 'array' });
+      const wb = XLSX.read(base64ToArrayBuffer(content), { type: "array" });
       const name = wb.SheetNames[0];
       if (!name) {
-        return { html: '', sheetNames: [] as string[], error: '工作簿为空' };
+        return { html: "", sheetNames: [] as string[], error: "工作簿为空" };
       }
       const sheet = wb.Sheets[name];
-      const tableHtml = XLSX.utils.sheet_to_html(sheet, { id: 'xlsx-preview-table' });
+      const tableHtml = XLSX.utils.sheet_to_html(sheet, {
+        id: "xlsx-preview-table",
+      });
       return { html: tableHtml, sheetNames: wb.SheetNames, error: null };
     } catch (err) {
       return {
-        html: '',
+        html: "",
         sheetNames: [] as string[],
-        error: err instanceof Error ? err.message : 'Excel 解析失败',
+        error: err instanceof Error ? err.message : "Excel 解析失败",
       };
     }
   }, [content]);
@@ -35,7 +42,9 @@ export function XlsxPreview({ content }: XlsxPreviewProps) {
   return (
     <div className="flex-1 overflow-auto p-2">
       {sheetNames.length > 1 && (
-        <p className="text-xs text-gray-500 mb-2">预览工作表：{sheetNames[0]}</p>
+        <p className="text-xs text-gray-500 mb-2">
+          预览工作表：{sheetNames[0]}
+        </p>
       )}
       <div
         className="text-xs [&_table]:border-collapse [&_td]:border [&_td]:border-gray-200 [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-gray-200 [&_th]:px-2 [&_th]:py-1 [&_th]:bg-gray-50"

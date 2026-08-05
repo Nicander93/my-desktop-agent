@@ -6,10 +6,12 @@
  * In non-interactive mode, returns a default or denies.
  */
 
-import type { ToolDefinition, ToolResult } from '../types.js'
+import type { ToolDefinition, ToolResult } from "../types.js";
 
 // Callback for handling user questions (set by the agent)
-let questionHandler: ((question: string, options?: string[]) => Promise<string>) | null = null
+let questionHandler:
+  | ((question: string, options?: string[]) => Promise<string>)
+  | null = null;
 
 /**
  * Set the question handler for AskUserQuestion.
@@ -17,63 +19,72 @@ let questionHandler: ((question: string, options?: string[]) => Promise<string>)
 export function setQuestionHandler(
   handler: (question: string, options?: string[]) => Promise<string>,
 ): void {
-  questionHandler = handler
+  questionHandler = handler;
 }
 
 /**
  * Clear the question handler.
  */
 export function clearQuestionHandler(): void {
-  questionHandler = null
+  questionHandler = null;
 }
 
 export const AskUserQuestionTool: ToolDefinition = {
-  name: 'AskUserQuestion',
-  description: 'Ask the user a question and wait for their response. Use when you need clarification or input from the user.',
+  name: "AskUserQuestion",
+  description:
+    "Ask the user a question and wait for their response. Use when you need clarification or input from the user.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
-      question: { type: 'string', description: 'The question to ask the user' },
+      question: { type: "string", description: "The question to ask the user" },
       options: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Optional list of choices for the user',
+        type: "array",
+        items: { type: "string" },
+        description: "Optional list of choices for the user",
       },
       allow_multiselect: {
-        type: 'boolean',
-        description: 'Whether to allow multiple selections (for options)',
+        type: "boolean",
+        description: "Whether to allow multiple selections (for options)",
       },
     },
-    required: ['question'],
+    required: ["question"],
   },
   isReadOnly: () => true,
   isConcurrencySafe: () => false,
   isEnabled: () => true,
-  async prompt() { return 'Ask the user a question.' },
+  /**
+   * 告知模型此工具用于在可交互环境中向用户请求澄清。
+   */
+  async prompt() {
+    return "Ask the user a question.";
+  },
+  /**
+   * 委托已注册提问处理器；非交互模式返回信息性结果让 Agent 自行判断。
+   */
   async call(input: any): Promise<ToolResult> {
     if (questionHandler) {
       try {
-        const answer = await questionHandler(input.question, input.options)
+        const answer = await questionHandler(input.question, input.options);
         return {
-          type: 'tool_result',
-          tool_use_id: '',
+          type: "tool_result",
+          tool_use_id: "",
           content: answer,
-        }
+        };
       } catch (err: any) {
         return {
-          type: 'tool_result',
-          tool_use_id: '',
+          type: "tool_result",
+          tool_use_id: "",
           content: `User declined to answer: ${err.message}`,
           is_error: true,
-        }
+        };
       }
     }
 
     // Non-interactive: return informative message
     return {
-      type: 'tool_result',
-      tool_use_id: '',
-      content: `[Non-interactive mode] Question: ${input.question}${input.options ? `\nOptions: ${input.options.join(', ')}` : ''}\n\nNo user available to answer. Proceeding with best judgment.`,
-    }
+      type: "tool_result",
+      tool_use_id: "",
+      content: `[Non-interactive mode] Question: ${input.question}${input.options ? `\nOptions: ${input.options.join(", ")}` : ""}\n\nNo user available to answer. Proceeding with best judgment.`,
+    };
   },
-}
+};

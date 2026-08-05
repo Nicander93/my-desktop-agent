@@ -2,7 +2,11 @@
  * McpServerRecord → open-agent-sdk 可消费的 MCP 配置。
  * 占位符替换、导入 JSON 解析也在这；连子进程测通见 agent-runtime/mcp.ts。
  */
-import type { McpImportFile, McpImportServerConfig, McpServerRecord } from '../types/mcp.js';
+import type {
+  McpImportFile,
+  McpImportServerConfig,
+  McpServerRecord,
+} from "../types/mcp.js";
 
 /** workspace / secrets 注入；commandResolver 把 npx/uvx 换成 bundled 绝对路径 */
 export interface McpBuildContext {
@@ -15,6 +19,9 @@ export interface McpBuildContext {
 /** 返回替换后的可执行路径，未识别则原样返回 */
 export type McpCommandResolver = (command: string) => string;
 
+/**
+ * 用工作区路径和调用时提供的 secrets 替换配置文本中的受支持占位符。
+ */
 function replacePlaceholders(value: string, ctx: McpBuildContext): string {
   let result = value;
   if (ctx.workspacePath) {
@@ -22,12 +29,15 @@ function replacePlaceholders(value: string, ctx: McpBuildContext): string {
   }
   if (ctx.secrets) {
     for (const [key, secretValue] of Object.entries(ctx.secrets)) {
-      result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), secretValue);
+      result = result.replace(new RegExp(`\\{${key}\\}`, "g"), secretValue);
     }
   }
   return result;
 }
 
+/**
+ * 解析服务环境或 HTTP headers 中每个值的占位符，不修改持久化原对象。
+ */
 function resolveEnv(
   env: Record<string, string> | undefined,
   ctx: McpBuildContext,
@@ -50,16 +60,18 @@ export function buildMcpServersForSdk(
   for (const server of servers) {
     if (!server.enabled) continue;
 
-    if (server.transport === 'stdio') {
+    if (server.transport === "stdio") {
       if (!server.command) continue;
       const command = ctx.commandResolver
         ? ctx.commandResolver(server.command)
         : server.command;
       out[server.name] = {
-        type: 'stdio',
+        type: "stdio",
         command,
         args: server.args.map((arg) => replacePlaceholders(arg, ctx)),
-        ...(resolveEnv(server.env, ctx) ? { env: resolveEnv(server.env, ctx) } : {}),
+        ...(resolveEnv(server.env, ctx)
+          ? { env: resolveEnv(server.env, ctx) }
+          : {}),
       };
       continue;
     }
@@ -68,7 +80,9 @@ export function buildMcpServersForSdk(
     out[server.name] = {
       type: server.transport,
       url: replacePlaceholders(server.url, ctx),
-      ...(resolveEnv(server.env, ctx) ? { headers: resolveEnv(server.env, ctx) } : {}),
+      ...(resolveEnv(server.env, ctx)
+        ? { headers: resolveEnv(server.env, ctx) }
+        : {}),
     };
   }
 
@@ -76,23 +90,31 @@ export function buildMcpServersForSdk(
 }
 
 /** 支持双引号包裹的参数，导入 UI 粘贴整行命令时用 */
-export function parseCommandLine(commandLine: string): { command: string; args: string[] } {
+export function parseCommandLine(commandLine: string): {
+  command: string;
+  args: string[];
+} {
   const parts = commandLine.trim().match(/(?:[^\s"]+|"[^"]*")+/g) ?? [];
-  const normalized = parts.map((part) => part.replace(/^"|"$/g, ''));
+  const normalized = parts.map((part) => part.replace(/^"|"$/g, ""));
   return {
-    command: normalized[0] ?? '',
+    command: normalized[0] ?? "",
     args: normalized.slice(1),
   };
 }
 
 /** 缺 mcpServers 或 JSON 非法时抛错 */
-export function parseMcpImportJson(raw: string): Array<{ name: string; config: McpImportServerConfig }> {
+export function parseMcpImportJson(
+  raw: string,
+): Array<{ name: string; config: McpImportServerConfig }> {
   const parsed = JSON.parse(raw) as McpImportFile;
-  if (!parsed.mcpServers || typeof parsed.mcpServers !== 'object') {
-    throw new Error('JSON 格式无效，需要 mcpServers 字段');
+  if (!parsed.mcpServers || typeof parsed.mcpServers !== "object") {
+    throw new Error("JSON 格式无效，需要 mcpServers 字段");
   }
 
-  return Object.entries(parsed.mcpServers).map(([name, config]) => ({ name, config }));
+  return Object.entries(parsed.mcpServers).map(([name, config]) => ({
+    name,
+    config,
+  }));
 }
 
 /** 导入配置 → 落库前的 McpServerRecord 字段；stdio 无 command 时抛错 */
@@ -101,19 +123,21 @@ export function importConfigToServerInput(
   config: McpImportServerConfig,
 ): {
   name: string;
-  transport: 'stdio' | 'sse' | 'http';
+  transport: "stdio" | "sse" | "http";
   command: string | null;
   args: string[];
   url: string | null;
   env: Record<string, string>;
 } {
-  const transport = config.type ?? (config.url ? (config.url.includes('/sse') ? 'sse' : 'http') : 'stdio');
+  const transport =
+    config.type ??
+    (config.url ? (config.url.includes("/sse") ? "sse" : "http") : "stdio");
 
-  if (transport === 'stdio') {
+  if (transport === "stdio") {
     if (config.command) {
       return {
         name,
-        transport: 'stdio',
+        transport: "stdio",
         command: config.command,
         args: config.args ?? [],
         url: null,

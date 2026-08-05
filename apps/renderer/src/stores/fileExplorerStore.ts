@@ -1,11 +1,14 @@
 /**
  * 工作区文件树：懒加载目录、展开/选中、联动编辑器
  */
-import { create } from 'zustand';
-import type { FileEntry } from '@desktop-agent/shared';
-import { useWorkspaceStore } from './workspaceStore';
-import { useEditorStore } from './editorStore';
+import { create } from "zustand";
+import type { FileEntry } from "@desktop-agent/shared";
+import { useWorkspaceStore } from "./workspaceStore";
+import { useEditorStore } from "./editorStore";
 
+/**
+ * 懒加载文件树的根目录、缓存子项、展开状态与编辑器联动操作。
+ */
 interface FileExplorerState {
   rootPath: string | null;
   childrenMap: Record<string, FileEntry[]>;
@@ -76,11 +79,14 @@ export const useFileExplorerStore = create<FileExplorerState>((set, get) => ({
     }));
 
     try {
-      const result = await window.electronAPI?.workspaceFs.readDir(workspaceId, path);
+      const result = await window.electronAPI?.workspaceFs.readDir(
+        workspaceId,
+        path,
+      );
       if (!result?.success || !result.entries) {
         set((state) => ({
           loadingPaths: { ...state.loadingPaths, [path]: false },
-          error: result?.error || '读取目录失败',
+          error: result?.error || "读取目录失败",
         }));
         return;
       }
@@ -92,7 +98,7 @@ export const useFileExplorerStore = create<FileExplorerState>((set, get) => ({
     } catch (error) {
       set((state) => ({
         loadingPaths: { ...state.loadingPaths, [path]: false },
-        error: error instanceof Error ? error.message : '读取目录失败',
+        error: error instanceof Error ? error.message : "读取目录失败",
       }));
     }
   },

@@ -6,24 +6,29 @@
  *
  * Run: npx tsx examples/04-prompt-api.ts
  */
-import { createAgent } from '../src/index.js'
+import { createAgent } from "../src/index.js";
 
+/**
+ * 运行使用 prompt API 的示例主流程。
+ */
 async function main() {
-  console.log('--- Example 4: Simple Prompt API ---\n')
+  console.log("--- Example 4: Simple Prompt API ---\n");
 
   const agent = createAgent({
-    model: process.env.CODEANY_MODEL || 'claude-sonnet-4-6',
+    model: process.env.CODEANY_MODEL || "claude-sonnet-4-6",
     maxTurns: 5,
-  })
+  });
 
   const result = await agent.prompt(
-    'Use Bash to run `node --version` and `npm --version`, then tell me the versions.',
-  )
+    "Use Bash to run `node --version` and `npm --version`, then tell me the versions.",
+  );
 
-  console.log(`Answer: ${result.text}`)
-  console.log(`Turns: ${result.num_turns}`)
-  console.log(`Tokens: ${result.usage.input_tokens} in / ${result.usage.output_tokens} out`)
-  console.log(`Duration: ${result.duration_ms}ms`)
+  console.log(`Answer: ${result.text}`);
+  console.log(`Turns: ${result.num_turns}`);
+  console.log(
+    `Tokens: ${result.usage.input_tokens} in / ${result.usage.output_tokens} out`,
+  );
+  console.log(`Duration: ${result.duration_ms}ms`);
 }
 
-main().catch(console.error)
+main().catch(console.error);

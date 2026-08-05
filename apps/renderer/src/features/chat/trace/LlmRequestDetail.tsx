@@ -1,24 +1,27 @@
 /** LLM 请求 span 详情：消息列表与 token 摘要 */
-import { useState } from 'react';
-import type { LlmRequestPayload } from '@desktop-agent/shared';
+import { useState } from "react";
+import type { LlmRequestPayload } from "@desktop-agent/shared";
 import {
   extractToolNames,
   normalizeTraceMessage,
   summarizeLlmRequest,
-} from '@/lib/llmTraceFormat';
-import { formatTokenCount } from '@/lib/traceUtils';
-import { Badge } from '@/components/ui/badge';
-import { MarkdownBlock } from '../MarkdownBlock';
-import { CodeBlock } from '../CodeBlock';
-import { TraceCollapsibleSection } from './TraceCollapsibleSection';
+} from "@/lib/llmTraceFormat";
+import { formatTokenCount } from "@/lib/traceUtils";
+import { Badge } from "@/components/ui/badge";
+import { MarkdownBlock } from "../MarkdownBlock";
+import { CodeBlock } from "../CodeBlock";
+import { TraceCollapsibleSection } from "./TraceCollapsibleSection";
 
 const ROLE_COLORS: Record<string, string> = {
-  user: 'bg-blue-50 text-blue-700 border-blue-100',
-  assistant: 'bg-purple-50 text-purple-700 border-purple-100',
-  tool: 'bg-amber-50 text-amber-700 border-amber-100',
-  system: 'bg-gray-50 text-gray-600 border-gray-100',
+  user: "bg-blue-50 text-blue-700 border-blue-100",
+  assistant: "bg-purple-50 text-purple-700 border-purple-100",
+  tool: "bg-amber-50 text-amber-700 border-amber-100",
+  system: "bg-gray-50 text-gray-600 border-gray-100",
 };
 
+/**
+ * 展示单条归一化请求消息，并对长文本提供按需展开以限制初始诊断视图体积。
+ */
 function MessageCard({ msg, index }: { msg: unknown; index: number }) {
   const [expanded, setExpanded] = useState(false);
   const { role, text, preview, isLong } = normalizeTraceMessage(msg);
@@ -52,11 +55,16 @@ function MessageCard({ msg, index }: { msg: unknown; index: number }) {
   );
 }
 
+/**
+ * LLM 请求 trace 中记录的结构化 payload。
+ */
 interface LlmRequestDetailProps {
   payload: LlmRequestPayload;
 }
 
-/** llm_request payload 展示 */
+/**
+ * 以 token、系统提示、消息和工具四个维度渲染 LLM 请求 trace。
+ */
 export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
   const summary = summarizeLlmRequest(payload);
   const toolNames = extractToolNames(payload.tools);
@@ -64,10 +72,14 @@ export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
 
   return (
     <div className="space-y-2">
-      {(summary.estimatedTokens != null || summary.maxTokens != null || summary.thinking) && (
+      {(summary.estimatedTokens != null ||
+        summary.maxTokens != null ||
+        summary.thinking) && (
         <div className="flex flex-wrap gap-2 text-[11px] text-gray-500">
           {summary.estimatedTokens != null && (
-            <span>预估输入 {formatTokenCount(summary.estimatedTokens)} tokens</span>
+            <span>
+              预估输入 {formatTokenCount(summary.estimatedTokens)} tokens
+            </span>
           )}
           {summary.maxTokens != null && (
             <span>max {formatTokenCount(summary.maxTokens)}</span>
@@ -75,7 +87,8 @@ export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
           {summary.thinking && (
             <span>
               thinking: {summary.thinking.type}
-              {summary.thinking.budget_tokens != null && ` (${summary.thinking.budget_tokens})`}
+              {summary.thinking.budget_tokens != null &&
+                ` (${summary.thinking.budget_tokens})`}
             </span>
           )}
         </div>
@@ -110,7 +123,7 @@ export function LlmRequestDetail({ payload }: LlmRequestDetailProps) {
       {toolNames.length > 0 && (
         <TraceCollapsibleSection
           title="Tools"
-          summary={`${summary.toolCount} 个 · ${toolNames.join(', ')}`}
+          summary={`${summary.toolCount} 个 · ${toolNames.join(", ")}`}
           defaultOpen={false}
         >
           <div className="space-y-2">

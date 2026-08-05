@@ -10,8 +10,11 @@ import type {
   TraceTurn,
   TokenUsage,
   AgentTrace,
-} from '../types/trace.js';
+} from "../types/trace.js";
 
+/**
+ * 汇总存在的 span 时长；全为零或缺失时保留 undefined 以区分无计时。
+ */
 function sumDuration(spans: (TraceSpan | undefined)[]): number | undefined {
   const total = spans.reduce((acc, s) => acc + (s?.durationMs ?? 0), 0);
   return total > 0 ? total : undefined;
@@ -25,10 +28,10 @@ export function groupTraceByTurn(spans: TraceSpan[]): TraceTurn[] {
 
   return turnNumbers.map((turn) => {
     const turnSpans = spans.filter((s) => s.turn === turn);
-    const llmRequest = turnSpans.find((s) => s.type === 'llm_request');
-    const llmResponse = turnSpans.find((s) => s.type === 'llm_response');
-    const toolCallSpans = turnSpans.filter((s) => s.type === 'tool_call');
-    const toolResultSpans = turnSpans.filter((s) => s.type === 'tool_result');
+    const llmRequest = turnSpans.find((s) => s.type === "llm_request");
+    const llmResponse = turnSpans.find((s) => s.type === "llm_response");
+    const toolCallSpans = turnSpans.filter((s) => s.type === "tool_call");
+    const toolResultSpans = turnSpans.filter((s) => s.type === "tool_result");
 
     const toolCalls = toolCallSpans.map((call) => {
       const toolUseId = (call.payload as { toolUseId?: string })?.toolUseId;
@@ -38,11 +41,11 @@ export function groupTraceByTurn(spans: TraceSpan[]): TraceTurn[] {
       return { call, result };
     });
 
-    const turnStart = turnSpans.find((s) => s.type === 'turn_start');
+    const turnStart = turnSpans.find((s) => s.type === "turn_start");
 
     return {
       turn,
-      startedAt: turnStart?.timestamp ?? llmRequest?.timestamp ?? '',
+      startedAt: turnStart?.timestamp ?? llmRequest?.timestamp ?? "",
       durationMs: sumDuration([llmResponse, ...toolResultSpans]),
       llmRequest,
       llmResponse,
@@ -51,23 +54,27 @@ export function groupTraceByTurn(spans: TraceSpan[]): TraceTurn[] {
   });
 }
 
+/**
+ * 将同一 run 的有序 span 集合归并为包含开始、结束、轮次和总时长的 TraceRun。
+ */
 function buildTraceRun(spans: TraceSpan[]): TraceRun {
-  const runId = spans[0]?.runId ?? '';
-  const sessionId = spans[0]?.sessionId ?? '';
-  const startSpan = spans.find((s) => s.type === 'run_start');
-  const endSpan = spans.find((s) => s.type === 'run_end');
+  const runId = spans[0]?.runId ?? "";
+  const sessionId = spans[0]?.sessionId ?? "";
+  const startSpan = spans.find((s) => s.type === "run_start");
+  const endSpan = spans.find((s) => s.type === "run_end");
 
   let durationMs: number | undefined;
   if (startSpan && endSpan) {
     durationMs =
       endSpan.durationMs ??
-      new Date(endSpan.timestamp).getTime() - new Date(startSpan.timestamp).getTime();
+      new Date(endSpan.timestamp).getTime() -
+        new Date(startSpan.timestamp).getTime();
   }
 
   return {
     runId,
     sessionId,
-    startedAt: startSpan?.timestamp ?? spans[0]?.timestamp ?? '',
+    startedAt: startSpan?.timestamp ?? spans[0]?.timestamp ?? "",
     endedAt: endSpan?.timestamp,
     durationMs,
     startSpan,
@@ -79,26 +86,39 @@ function buildTraceRun(spans: TraceSpan[]): TraceRun {
 /** 按 runId 拆成多条 TraceRun */
 export function groupTraceByRun(spans: TraceSpan[]): TraceRun[] {
   const runIds = [...new Set(spans.map((s) => s.runId))];
-  return runIds.map((runId) => buildTraceRun(spans.filter((s) => s.runId === runId)));
+  return runIds.map((runId) =>
+    buildTraceRun(spans.filter((s) => s.runId === runId)),
+  );
 }
 
 /** 可选 runId 过滤；无 span 时返回 null */
-export function buildTraceRunFromSpans(spans: TraceSpan[], runId?: string): TraceRun | null {
+export function buildTraceRunFromSpans(
+  spans: TraceSpan[],
+  runId?: string,
+): TraceRun | null {
   const filtered = runId ? spans.filter((s) => s.runId === runId) : spans;
   if (filtered.length === 0) return null;
   return buildTraceRun(filtered);
 }
 
-function addUsage(total: TokenUsage | undefined, usage?: TokenUsage): TokenUsage | undefined {
+/**
+ * 按字段累加可选 token 用量，保持未出现的缓存用量字段为零或缺失。
+ */
+function addUsage(
+  total: TokenUsage | undefined,
+  usage?: TokenUsage,
+): TokenUsage | undefined {
   if (!usage) return total;
   if (!total) return { ...usage };
   return {
     input_tokens: total.input_tokens + usage.input_tokens,
     output_tokens: total.output_tokens + usage.output_tokens,
     cache_creation_input_tokens:
-      (total.cache_creation_input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0),
+      (total.cache_creation_input_tokens ?? 0) +
+      (usage.cache_creation_input_tokens ?? 0),
     cache_read_input_tokens:
-      (total.cache_read_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0),
+      (total.cache_read_input_tokens ?? 0) +
+      (usage.cache_read_input_tokens ?? 0),
     cached_input_tokens:
       (total.cached_input_tokens ?? 0) + (usage.cached_input_tokens ?? 0),
   };
@@ -110,7 +130,10 @@ export function summarizeTraceRun(run: TraceRun): TraceSummary {
   let toolCallCount = 0;
 
   for (const turn of run.turns) {
-    usage = addUsage(usage, (turn.llmResponse?.payload as { usage?: TokenUsage })?.usage);
+    usage = addUsage(
+      usage,
+      (turn.llmResponse?.payload as { usage?: TokenUsage })?.usage,
+    );
     toolCallCount += turn.toolCalls.length;
   }
 
@@ -131,7 +154,10 @@ export function summarizeTraceRun(run: TraceRun): TraceSummary {
 }
 
 /** 同 id 覆盖更新，避免流式重复追加 */
-export function appendTraceSpan(spans: TraceSpan[], span: TraceSpan): TraceSpan[] {
+export function appendTraceSpan(
+  spans: TraceSpan[],
+  span: TraceSpan,
+): TraceSpan[] {
   const idx = spans.findIndex((s) => s.id === span.id);
   if (idx >= 0) {
     const next = [...spans];
@@ -142,18 +168,22 @@ export function appendTraceSpan(spans: TraceSpan[], span: TraceSpan): TraceSpan[
 }
 
 /** 判断 IPC/流消息是否为 trace span 包裹 */
-export function isTraceMessage(message: unknown): message is { type: 'trace'; span: TraceSpan } {
+export function isTraceMessage(
+  message: unknown,
+): message is { type: "trace"; span: TraceSpan } {
   return (
     message != null &&
-    typeof message === 'object' &&
-    (message as { type?: string }).type === 'trace' &&
+    typeof message === "object" &&
+    (message as { type?: string }).type === "trace" &&
     (message as { span?: unknown }).span != null
   );
 }
 
 /** 从消息数组提取并合并 trace；无 span 返回 undefined */
-export function collectTraceFromMessages(messages: unknown[]): AgentTrace | undefined {
-  let runId = '';
+export function collectTraceFromMessages(
+  messages: unknown[],
+): AgentTrace | undefined {
+  let runId = "";
   let spans: TraceSpan[] = [];
   for (const msg of messages) {
     if (isTraceMessage(msg)) {
@@ -166,9 +196,12 @@ export function collectTraceFromMessages(messages: unknown[]): AgentTrace | unde
 }
 
 /** 合并两段 trace，按 span id 去重 */
-export function mergeAgentTrace(current?: AgentTrace, incoming?: AgentTrace): AgentTrace | undefined {
+export function mergeAgentTrace(
+  current?: AgentTrace,
+  incoming?: AgentTrace,
+): AgentTrace | undefined {
   if (!current && !incoming) return undefined;
-  const runId = incoming?.runId || current?.runId || '';
+  const runId = incoming?.runId || current?.runId || "";
   let spans = current?.spans ?? [];
   for (const span of incoming?.spans ?? []) {
     spans = appendTraceSpan(spans, span);
@@ -183,6 +216,9 @@ export function mergeAgentTrace(current?: AgentTrace, incoming?: AgentTrace): Ag
 /** TraceRun 树展平回 AgentTrace.span 列表 */
 export function traceRunToAgentTrace(run: TraceRun): AgentTrace {
   const spans: TraceSpan[] = [];
+  /**
+   * 仅追加存在的 span，保留 run 展平后用于流式同步的顺序。
+   */
   const push = (span?: TraceSpan) => {
     if (span) spans.push(span);
   };

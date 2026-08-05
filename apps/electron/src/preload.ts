@@ -3,142 +3,222 @@
  * 命名空间 agent / workspace / conversation / message / dialog / workspaceFs 等。
  * 只做转发，不写业务。
  */
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer } from "electron";
 
-contextBridge.exposeInMainWorld('electronAPI', {
+contextBridge.exposeInMainWorld("electronAPI", {
   agent: {
     createSession: (sessionId: string) =>
-      ipcRenderer.invoke('agent:create-session', sessionId),
-        sendMessage: (sessionId: string, content: string, options?: import('@desktop-agent/shared').AgentSendMessageOptions) =>
-          ipcRenderer.invoke('agent:send-message', sessionId, content, options),
-        prompt: (sessionId: string, content: string, options?: import('@desktop-agent/shared').AgentSendMessageOptions) =>
-          ipcRenderer.invoke('agent:prompt', sessionId, content, options),
+      ipcRenderer.invoke("agent:create-session", sessionId),
+    sendMessage: (
+      sessionId: string,
+      content: string,
+      options?: import("@desktop-agent/shared").AgentSendMessageOptions,
+    ) => ipcRenderer.invoke("agent:send-message", sessionId, content, options),
+    prompt: (
+      sessionId: string,
+      content: string,
+      options?: import("@desktop-agent/shared").AgentSendMessageOptions,
+    ) => ipcRenderer.invoke("agent:prompt", sessionId, content, options),
     getMessages: (sessionId: string) =>
-      ipcRenderer.invoke('agent:get-messages', sessionId),
+      ipcRenderer.invoke("agent:get-messages", sessionId),
     getTraceRun: (sessionId: string, runId: string) =>
-      ipcRenderer.invoke('agent:get-trace-run', sessionId, runId),
+      ipcRenderer.invoke("agent:get-trace-run", sessionId, runId),
     getLatestTraceRun: (sessionId: string) =>
-      ipcRenderer.invoke('agent:get-latest-trace-run', sessionId),
+      ipcRenderer.invoke("agent:get-latest-trace-run", sessionId),
     closeSession: (sessionId: string) =>
-      ipcRenderer.invoke('agent:close-session', sessionId),
+      ipcRenderer.invoke("agent:close-session", sessionId),
     /** 订阅 Agent 流式输出，返回取消订阅函数 */
-    onStreamMessage: (callback: (data: { sessionId: string; message: any }) => void) => {
-      const listener = (_: any, data: { sessionId: string; message: any }) => callback(data);
-      ipcRenderer.on('agent:stream-message', listener);
-      return () => { ipcRenderer.removeListener('agent:stream-message', listener); };
-    }
+    onStreamMessage: (
+      callback: (data: { sessionId: string; message: any }) => void,
+    ) => {
+      /**
+       * 将 Electron 事件参数剥离，仅把 IPC 载荷交给渲染进程订阅者。
+       */
+      const listener = (_: any, data: { sessionId: string; message: any }) =>
+        callback(data);
+      ipcRenderer.on("agent:stream-message", listener);
+      return () => {
+        ipcRenderer.removeListener("agent:stream-message", listener);
+      };
+    },
   },
 
   workspace: {
     create: (name: string, description?: string) =>
-      ipcRenderer.invoke('workspace:create', name, description),
+      ipcRenderer.invoke("workspace:create", name, description),
     createFromPath: (name: string, path: string, description?: string) =>
-      ipcRenderer.invoke('workspace:create-from-path', name, path, description),
-    getAll: () =>
-      ipcRenderer.invoke('workspace:get-all'),
-    get: (id: string) =>
-      ipcRenderer.invoke('workspace:get', id),
-    update: (id: string, updates: { name?: string; description?: string; icon?: string; color?: string }) =>
-      ipcRenderer.invoke('workspace:update', id, updates),
-    delete: (id: string) =>
-      ipcRenderer.invoke('workspace:delete', id),
-    touch: (id: string) =>
-      ipcRenderer.invoke('workspace:touch', id),
+      ipcRenderer.invoke("workspace:create-from-path", name, path, description),
+    getAll: () => ipcRenderer.invoke("workspace:get-all"),
+    get: (id: string) => ipcRenderer.invoke("workspace:get", id),
+    update: (
+      id: string,
+      updates: {
+        name?: string;
+        description?: string;
+        icon?: string;
+        color?: string;
+      },
+    ) => ipcRenderer.invoke("workspace:update", id, updates),
+    delete: (id: string) => ipcRenderer.invoke("workspace:delete", id),
+    touch: (id: string) => ipcRenderer.invoke("workspace:touch", id),
     getSettings: (workspaceId: string) =>
-      ipcRenderer.invoke('workspace:get-settings', workspaceId),
-    updateSettings: (workspaceId: string, settings: { allowedPaths?: string[]; restrictedMode?: boolean }) =>
-      ipcRenderer.invoke('workspace:update-settings', workspaceId, settings)
+      ipcRenderer.invoke("workspace:get-settings", workspaceId),
+    updateSettings: (
+      workspaceId: string,
+      settings: { allowedPaths?: string[]; restrictedMode?: boolean },
+    ) => ipcRenderer.invoke("workspace:update-settings", workspaceId, settings),
   },
 
   conversation: {
-    create: (workspaceId: string, title?: string, model?: string, modelConfigId?: string) =>
-      ipcRenderer.invoke('conversation:create', workspaceId, title, model, modelConfigId),
+    create: (
+      workspaceId: string,
+      title?: string,
+      model?: string,
+      modelConfigId?: string,
+    ) =>
+      ipcRenderer.invoke(
+        "conversation:create",
+        workspaceId,
+        title,
+        model,
+        modelConfigId,
+      ),
     getAll: (workspaceId: string, includeArchived?: boolean) =>
-      ipcRenderer.invoke('conversation:get-all', workspaceId, includeArchived),
-    get: (id: string) =>
-      ipcRenderer.invoke('conversation:get', id),
-    update: (id: string, updates: { title?: string; model?: string; modelConfigId?: string; isArchived?: boolean }) =>
-      ipcRenderer.invoke('conversation:update', id, updates),
-    delete: (id: string) =>
-      ipcRenderer.invoke('conversation:delete', id)
+      ipcRenderer.invoke("conversation:get-all", workspaceId, includeArchived),
+    get: (id: string) => ipcRenderer.invoke("conversation:get", id),
+    update: (
+      id: string,
+      updates: {
+        title?: string;
+        model?: string;
+        modelConfigId?: string;
+        isArchived?: boolean;
+      },
+    ) => ipcRenderer.invoke("conversation:update", id, updates),
+    delete: (id: string) => ipcRenderer.invoke("conversation:delete", id),
   },
 
   message: {
-    create: (conversationId: string, role: string, content: string, toolCalls?: unknown[], metadata?: Record<string, unknown>, id?: string) =>
-      ipcRenderer.invoke('message:create', conversationId, role, content, toolCalls, metadata, id),
-    getByConversation: (conversationId: string, limit?: number, offset?: number) =>
-      ipcRenderer.invoke('message:get-by-conversation', conversationId, limit, offset),
-    update: (id: string, updates: { content?: string; toolCalls?: unknown[]; metadata?: Record<string, unknown> }) =>
-      ipcRenderer.invoke('message:update', id, updates),
+    create: (
+      conversationId: string,
+      role: string,
+      content: string,
+      toolCalls?: unknown[],
+      metadata?: Record<string, unknown>,
+      id?: string,
+    ) =>
+      ipcRenderer.invoke(
+        "message:create",
+        conversationId,
+        role,
+        content,
+        toolCalls,
+        metadata,
+        id,
+      ),
+    getByConversation: (
+      conversationId: string,
+      limit?: number,
+      offset?: number,
+    ) =>
+      ipcRenderer.invoke(
+        "message:get-by-conversation",
+        conversationId,
+        limit,
+        offset,
+      ),
+    update: (
+      id: string,
+      updates: {
+        content?: string;
+        toolCalls?: unknown[];
+        metadata?: Record<string, unknown>;
+      },
+    ) => ipcRenderer.invoke("message:update", id, updates),
     deleteByConversation: (conversationId: string) =>
-      ipcRenderer.invoke('message:delete-by-conversation', conversationId)
+      ipcRenderer.invoke("message:delete-by-conversation", conversationId),
   },
 
   model: {
-    getAll: () => ipcRenderer.invoke('model:get-all'),
-    create: (input: import('@desktop-agent/shared').ModelConfigInput) => ipcRenderer.invoke('model:create', input),
-    update: (id: string, updates: Partial<import('@desktop-agent/shared').ModelConfigInput>) => ipcRenderer.invoke('model:update', id, updates),
-    delete: (id: string) => ipcRenderer.invoke('model:delete', id),
-    testConnection: (input: import('@desktop-agent/shared').ModelConfigInput) => ipcRenderer.invoke('model:test-connection', input),
+    getAll: () => ipcRenderer.invoke("model:get-all"),
+    create: (input: import("@desktop-agent/shared").ModelConfigInput) =>
+      ipcRenderer.invoke("model:create", input),
+    update: (
+      id: string,
+      updates: Partial<import("@desktop-agent/shared").ModelConfigInput>,
+    ) => ipcRenderer.invoke("model:update", id, updates),
+    delete: (id: string) => ipcRenderer.invoke("model:delete", id),
+    testConnection: (input: import("@desktop-agent/shared").ModelConfigInput) =>
+      ipcRenderer.invoke("model:test-connection", input),
   },
 
   attachment: {
     selectImages: (conversationId: string) =>
-      ipcRenderer.invoke('attachment:select-images', conversationId),
-    createFromBytes: (input: import('@desktop-agent/shared').CreateAttachmentFromBytesInput) =>
-      ipcRenderer.invoke('attachment:create-from-bytes', input),
-    getPreviewUrl: (id: string, variant?: import('@desktop-agent/shared').ImageAttachmentVariant) =>
-      ipcRenderer.invoke('attachment:get-preview-url', id, variant),
+      ipcRenderer.invoke("attachment:select-images", conversationId),
+    createFromBytes: (
+      input: import("@desktop-agent/shared").CreateAttachmentFromBytesInput,
+    ) => ipcRenderer.invoke("attachment:create-from-bytes", input),
+    getPreviewUrl: (
+      id: string,
+      variant?: import("@desktop-agent/shared").ImageAttachmentVariant,
+    ) => ipcRenderer.invoke("attachment:get-preview-url", id, variant),
     deleteDraft: (id: string) =>
-      ipcRenderer.invoke('attachment:delete-draft', id),
+      ipcRenderer.invoke("attachment:delete-draft", id),
   },
 
   dialog: {
     selectDirectory: (options?: { title?: string; defaultPath?: string }) =>
-      ipcRenderer.invoke('dialog:select-directory', options),
-    confirmPathAccess: (options: { workspacePath: string; targetPath: string }) =>
-      ipcRenderer.invoke('dialog:confirm-path-access', options)
+      ipcRenderer.invoke("dialog:select-directory", options),
+    confirmPathAccess: (options: {
+      workspacePath: string;
+      targetPath: string;
+    }) => ipcRenderer.invoke("dialog:confirm-path-access", options),
   },
 
   workspaceFs: {
     stat: (workspaceId: string, path: string) =>
-      ipcRenderer.invoke('workspace-fs:stat', workspaceId, path),
+      ipcRenderer.invoke("workspace-fs:stat", workspaceId, path),
     read: (workspaceId: string, path: string) =>
-      ipcRenderer.invoke('workspace-fs:read', workspaceId, path),
+      ipcRenderer.invoke("workspace-fs:read", workspaceId, path),
     write: (workspaceId: string, path: string, content: string) =>
-      ipcRenderer.invoke('workspace-fs:write', workspaceId, path, content),
+      ipcRenderer.invoke("workspace-fs:write", workspaceId, path, content),
     readDir: (workspaceId: string, dirPath: string) =>
-      ipcRenderer.invoke('workspace-fs:read-dir', workspaceId, dirPath),
+      ipcRenderer.invoke("workspace-fs:read-dir", workspaceId, dirPath),
     search: (workspaceId: string, query: string) =>
-      ipcRenderer.invoke('workspace-fs:search', workspaceId, query),
+      ipcRenderer.invoke("workspace-fs:search", workspaceId, query),
     getPreviewUrl: (workspaceId: string, path: string) =>
-      ipcRenderer.invoke('workspace-fs:get-preview-url', workspaceId, path),
+      ipcRenderer.invoke("workspace-fs:get-preview-url", workspaceId, path),
   },
 
   mcp: {
-    getAll: () => ipcRenderer.invoke('mcp:get-all'),
-    getCatalog: () => ipcRenderer.invoke('mcp:get-catalog'),
-    getMentionable: () => ipcRenderer.invoke('mcp:get-mentionable'),
-    create: (input: unknown) => ipcRenderer.invoke('mcp:create', input),
-    update: (id: string, updates: unknown) => ipcRenderer.invoke('mcp:update', id, updates),
-    delete: (id: string) => ipcRenderer.invoke('mcp:delete', id),
+    getAll: () => ipcRenderer.invoke("mcp:get-all"),
+    getCatalog: () => ipcRenderer.invoke("mcp:get-catalog"),
+    getMentionable: () => ipcRenderer.invoke("mcp:get-mentionable"),
+    create: (input: unknown) => ipcRenderer.invoke("mcp:create", input),
+    update: (id: string, updates: unknown) =>
+      ipcRenderer.invoke("mcp:update", id, updates),
+    delete: (id: string) => ipcRenderer.invoke("mcp:delete", id),
     installCatalog: (catalogId: string, secrets?: Record<string, string>) =>
-      ipcRenderer.invoke('mcp:install-catalog', catalogId, secrets),
-    importJson: (raw: string) => ipcRenderer.invoke('mcp:import-json', raw),
+      ipcRenderer.invoke("mcp:install-catalog", catalogId, secrets),
+    importJson: (raw: string) => ipcRenderer.invoke("mcp:import-json", raw),
     testConnection: (id: string, conversationId?: string) =>
-      ipcRenderer.invoke('mcp:test-connection', id, conversationId),
+      ipcRenderer.invoke("mcp:test-connection", id, conversationId),
   },
 
   skill: {
-    getAll: () => ipcRenderer.invoke('skill:get-all'),
-    getCatalog: () => ipcRenderer.invoke('skill:get-catalog'),
-    getMentionable: () => ipcRenderer.invoke('skill:get-mentionable'),
-    create: (input: unknown) => ipcRenderer.invoke('skill:create', input),
-    update: (id: string, updates: unknown) => ipcRenderer.invoke('skill:update', id, updates),
-    delete: (id: string) => ipcRenderer.invoke('skill:delete', id),
-    installCatalog: (catalogId: string) => ipcRenderer.invoke('skill:install-catalog', catalogId),
-    importUrl: (name: string, url: string) => ipcRenderer.invoke('skill:import-url', name, url),
-    importLocal: (name: string, localPath: string) => ipcRenderer.invoke('skill:import-local', name, localPath),
-    refresh: (id: string) => ipcRenderer.invoke('skill:refresh', id),
-  }
+    getAll: () => ipcRenderer.invoke("skill:get-all"),
+    getCatalog: () => ipcRenderer.invoke("skill:get-catalog"),
+    getMentionable: () => ipcRenderer.invoke("skill:get-mentionable"),
+    create: (input: unknown) => ipcRenderer.invoke("skill:create", input),
+    update: (id: string, updates: unknown) =>
+      ipcRenderer.invoke("skill:update", id, updates),
+    delete: (id: string) => ipcRenderer.invoke("skill:delete", id),
+    installCatalog: (catalogId: string) =>
+      ipcRenderer.invoke("skill:install-catalog", catalogId),
+    importUrl: (name: string, url: string) =>
+      ipcRenderer.invoke("skill:import-url", name, url),
+    importLocal: (name: string, localPath: string) =>
+      ipcRenderer.invoke("skill:import-local", name, localPath),
+    refresh: (id: string) => ipcRenderer.invoke("skill:refresh", id),
+  },
 });

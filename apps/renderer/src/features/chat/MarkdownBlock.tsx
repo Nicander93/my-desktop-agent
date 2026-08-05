@@ -1,35 +1,47 @@
 /**
  * 单块 Markdown 渲染：GFM、代码高亮、路径链接
  */
-import { Fragment, isValidElement, cloneElement, memo, type MouseEvent, type ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import type { Components } from 'react-markdown';
-import { splitTextWithFilePaths } from '@/lib/filePathUtils';
-import { CodeBlock } from './CodeBlock';
-import { FilePathLink } from './FilePathLink';
+import {
+  Fragment,
+  isValidElement,
+  cloneElement,
+  memo,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import type { Components } from "react-markdown";
+import { splitTextWithFilePaths } from "@/lib/filePathUtils";
+import { CodeBlock } from "./CodeBlock";
+import { FilePathLink } from "./FilePathLink";
 
 const proseClass =
-  'prose prose-gray prose-sm max-w-none ' +
-  'prose-pre:p-0 prose-pre:bg-transparent prose-pre:m-0 ' +
-  'prose-code:before:content-none prose-code:after:content-none ' +
-  'prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[0.875em]';
+  "prose prose-gray prose-sm max-w-none " +
+  "prose-pre:p-0 prose-pre:bg-transparent prose-pre:m-0 " +
+  "prose-code:before:content-none prose-code:after:content-none " +
+  "prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[0.875em]";
 
+/**
+ * 递归遍历 Markdown 子节点，将可识别的工作区路径替换为编辑器打开链接。
+ */
 function linkifyFilePaths(node: ReactNode): ReactNode {
-  if (typeof node === 'string') {
+  if (typeof node === "string") {
     const segments = splitTextWithFilePaths(node);
-    if (segments.length === 1 && segments[0].type === 'text') return node;
+    if (segments.length === 1 && segments[0].type === "text") return node;
     return segments.map((seg, i) =>
-      seg.type === 'path' ? (
+      seg.type === "path" ? (
         <FilePathLink key={i} path={seg.value} />
       ) : (
         <Fragment key={i}>{seg.value}</Fragment>
-      )
+      ),
     );
   }
 
   if (Array.isArray(node)) {
-    return node.map((child, i) => <Fragment key={i}>{linkifyFilePaths(child)}</Fragment>);
+    return node.map((child, i) => (
+      <Fragment key={i}>{linkifyFilePaths(child)}</Fragment>
+    ));
   }
 
   if (isValidElement<{ children?: ReactNode }>(node) && node.props.children) {
@@ -42,21 +54,36 @@ function linkifyFilePaths(node: ReactNode): ReactNode {
   return node;
 }
 
-function withFilePathLinks(Tag: 'p' | 'li' | 'td') {
-  return function Block({ children, ...props }: React.HTMLAttributes<HTMLElement>) {
+/**
+ * 为指定的 Markdown 块级标签生成保留原属性的路径链接化渲染器。
+ */
+function withFilePathLinks(Tag: "p" | "li" | "td") {
+  return function Block({
+    children,
+    ...props
+  }: React.HTMLAttributes<HTMLElement>) {
     return <Tag {...props}>{linkifyFilePaths(children)}</Tag>;
   };
 }
 
 /** react-markdown 自定义组件映射 */
+/**
+ * react-markdown 的安全渲染覆盖：代码块高亮、外链隔离及文本路径联动。
+ */
 export const markdownComponents: Components = {
+  /**
+   * 去除 react-markdown 默认 pre 包装，由 CodeBlock 统一负责块级代码外壳。
+   */
   pre({ children }) {
     return <>{children}</>;
   },
+  /**
+   * 区分内联与块级代码，后者交给异步高亮组件处理。
+   */
   code({ className, children, ...props }) {
     const text = String(children);
-    const match = /language-(\w+)/.exec(className || '');
-    const isBlock = Boolean(match) || text.includes('\n');
+    const match = /language-(\w+)/.exec(className || "");
+    const isBlock = Boolean(match) || text.includes("\n");
 
     if (!isBlock) {
       return (
@@ -68,27 +95,44 @@ export const markdownComponents: Components = {
 
     return <CodeBlock language={match?.[1]}>{text}</CodeBlock>;
   },
+  /**
+   * 在外部浏览器中打开链接，并防止 Electron 页面在当前上下文发生导航。
+   */
   a({ href, children }) {
+    /**
+     * 阻止默认导航后，以隔离窗口特性打开可信外链。
+     */
     const handleClick = (e: MouseEvent) => {
       e.preventDefault();
-      if (href) window.open(href, '_blank', 'noopener,noreferrer');
+      if (href) window.open(href, "_blank", "noopener,noreferrer");
     };
     return (
-      <a href={href} onClick={handleClick} className="text-blue-600 hover:underline">
+      <a
+        href={href}
+        onClick={handleClick}
+        className="text-blue-600 hover:underline"
+      >
         {children}
       </a>
     );
   },
-  p: withFilePathLinks('p'),
-  li: withFilePathLinks('li'),
-  td: withFilePathLinks('td'),
+  p: withFilePathLinks("p"),
+  li: withFilePathLinks("li"),
+  td: withFilePathLinks("td"),
 };
 
 /** 单段 Markdown 内容（memo 避免流式重绘） */
-export const MarkdownBlock = memo(function MarkdownBlock({ content }: { content: string }) {
+export const MarkdownBlock = memo(function MarkdownBlock({
+  content,
+}: {
+  content: string;
+}) {
   return (
     <div className={proseClass}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={markdownComponents}
+      >
         {content}
       </ReactMarkdown>
     </div>

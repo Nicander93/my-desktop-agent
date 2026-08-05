@@ -1,229 +1,377 @@
 /** runTask 全流程与 verifier、子进程执行 */
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
-import type { LoadedEvaluationTask } from '../src/task.js';
-import { runTask, type AgentExecutor, shouldRetryAttempt, buildAttemptRetryFeedback } from '../src/runner.js';
-import { runProcess } from '../src/process.js';
+import { mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import type { LoadedEvaluationTask } from "../src/task.js";
+import {
+  runTask,
+  type AgentExecutor,
+  shouldRetryAttempt,
+  buildAttemptRetryFeedback,
+} from "../src/runner.js";
+import { runProcess } from "../src/process.js";
 
-describe('agent-eval runner', () => {
-  it('uses verifier evidence instead of the agent completion claim', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await writeFile(join(root, 'placeholder'), '', 'utf8');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
+describe("agent-eval runner", () => {
+  it("uses verifier evidence instead of the agent completion claim", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await writeFile(join(root, "placeholder"), "", "utf8");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
     const task = { ...createTask(root), limits: { maxAttempts: 1 } };
-    const executor: AgentExecutor = { async execute() { return { text: '任务已完成', trace: [{ type: 'tool_result', payload: { content: 'raw result' } }] }; } };
-
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
-
-    expect(result.status).toBe('failed');
-    expect(result.verifier.passed).toBe(false);
-    expect(await readFile(result.artifacts.tracePath!, 'utf8')).toContain('raw result');
-  });
-
-  it('records a successful verification and preserves protected files', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
-    await writeFile(join(fixture, 'protected.txt'), 'fixed\n', 'utf8');
-    const task = createTask(root);
     const executor: AgentExecutor = {
-      async execute(_task, workspacePath) {
-        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
-        return { text: 'done', trace: [] };
+      /** 模拟不修改工作区但宣称完成的单次执行。 */ async execute() {
+        return {
+          text: "任务已完成",
+          trace: [{ type: "tool_result", payload: { content: "raw result" } }],
+        };
       },
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('passed');
+    expect(result.status).toBe("failed");
+    expect(result.verifier.passed).toBe(false);
+    expect(await readFile(result.artifacts.tracePath!, "utf8")).toContain(
+      "raw result",
+    );
+  });
+
+  it("records a successful verification and preserves protected files", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
+    await writeFile(join(fixture, "protected.txt"), "fixed\n", "utf8");
+    const task = createTask(root);
+    const executor: AgentExecutor = {
+      /**
+       * 模拟首次执行修复目标文件。
+       */
+      async execute(_task, workspacePath) {
+        await writeFile(join(workspacePath, "answer.txt"), "fixed\n", "utf8");
+        return { text: "done", trace: [] };
+      },
+    };
+
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
+
+    expect(result.status).toBe("passed");
     expect(result.verifier.checks.every((check) => check.passed)).toBe(true);
   });
 
-  it('fails verification when an agent changes more files than the task allows', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
-    const task = { ...createTask(root), limits: { maxChangedFiles: 1, maxAttempts: 1 } };
+  it("fails verification when an agent changes more files than the task allows", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
+    const task = {
+      ...createTask(root),
+      limits: { maxChangedFiles: 1, maxAttempts: 1 },
+    };
     const executor: AgentExecutor = {
+      /**
+       * 模拟执行写入超出变更限制的额外文件。
+       */
       async execute(_task, workspacePath) {
-        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
-        await writeFile(join(workspacePath, 'extra.txt'), 'unexpected\n', 'utf8');
-        return { text: 'done', trace: [] };
+        await writeFile(join(workspacePath, "answer.txt"), "fixed\n", "utf8");
+        await writeFile(
+          join(workspacePath, "extra.txt"),
+          "unexpected\n",
+          "utf8",
+        );
+        return { text: "done", trace: [] };
       },
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('failed');
-    expect(result.verifier.checks).toContainEqual(expect.objectContaining({ id: 'changed-files-limit', passed: false }));
+    expect(result.status).toBe("failed");
+    expect(result.verifier.checks).toContainEqual(
+      expect.objectContaining({ id: "changed-files-limit", passed: false }),
+    );
   });
 
-  it('runs migrated declarative verifier checks', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
+  it("runs migrated declarative verifier checks", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
     const task = {
       ...createTask(root),
       verifier: {
-        requiredFiles: ['answer.txt'],
-        checks: [{ id: 'answer-content', type: 'file-contains' as const, path: 'answer.txt', includes: 'fixed' }],
+        requiredFiles: ["answer.txt"],
+        checks: [
+          {
+            id: "answer-content",
+            type: "file-contains" as const,
+            path: "answer.txt",
+            includes: "fixed",
+          },
+        ],
       },
     };
     const executor: AgentExecutor = {
+      /**
+       * 模拟执行以满足声明式 verifier 检查。
+       */
       async execute(_task, workspacePath) {
-        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
-        return { text: 'done', trace: [] };
+        await writeFile(join(workspacePath, "answer.txt"), "fixed\n", "utf8");
+        return { text: "done", trace: [] };
       },
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('passed');
-    expect(result.verifier.checks).toContainEqual(expect.objectContaining({ id: 'answer-content', passed: true }));
+    expect(result.status).toBe("passed");
+    expect(result.verifier.checks).toContainEqual(
+      expect.objectContaining({ id: "answer-content", passed: true }),
+    );
   });
 
-  it('continues a failed verification in the same workspace and session', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
+  it("continues a failed verification in the same workspace and session", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
     const task = {
       ...createTask(root),
       limits: { maxAttempts: 2 },
-      verifier: { requiredFiles: ['answer.txt'], checks: [{ id: 'answer-content', type: 'file-contains' as const, path: 'answer.txt', includes: 'fixed' }] },
+      verifier: {
+        requiredFiles: ["answer.txt"],
+        checks: [
+          {
+            id: "answer-content",
+            type: "file-contains" as const,
+            path: "answer.txt",
+            includes: "fixed",
+          },
+        ],
+      },
     };
     const calls: string[] = [];
     const executor: AgentExecutor = {
+      /**
+       * 记录首轮执行使用的会话与工作区。
+       */
       async execute(_task, workspacePath, sessionId) {
         calls.push(`execute:${sessionId}:${workspacePath}`);
-        return { text: 'first', trace: [] };
+        return { text: "first", trace: [] };
       },
+      /**
+       * 模拟在同一会话中根据 verifier 反馈继续修复。
+       */
       async continueExecution(_task, workspacePath, sessionId, feedback) {
         calls.push(`continue:${sessionId}:${workspacePath}`);
-        expect(feedback).toContain('answer-content');
-        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
-        return { text: 'fixed', trace: [] };
+        expect(feedback).toContain("answer-content");
+        await writeFile(join(workspacePath, "answer.txt"), "fixed\n", "utf8");
+        return { text: "fixed", trace: [] };
       },
+      /**
+       * 记录 runner 结束时的会话关闭调用。
+       */
       async close(sessionId) {
         calls.push(`close:${sessionId}`);
       },
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('passed');
+    expect(result.status).toBe("passed");
     expect(result.attemptCount).toBe(2);
-    expect(result.attempts?.map((attempt) => attempt.status)).toEqual(['failed', 'passed']);
-    expect(calls[0].split(':')[1]).toBe(calls[1].split(':')[1]);
+    expect(result.attempts?.map((attempt) => attempt.status)).toEqual([
+      "failed",
+      "passed",
+    ]);
+    expect(calls[0].split(":")[1]).toBe(calls[1].split(":")[1]);
     expect(calls).toHaveLength(3);
     expect(calls[2]).toMatch(/^close:/);
   });
 
-  it('does not consume eval attempts on transient API errors', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
-    await writeFile(join(fixture, 'protected.txt'), 'fixed\n', 'utf8');
+  it("does not consume eval attempts on transient API errors", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
+    await writeFile(join(fixture, "protected.txt"), "fixed\n", "utf8");
     const task = { ...createTask(root), limits: { maxAttempts: 3 } };
     const executor: AgentExecutor = {
+      /**
+       * 模拟可重试 API 错误。
+       */
       async execute() {
-        return { text: 'oops', trace: [], error: 'OpenAI API error: 500 Internal Server Error' };
+        return {
+          text: "oops",
+          trace: [],
+          error: "OpenAI API error: 500 Internal Server Error",
+        };
       },
+      /**
+       * 测试替身关闭无需资源清理。
+       */
       async close() {},
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('error');
+    expect(result.status).toBe("error");
     expect(result.attemptCount).toBe(1);
   });
 
-  it('retries after max_turns exhaustion with focused feedback', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'agent-eval-'));
-    const fixture = join(root, 'fixture');
-    await (await import('node:fs/promises')).mkdir(fixture, { recursive: true });
-    await writeFile(join(fixture, 'answer.txt'), 'broken\n', 'utf8');
-    await writeFile(join(fixture, 'protected.txt'), 'fixed\n', 'utf8');
+  it("retries after max_turns exhaustion with focused feedback", async () => {
+    const root = await mkdtemp(join(tmpdir(), "agent-eval-"));
+    const fixture = join(root, "fixture");
+    await (
+      await import("node:fs/promises")
+    ).mkdir(fixture, { recursive: true });
+    await writeFile(join(fixture, "answer.txt"), "broken\n", "utf8");
+    await writeFile(join(fixture, "protected.txt"), "fixed\n", "utf8");
     const task = { ...createTask(root), limits: { maxAttempts: 2 } };
     const executor: AgentExecutor = {
+      /**
+       * 模拟达到最大回合数的首次执行。
+       */
       async execute() {
-        return { text: 'incomplete', trace: [], error: 'Agent execution failed (error_max_turns).' };
+        return {
+          text: "incomplete",
+          trace: [],
+          error: "Agent execution failed (error_max_turns).",
+        };
       },
+      /**
+       * 模拟续跑后写入通过 verifier 的内容。
+       */
       async continueExecution(_task, workspacePath, _sessionId, feedback) {
-        expect(feedback).toContain('ran out of turns');
-        await writeFile(join(workspacePath, 'answer.txt'), 'fixed\n', 'utf8');
-        return { text: 'fixed', trace: [] };
+        expect(feedback).toContain("ran out of turns");
+        await writeFile(join(workspacePath, "answer.txt"), "fixed\n", "utf8");
+        return { text: "fixed", trace: [] };
       },
+      /**
+       * 测试替身关闭无需资源清理。
+       */
       async close() {},
     };
 
-    const result = await runTask(task, { outputRoot: join(root, 'runs'), executor, model: { model: 'mock' } });
+    const result = await runTask(task, {
+      outputRoot: join(root, "runs"),
+      executor,
+      model: { model: "mock" },
+    });
 
-    expect(result.status).toBe('passed');
+    expect(result.status).toBe("passed");
     expect(result.attemptCount).toBe(2);
   });
 
-  it('includes harness stderr details in retry feedback', () => {
+  it("includes harness stderr details in retry feedback", () => {
     const feedback = buildAttemptRetryFeedback(1, 3, {
       index: 1,
-      status: 'failed',
-      startedAt: 't0',
-      endedAt: 't1',
+      status: "failed",
+      startedAt: "t0",
+      endedAt: "t1",
       durationMs: 1,
       verifier: {
         passed: false,
-        checks: [{
-          id: 'command:node',
-          passed: false,
-          evidence: 'node verify.mjs exited 1 (expected 0); missing stdout: DWB_VERIFY_PASS; stderr: DWB_VERIFY_FAIL: slide count 0',
-          durationMs: 1,
-        }],
+        checks: [
+          {
+            id: "command:node",
+            passed: false,
+            evidence:
+              "node verify.mjs exited 1 (expected 0); missing stdout: DWB_VERIFY_PASS; stderr: DWB_VERIFY_FAIL: slide count 0",
+            durationMs: 1,
+          },
+        ],
       },
     });
 
-    expect(feedback).toContain('Harness stderr');
-    expect(feedback).toContain('DWB_VERIFY_FAIL: slide count 0');
+    expect(feedback).toContain("Harness stderr");
+    expect(feedback).toContain("DWB_VERIFY_FAIL: slide count 0");
   });
 });
 
-describe('retry helpers', () => {
-  it('retries verifier failures, max_turns, and timeouts only', () => {
-    expect(shouldRetryAttempt('failed')).toBe(true);
-    expect(shouldRetryAttempt('timeout')).toBe(true);
-    expect(shouldRetryAttempt('error', 'Agent execution failed (error_max_turns).')).toBe(true);
-    expect(shouldRetryAttempt('error', 'OpenAI API error: 500 Internal Server Error')).toBe(false);
-    expect(shouldRetryAttempt('passed')).toBe(false);
-    expect(shouldRetryAttempt('error')).toBe(false);
+describe("retry helpers", () => {
+  it("retries verifier failures, max_turns, and timeouts only", () => {
+    expect(shouldRetryAttempt("failed")).toBe(true);
+    expect(shouldRetryAttempt("timeout")).toBe(true);
+    expect(
+      shouldRetryAttempt("error", "Agent execution failed (error_max_turns)."),
+    ).toBe(true);
+    expect(
+      shouldRetryAttempt(
+        "error",
+        "OpenAI API error: 500 Internal Server Error",
+      ),
+    ).toBe(false);
+    expect(shouldRetryAttempt("passed")).toBe(false);
+    expect(shouldRetryAttempt("error")).toBe(false);
   });
 });
 
-describe('process execution', () => {
-  it('runs a Node command without a shell', async () => {
-    const result = await runProcess(process.execPath, ['-e', 'console.log("ok")'], process.cwd());
+describe("process execution", () => {
+  it("runs a Node command without a shell", async () => {
+    const result = await runProcess(
+      process.execPath,
+      ["-e", 'console.log("ok")'],
+      process.cwd(),
+    );
     expect(result).toMatchObject({ exitCode: 0, timedOut: false });
-    expect(result.stdout).toContain('ok');
+    expect(result.stdout).toContain("ok");
   });
 });
 
+/**
+ * 构造每个 runner 用例共享的最小有效评测任务。
+ */
 function createTask(root: string): LoadedEvaluationTask {
   return {
     schemaVersion: 1,
-    id: 'test-task',
-    version: '1',
-    title: 'test',
-    prompt: 'fix it',
-    profile: 'coding',
-    capabilities: ['edit-code'],
-    fixture: 'fixture',
-    verifier: { requiredFiles: ['answer.txt'], unchangedPaths: ['protected.txt'] },
-    definitionPath: join(root, 'task.json'),
+    id: "test-task",
+    version: "1",
+    title: "test",
+    prompt: "fix it",
+    profile: "coding",
+    capabilities: ["edit-code"],
+    fixture: "fixture",
+    verifier: {
+      requiredFiles: ["answer.txt"],
+      unchangedPaths: ["protected.txt"],
+    },
+    definitionPath: join(root, "task.json"),
   };
 }

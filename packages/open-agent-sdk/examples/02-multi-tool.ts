@@ -6,39 +6,46 @@
  *
  * Run: npx tsx examples/02-multi-tool.ts
  */
-import { createAgent } from '../src/index.js'
+import { createAgent } from "../src/index.js";
 
+/**
+ * 运行展示多工具注册与调用的示例主流程。
+ */
 async function main() {
-  console.log('--- Example 2: Multi-Tool Orchestration ---\n')
+  console.log("--- Example 2: Multi-Tool Orchestration ---\n");
 
   const agent = createAgent({
-    model: process.env.CODEANY_MODEL || 'claude-sonnet-4-6',
+    model: process.env.CODEANY_MODEL || "claude-sonnet-4-6",
     maxTurns: 15,
-  })
+  });
 
   for await (const event of agent.query(
-    'Do these steps: ' +
-    '1) Use Glob to find all .ts files in src/ (pattern "src/*.ts"). ' +
-    '2) Use Bash to count lines in src/agent.ts with `wc -l`. ' +
-    '3) Give a brief summary.',
+    "Do these steps: " +
+      '1) Use Glob to find all .ts files in src/ (pattern "src/*.ts"). ' +
+      "2) Use Bash to count lines in src/agent.ts with `wc -l`. " +
+      "3) Give a brief summary.",
   )) {
-    const msg = event as any
+    const msg = event as any;
 
-    if (msg.type === 'assistant') {
+    if (msg.type === "assistant") {
       for (const block of msg.message?.content || []) {
-        if (block.type === 'tool_use') {
-          console.log(`[${block.name}] ${JSON.stringify(block.input).slice(0, 100)}`)
+        if (block.type === "tool_use") {
+          console.log(
+            `[${block.name}] ${JSON.stringify(block.input).slice(0, 100)}`,
+          );
         }
-        if (block.type === 'text' && block.text.trim()) {
-          console.log(`\n${block.text}`)
+        if (block.type === "text" && block.text.trim()) {
+          console.log(`\n${block.text}`);
         }
       }
     }
 
-    if (msg.type === 'result') {
-      console.log(`\n--- ${msg.subtype} | ${msg.usage?.input_tokens}/${msg.usage?.output_tokens} tokens ---`)
+    if (msg.type === "result") {
+      console.log(
+        `\n--- ${msg.subtype} | ${msg.usage?.input_tokens}/${msg.usage?.output_tokens} tokens ---`,
+      );
     }
   }
 }
 
-main().catch(console.error)
+main().catch(console.error);

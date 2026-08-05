@@ -6,19 +6,22 @@
  * 2. 未选对话   → 引导新建对话
  * 3. 正常聊天   → MessageList + ChatInput
  */
-import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
-import { EmptyState } from '@/components/ui/empty-state';
-import { MessageList } from './MessageList';
-import { ChatInput } from './ChatInput';
-import { useAgent } from '@/hooks/useAgent';
-import { useNewConversation } from '@/hooks/useNewConversation';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { useSessionStore } from '@/stores/sessionStore';
-import { FolderOpen, MessageSquarePlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { CreateWorkspaceDialog } from '@/features/workspace/CreateWorkspaceDialog';
+import { useState } from "react";
+import { Header } from "@/components/layout/Header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { MessageList } from "./MessageList";
+import { ChatInput } from "./ChatInput";
+import { useAgent } from "@/hooks/useAgent";
+import { useNewConversation } from "@/hooks/useNewConversation";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useSessionStore } from "@/stores/sessionStore";
+import { FolderOpen, MessageSquarePlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CreateWorkspaceDialog } from "@/features/workspace/CreateWorkspaceDialog";
 
+/**
+ * 根据工作区和会话选择状态渲染聊天区，缺失上下文时提供相应的创建引导。
+ */
 export function ChatPanel() {
   const { sendMessage } = useAgent();
   const { currentWorkspaceId, workspaces } = useWorkspaceStore();
@@ -26,7 +29,7 @@ export function ChatPanel() {
   const startNewConversation = useNewConversation();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
+  const currentWorkspace = workspaces.find((w) => w.id === currentWorkspaceId);
 
   if (!currentWorkspaceId) {
     return (
@@ -48,7 +51,7 @@ export function ChatPanel() {
   if (!currentSessionId) {
     return (
       <div className="flex flex-col h-full bg-[var(--color-bg-surface)]">
-        <Header title={currentWorkspace?.name || 'Desktop Agent'} />
+        <Header title={currentWorkspace?.name || "Desktop Agent"} />
         <EmptyState
           icon={<MessageSquarePlus size={28} />}
           title="开始一个新任务"

@@ -2,92 +2,108 @@
  * NotebookEditTool - Edit Jupyter notebooks
  */
 
-import { readFile, writeFile } from 'fs/promises'
-import { defineTool } from './types.js'
-import { resolveToolPath } from '../utils/toolPath.js'
+import { readFile, writeFile } from "fs/promises";
+import { defineTool } from "./types.js";
+import { resolveToolPath } from "../utils/toolPath.js";
 
 export const NotebookEditTool = defineTool({
-  name: 'NotebookEdit',
-  description: 'Edit Jupyter notebook (.ipynb) cells. Can insert, replace, or delete cells.',
+  name: "NotebookEdit",
+  description:
+    "Edit Jupyter notebook (.ipynb) cells. Can insert, replace, or delete cells.",
   inputSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       file_path: {
-        type: 'string',
-        description: 'Path to the .ipynb file',
+        type: "string",
+        description: "Path to the .ipynb file",
       },
       command: {
-        type: 'string',
-        enum: ['insert', 'replace', 'delete'],
-        description: 'The edit operation to perform',
+        type: "string",
+        enum: ["insert", "replace", "delete"],
+        description: "The edit operation to perform",
       },
       cell_number: {
-        type: 'number',
-        description: 'Cell index (0-based) to operate on',
+        type: "number",
+        description: "Cell index (0-based) to operate on",
       },
       cell_type: {
-        type: 'string',
-        enum: ['code', 'markdown'],
-        description: 'Type of cell (for insert/replace)',
+        type: "string",
+        enum: ["code", "markdown"],
+        description: "Type of cell (for insert/replace)",
       },
       source: {
-        type: 'string',
-        description: 'Cell content (for insert/replace)',
+        type: "string",
+        description: "Cell content (for insert/replace)",
       },
     },
-    required: ['file_path', 'command', 'cell_number'],
+    required: ["file_path", "command", "cell_number"],
   },
   isReadOnly: false,
   isConcurrencySafe: false,
+  /**
+   * 对授权 notebook 文件应用结构化单元格编辑，并返回执行成功或失败信息。
+   */
   async call(input, context) {
-    const filePath = resolveToolPath(context.cwd, input.file_path)
+    const filePath = resolveToolPath(context.cwd, input.file_path);
 
     try {
-      const content = await readFile(filePath, 'utf-8')
-      const notebook = JSON.parse(content)
+      const content = await readFile(filePath, "utf-8");
+      const notebook = JSON.parse(content);
 
       if (!notebook.cells || !Array.isArray(notebook.cells)) {
-        return { data: 'Error: Invalid notebook format', is_error: true }
+        return { data: "Error: Invalid notebook format", is_error: true };
       }
 
-      const { command, cell_number, cell_type, source } = input
+      const { command, cell_number, cell_type, source } = input;
 
       switch (command) {
-        case 'insert': {
+        case "insert": {
           const newCell = {
-            cell_type: cell_type || 'code',
-            source: (source || '').split('\n').map((l: string, i: number, arr: string[]) =>
-              i < arr.length - 1 ? l + '\n' : l
-            ),
+            cell_type: cell_type || "code",
+            source: (source || "")
+              .split("\n")
+              .map((l: string, i: number, arr: string[]) =>
+                i < arr.length - 1 ? l + "\n" : l,
+              ),
             metadata: {},
-            ...(cell_type !== 'markdown' ? { outputs: [], execution_count: null } : {}),
-          }
-          notebook.cells.splice(cell_number, 0, newCell)
-          break
+            ...(cell_type !== "markdown"
+              ? { outputs: [], execution_count: null }
+              : {}),
+          };
+          notebook.cells.splice(cell_number, 0, newCell);
+          break;
         }
-        case 'replace': {
+        case "replace": {
           if (cell_number >= notebook.cells.length) {
-            return { data: `Error: Cell ${cell_number} does not exist`, is_error: true }
+            return {
+              data: `Error: Cell ${cell_number} does not exist`,
+              is_error: true,
+            };
           }
-          notebook.cells[cell_number].source = (source || '').split('\n').map(
-            (l: string, i: number, arr: string[]) => i < arr.length - 1 ? l + '\n' : l
-          )
-          if (cell_type) notebook.cells[cell_number].cell_type = cell_type
-          break
+          notebook.cells[cell_number].source = (source || "")
+            .split("\n")
+            .map((l: string, i: number, arr: string[]) =>
+              i < arr.length - 1 ? l + "\n" : l,
+            );
+          if (cell_type) notebook.cells[cell_number].cell_type = cell_type;
+          break;
         }
-        case 'delete': {
+        case "delete": {
           if (cell_number >= notebook.cells.length) {
-            return { data: `Error: Cell ${cell_number} does not exist`, is_error: true }
+            return {
+              data: `Error: Cell ${cell_number} does not exist`,
+              is_error: true,
+            };
           }
-          notebook.cells.splice(cell_number, 1)
-          break
+          notebook.cells.splice(cell_number, 1);
+          break;
         }
       }
 
-      await writeFile(filePath, JSON.stringify(notebook, null, 1), 'utf-8')
-      return `Notebook ${command}: cell ${cell_number} in ${filePath}`
+      await writeFile(filePath, JSON.stringify(notebook, null, 1), "utf-8");
+      return `Notebook ${command}: cell ${cell_number} in ${filePath}`;
     } catch (err: any) {
-      return { data: `Error: ${err.message}`, is_error: true }
+      return { data: `Error: ${err.message}`, is_error: true };
     }
   },
-})
+});

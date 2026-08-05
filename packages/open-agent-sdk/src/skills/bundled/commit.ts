@@ -4,8 +4,8 @@
  * Create a git commit with a well-crafted message based on staged changes.
  */
 
-import { registerSkill } from '../registry.js'
-import type { SkillContentBlock } from '../types.js'
+import { registerSkill } from "../registry.js";
+import type { SkillContentBlock } from "../types.js";
 
 const COMMIT_PROMPT = `Create a git commit for the current changes. Follow these steps:
 
@@ -18,21 +18,28 @@ const COMMIT_PROMPT = `Create a git commit for the current changes. Follow these
    - Adds a body with details if the change is complex
 4. Create the commit
 
-Do NOT push to remote unless explicitly asked.`
+Do NOT push to remote unless explicitly asked.`;
 
+/**
+ * 注册可由用户调用的提交 Skill，并限制其使用适合审查暂存变更的工具。
+ */
 export function registerCommitSkill(): void {
   registerSkill({
-    name: 'commit',
-    description: 'Create a git commit with a well-crafted message based on staged changes.',
-    aliases: ['ci'],
-    allowedTools: ['Bash', 'Read', 'Glob', 'Grep'],
+    name: "commit",
+    description:
+      "Create a git commit with a well-crafted message based on staged changes.",
+    aliases: ["ci"],
+    allowedTools: ["Bash", "Read", "Glob", "Grep"],
     userInvocable: true,
+    /**
+     * 返回提交流程提示，并附加用户提供的额外提交约束。
+     */
     async getPrompt(args): Promise<SkillContentBlock[]> {
-      let prompt = COMMIT_PROMPT
+      let prompt = COMMIT_PROMPT;
       if (args.trim()) {
-        prompt += `\n\nAdditional instructions: ${args}`
+        prompt += `\n\nAdditional instructions: ${args}`;
       }
-      return [{ type: 'text', text: prompt }]
+      return [{ type: "text", text: prompt }];
     },
-  })
+  });
 }

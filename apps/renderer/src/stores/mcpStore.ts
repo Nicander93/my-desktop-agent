@@ -1,11 +1,17 @@
 /**
  * MCP 服务配置：列表、目录安装、导入与连通测试
  */
-import { create } from 'zustand';
-import type { McpCatalogEntry, McpServerRecord } from '@desktop-agent/shared';
+import { create } from "zustand";
+import type { McpCatalogEntry, McpServerRecord } from "@desktop-agent/shared";
 
+/**
+ * 目录条目及其在本地安装列表中的派生状态。
+ */
 type CatalogEntry = McpCatalogEntry & { installed: boolean };
 
+/**
+ * MCP 设置页共享的列表、提及候选、安装、导入与测试状态操作。
+ */
 interface McpStore {
   servers: McpServerRecord[];
   catalog: CatalogEntry[];
@@ -13,11 +19,26 @@ interface McpStore {
   loading: boolean;
   loadAll: () => Promise<void>;
   loadMentionable: () => Promise<void>;
-  installCatalog: (catalogId: string, secrets?: Record<string, string>) => Promise<{ error?: string; toolCount?: number }>;
-  updateServer: (id: string, updates: Partial<McpServerRecord>) => Promise<string | null>;
+  installCatalog: (
+    catalogId: string,
+    secrets?: Record<string, string>,
+  ) => Promise<{ error?: string; toolCount?: number }>;
+  updateServer: (
+    id: string,
+    updates: Partial<McpServerRecord>,
+  ) => Promise<string | null>;
   deleteServer: (id: string) => Promise<string | null>;
-  importJson: (raw: string) => Promise<{ error?: string; warning?: string; count?: number }>;
-  testConnection: (id: string, conversationId?: string) => Promise<{ success: boolean; tools?: Array<{ name: string; description: string }>; error?: string }>;
+  importJson: (
+    raw: string,
+  ) => Promise<{ error?: string; warning?: string; count?: number }>;
+  testConnection: (
+    id: string,
+    conversationId?: string,
+  ) => Promise<{
+    success: boolean;
+    tools?: Array<{ name: string; description: string }>;
+    error?: string;
+  }>;
 }
 
 /** MCP 配置 Zustand store */
@@ -36,8 +57,8 @@ export const useMcpStore = create<McpStore>((set, get) => ({
         window.electronAPI.mcp.getCatalog(),
       ]);
       set({
-        servers: allResult.success ? allResult.servers ?? [] : [],
-        catalog: catalogResult.success ? catalogResult.catalog ?? [] : [],
+        servers: allResult.success ? (allResult.servers ?? []) : [],
+        catalog: catalogResult.success ? (catalogResult.catalog ?? []) : [],
       });
       await get().loadMentionable();
     } finally {
@@ -54,15 +75,18 @@ export const useMcpStore = create<McpStore>((set, get) => ({
   },
 
   installCatalog: async (catalogId, secrets) => {
-    if (!window.electronAPI?.mcp) return { error: 'MCP API 不可用' };
-    const result = await window.electronAPI.mcp.installCatalog(catalogId, secrets);
-    if (!result.success) return { error: result.error || '安装失败' };
+    if (!window.electronAPI?.mcp) return { error: "MCP API 不可用" };
+    const result = await window.electronAPI.mcp.installCatalog(
+      catalogId,
+      secrets,
+    );
+    if (!result.success) return { error: result.error || "安装失败" };
     await get().loadAll();
     return { toolCount: result.tools?.length };
   },
 
   updateServer: async (id, updates) => {
-    if (!window.electronAPI?.mcp) return 'MCP API 不可用';
+    if (!window.electronAPI?.mcp) return "MCP API 不可用";
     const result = await window.electronAPI.mcp.update(id, {
       name: updates.name,
       displayName: updates.displayName,
@@ -74,30 +98,30 @@ export const useMcpStore = create<McpStore>((set, get) => ({
       env: updates.env,
       enabled: updates.enabled,
     });
-    if (!result.success) return result.error || '更新失败';
+    if (!result.success) return result.error || "更新失败";
     await get().loadAll();
     return null;
   },
 
   deleteServer: async (id) => {
-    if (!window.electronAPI?.mcp) return 'MCP API 不可用';
+    if (!window.electronAPI?.mcp) return "MCP API 不可用";
     const result = await window.electronAPI.mcp.delete(id);
-    if (!result.success) return result.error || '删除失败';
+    if (!result.success) return result.error || "删除失败";
     await get().loadAll();
     return null;
   },
 
   importJson: async (raw) => {
-    if (!window.electronAPI?.mcp) return { error: 'MCP API 不可用' };
+    if (!window.electronAPI?.mcp) return { error: "MCP API 不可用" };
     const result = await window.electronAPI.mcp.importJson(raw);
-    if (!result.success) return { error: result.error || '导入失败' };
+    if (!result.success) return { error: result.error || "导入失败" };
     await get().loadAll();
     return { warning: result.warning, count: result.servers?.length };
   },
 
   testConnection: async (id, conversationId) => {
     if (!window.electronAPI?.mcp) {
-      return { success: false, error: 'MCP API 不可用' };
+      return { success: false, error: "MCP API 不可用" };
     }
     return window.electronAPI.mcp.testConnection(id, conversationId);
   },

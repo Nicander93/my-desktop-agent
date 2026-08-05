@@ -4,8 +4,8 @@
  * Run tests and analyze failures.
  */
 
-import { registerSkill } from '../registry.js'
-import type { SkillContentBlock } from '../types.js'
+import { registerSkill } from "../registry.js";
+import type { SkillContentBlock } from "../types.js";
 
 const TEST_PROMPT = `Run the project's test suite and analyze the results:
 
@@ -23,21 +23,27 @@ const TEST_PROMPT = `Run the project's test suite and analyze the results:
    - Identify why the test is failing
    - Fix the issue (in tests or source as appropriate)
 
-4. **Re-verify**: Run the failing tests again to confirm the fix`
+4. **Re-verify**: Run the failing tests again to confirm the fix`;
 
+/**
+ * 注册测试执行与失败分析 Skill，并提供修改测试或源码所需的工具。
+ */
 export function registerTestSkill(): void {
   registerSkill({
-    name: 'test',
-    description: 'Run tests and analyze failures, fixing any issues found.',
-    aliases: ['run-tests'],
-    allowedTools: ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep'],
+    name: "test",
+    description: "Run tests and analyze failures, fixing any issues found.",
+    aliases: ["run-tests"],
+    allowedTools: ["Bash", "Read", "Write", "Edit", "Glob", "Grep"],
     userInvocable: true,
+    /**
+     * 返回测试工作流提示，并附加用户指定的测试目标。
+     */
     async getPrompt(args): Promise<SkillContentBlock[]> {
-      let prompt = TEST_PROMPT
+      let prompt = TEST_PROMPT;
       if (args.trim()) {
-        prompt += `\n\nSpecific test target: ${args}`
+        prompt += `\n\nSpecific test target: ${args}`;
       }
-      return [{ type: 'text', text: prompt }]
+      return [{ type: "text", text: prompt }];
     },
-  })
+  });
 }

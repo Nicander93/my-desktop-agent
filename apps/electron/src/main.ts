@@ -31,18 +31,31 @@ registerWorkspacePreviewScheme();
 
 
 
-/** 全局 Agent 运行时实例，按 sessionId 管理多个 Agent */
+/**
+ * 全局 Agent Runtime，按 sessionId 管理多个会话 Agent。
+ *
+ * 仅在 app ready、数据库和 bundled runtime 初始化后创建；窗口关闭时必须通过 `closeAll` 释放资源。
+ */
 let runtime: AgentRuntime;
-/** 主窗口引用，用于流式推送和路径访问弹窗 */
+/**
+ * 主窗口引用，用于流式事件推送和路径访问确认。
+ *
+ * 窗口关闭时置空，IPC/Runtime 回调必须容忍没有可用窗口的无头状态。
+ */
 let mainWindow: BrowserWindow | null = null;
-/** App 级运行时管理 */
+/**
+ * 管理 App 级 bundled 二进制及其基础环境。
+ *
+ * 其路径由 Profile 子进程环境读取，不应直接修改用户系统的全局环境配置。
+ */
 let binaryManager: BinaryManager;
 
 
 
 /**
- * 创建 AgentRuntime 并注入路径拦截器
- * permissionMode 设为 default，工具执行前会走路径检查
+ * 从 Host 环境创建 AgentRuntime，并注入路径拦截器。
+ *
+ * 必须保持 `permissionMode: 'default'`，使工具调用经 pathGuard 授权；空 API Key 只记录警告，让 UI 仍能展示可恢复错误。
  */
 function createRuntime(): void {
   const apiKey = readAgentEnv('CODEANY_API_KEY');
@@ -84,7 +97,11 @@ function createRuntime(): void {
 
 
 
-/** 创建主窗口，开发模式加载 Vite dev server */
+/**
+ * 创建主窗口并根据打包状态加载 Vite 或构建产物。
+ *
+ * preload 与 contextIsolation 是 renderer 唯一获得 Host 能力的桥接边界，不能为方便调试启用 nodeIntegration。
+ */
 function createWindow(): void {
   const iconPath = app.isPackaged
     ? join(process.resourcesPath, 'icon.png')

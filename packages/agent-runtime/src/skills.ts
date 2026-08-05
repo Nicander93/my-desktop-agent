@@ -2,8 +2,11 @@
  * 把 DB/设置里的 Skill 注册进 open-agent-sdk；enabled 或本轮 / 提及才注册。
  * managedSkillNames 跟踪本 runtime 注册过的名字，禁用或切 session 时 unregister。
  */
-import { registerSkill, unregisterSkill } from '@codeany/open-agent-sdk';
-import { getSkillPromptBody, type RuntimeSkillDefinition } from '@desktop-agent/shared';
+import { registerSkill, unregisterSkill } from "@codeany/open-agent-sdk";
+import {
+  getSkillPromptBody,
+  type RuntimeSkillDefinition,
+} from "@desktop-agent/shared";
 
 const managedSkillNames = new Set<string>();
 
@@ -13,7 +16,9 @@ export function syncRuntimeSkills(
   mentionNames: string[] = [],
 ): void {
   const mentionSet = new Set(mentionNames);
-  const active = skills.filter((skill) => skill.enabled || mentionSet.has(skill.name));
+  const active = skills.filter(
+    (skill) => skill.enabled || mentionSet.has(skill.name),
+  );
   const activeNames = new Set(active.map((skill) => skill.name));
 
   for (const name of [...managedSkillNames]) {
@@ -31,12 +36,15 @@ export function syncRuntimeSkills(
       userInvocable: true,
       whenToUse: skill.description || undefined,
       isEnabled: () => true,
+      /**
+       * 返回 Skill 主体，并在用户显式 mention 时附加经裁剪的调用上下文。
+       */
       async getPrompt(args) {
         let text = body;
         if (args?.trim()) {
           text += `\n\nAdditional context from user: ${args.trim()}`;
         }
-        return [{ type: 'text', text }];
+        return [{ type: "text", text }];
       },
     });
     managedSkillNames.add(skill.name);
