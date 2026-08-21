@@ -5,7 +5,7 @@
  * Supports keyword search and exact name selection.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 // Registry of deferred tools (set by the agent)
 let deferredTools: ToolDefinition[] = [];

@@ -5,7 +5,7 @@
  * between teammates in a multi-agent setup.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 /**
  * Message inbox for inter-agent communication.

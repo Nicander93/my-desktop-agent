@@ -5,7 +5,7 @@
  * Allows the agent to enter a design/planning phase before execution.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 // Track plan mode state
 let planModeActive = false;

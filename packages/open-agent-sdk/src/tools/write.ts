@@ -6,9 +6,9 @@
 
 import { writeFile, mkdir } from "fs/promises";
 import { dirname } from "path";
-import { defineTool } from "./types.js";
+import { defineTool } from "./define.js";
+import type { ToolContext } from "./types.js";
 import { resolveToolPath } from "../utils/toolPath.js";
-import type { ToolContext } from "../types.js";
 
 /**
  * Write 工具接受的文件路径与完整文本内容。

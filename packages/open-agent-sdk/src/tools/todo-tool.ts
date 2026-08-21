@@ -4,7 +4,7 @@
  * Manages a session-scoped todo list for tracking work items.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 /**
  * 会话内待办条目的稳定编号、文本、完成状态和可选优先级。

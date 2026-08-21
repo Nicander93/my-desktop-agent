@@ -5,7 +5,7 @@
  * RemoteTrigger - Manage remote scheduled agent triggers.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 /**
  * Cron job definition.

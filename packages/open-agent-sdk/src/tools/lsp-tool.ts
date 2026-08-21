@@ -6,7 +6,7 @@
  */
 
 import { execSync } from "child_process";
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 export const LSPTool: ToolDefinition = {
   name: "LSP",

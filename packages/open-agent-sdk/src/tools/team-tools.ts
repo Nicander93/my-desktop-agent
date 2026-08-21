@@ -5,7 +5,7 @@
  * Manages team composition, task lists, and inter-agent messaging.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 /**
  * Team definition.

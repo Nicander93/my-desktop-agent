@@ -65,7 +65,6 @@ export {
 
   // Helpers
   defineTool,
-  toApiTool,
 
   // Core file I/O & execution
   BashTool,
@@ -395,8 +394,11 @@ export type {
   ToolDefinition,
   ToolInputSchema,
   ToolContext,
+  ToolUseContext,
   ToolResult,
   ToolResultTransformer,
+  ValidationResult,
+  PermissionResult,
 
   // Permission types
   PermissionMode,

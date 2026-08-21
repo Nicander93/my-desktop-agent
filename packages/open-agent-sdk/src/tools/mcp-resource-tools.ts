@@ -4,7 +4,7 @@
  * ListMcpResources / ReadMcpResource - Access resources from MCP servers.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 import type { MCPConnection } from "../mcp/client.js";
 
 // Registry of MCP connections (set by the agent)

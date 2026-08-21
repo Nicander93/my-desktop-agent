@@ -4,7 +4,7 @@
  * Get/set global configuration and session settings.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 // In-memory config store
 const configStore = new Map<string, unknown>();

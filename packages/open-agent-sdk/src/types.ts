@@ -1,6 +1,25 @@
 /**
- * Core type definitions for the Agent SDK
+ * SDK 公共类型入口。
+ *
+ * 消息、权限、AgentOptions 定义在此；ToolDefinition 等模块类型从对应目录 re-export，
+ * 调用方可以继续从本文件进口径。
  */
+
+import type {
+  ToolDefinition,
+  ToolResultTransformer,
+} from "./tools/types.js";
+
+export type {
+  ToolDefinition,
+  ToolInputSchema,
+  ToolContext,
+  ToolUseContext,
+  ToolResult,
+  ToolResultTransformer,
+  ValidationResult,
+  PermissionResult,
+} from "./tools/types.js";
 
 // Content block types (provider-agnostic, compatible with Anthropic format)
 /** Provider 无关的输入内容块，保持与 Anthropic 风格工具协议兼容。 */
@@ -198,58 +217,6 @@ export interface TokenUsage {
   cache_read_input_tokens?: number;
   cached_input_tokens?: number;
 }
-
-// --------------------------------------------------------------------------
-// Tool Types
-// --------------------------------------------------------------------------
-
-/** 可注册到 Agent 的工具定义及其执行和提示策略。 */
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  inputSchema: ToolInputSchema;
-  call: (input: any, context: ToolContext) => Promise<ToolResult>;
-  isReadOnly?: () => boolean;
-  isConcurrencySafe?: () => boolean;
-  isEnabled?: () => boolean;
-  prompt?: (context: ToolContext) => Promise<string>;
-}
-
-/** 传给 Provider 的 JSON Schema 子集。 */
-export interface ToolInputSchema {
-  type: "object";
-  properties: Record<string, any>;
-  required?: string[];
-}
-
-/** 每次工具调用携带的会话级运行上下文。 */
-export interface ToolContext {
-  cwd: string;
-  abortSignal?: AbortSignal;
-  /** Parent agent's LLM provider (inherited by subagents) */
-  provider?: import("./providers/types.js").LLMProvider;
-  /** Parent agent's model ID */
-  model?: string;
-  /** Parent agent's API type */
-  apiType?: import("./providers/types.js").ApiType;
-  /** Per-session env for shell/MCP subprocesses (avoids mutating global process.env) */
-  subprocessEnv?: Record<string, string>;
-}
-
-/** 工具返回给模型的标准结果载体。 */
-export interface ToolResult {
-  type: "tool_result";
-  tool_use_id: string;
-  content: string | any[];
-  is_error?: boolean;
-}
-
-/** Generic hook for adapting a tool result before it becomes model context. */
-/** 在结果进入模型上下文前执行的会话策略转换器。 */
-export type ToolResultTransformer = (
-  result: ToolResult,
-  context: { toolName: string; profile?: string },
-) => ToolResult;
 
 // --------------------------------------------------------------------------
 // Permission Types

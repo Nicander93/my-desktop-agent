@@ -4,7 +4,7 @@
  * 优先使用 Node 的 glob 实现；旧运行时回退到受限 shell 命令，结果始终限制为 500 条以控制上下文体积。
  */
 
-import { defineTool } from "./types.js";
+import { defineTool } from "./define.js";
 import { resolveToolPath } from "../utils/toolPath.js";
 
 /**
@@ -32,17 +32,15 @@ export const GlobTool = defineTool({
   },
   isReadOnly: true,
   isConcurrencySafe: true,
-  /**
-   * 在工作目录内执行 glob 文件发现，并把匹配项限制为工具结果格式。
-   */
+
+  // 实际调用
   async call(input, context) {
     const searchDir = input.path
       ? resolveToolPath(context.cwd, input.path)
       : context.cwd;
     const { pattern } = input;
-
     try {
-      // Node 22 的 glob 可避免启动 shell；缺失时才使用兼容回退。
+      // Node 22 的 glob 可避免启动 shell
       const { glob } = await import("fs/promises");
 
       // @ts-ignore - glob is available in Node 22+

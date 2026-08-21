@@ -5,7 +5,7 @@
  */
 
 import { spawn } from "child_process";
-import { defineTool } from "./types.js";
+import { defineTool } from "./define.js";
 import { resolveToolPath } from "../utils/toolPath.js";
 
 /**

@@ -6,7 +6,7 @@
  * In non-interactive mode, returns a default or denies.
  */
 
-import type { ToolDefinition, ToolResult } from "../types.js";
+import type { ToolDefinition, ToolResult } from "./types.js";
 
 // Callback for handling user questions (set by the agent)
 let questionHandler:

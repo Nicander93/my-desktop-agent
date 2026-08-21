@@ -71,6 +71,7 @@ function stabilizeTools(tools: ToolDefinition[]): ToolDefinition[] {
 }
 
 /**
+ * Agent 
  * SDK 的高层会话对象：管理 provider、工具池、MCP 连接、历史、权限钩子和 trace。
  */
 export class Agent {

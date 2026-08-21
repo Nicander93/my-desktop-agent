@@ -4,7 +4,7 @@
  * 本文件只维护 SDK 工具定义的顺序和筛选，不决定 Desktop Profile 权限；Runtime 会在此基础上叠加 Execution Policy。
  */
 
-import type { ToolDefinition } from "../types.js";
+import type { ToolDefinition } from "./types.js";
 
 // File I/O
 import { BashTool } from "./bash.js";
@@ -252,4 +252,4 @@ export {
 };
 
 // Re-export helpers
-export { defineTool, toApiTool } from "./types.js";
+export { defineTool } from "./define.js";

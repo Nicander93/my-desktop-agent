@@ -5,7 +5,7 @@
  * They can be invoked by the model via the Skill tool or by users via /skillname.
  */
 
-import type { ToolContext } from '../types.js'
+import type { ToolContext } from '../tools/types.js'
 import type { HookConfig } from '../hooks.js'
 
 /**

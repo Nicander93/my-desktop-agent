@@ -5,12 +5,8 @@
  * Agents run as nested query loops with their own context and tool sets.
  */
 
-import type {
-  ToolDefinition,
-  ToolContext,
-  ToolResult,
-  AgentDefinition,
-} from "../types.js";
+import type { ToolDefinition, ToolContext, ToolResult } from "./types.js";
+import type { AgentDefinition } from "../types.js";
 import { QueryEngine } from "../engine.js";
 import { getAllBaseTools, filterTools } from "./index.js";
 import { createProvider, type ApiType } from "../providers/index.js";

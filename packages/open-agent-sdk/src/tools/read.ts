@@ -5,9 +5,9 @@
  */
 
 import { readFile, stat } from "fs/promises";
-import { defineTool } from "./types.js";
+import { defineTool } from "./define.js";
+import type { ToolContext } from "./types.js";
 import { resolveToolPath } from "../utils/toolPath.js";
-import type { ToolContext } from "../types.js";
 
 /**
  * Read 工具支持的文件范围参数。

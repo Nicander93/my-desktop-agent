@@ -3,7 +3,7 @@
  */
 
 import { spawn } from "child_process";
-import { defineTool } from "./types.js";
+import { defineTool } from "./define.js";
 import { formatShellOutput, resolveShellInvocation } from "./shell.js";
 
 const isWin32 = process.platform === "win32";

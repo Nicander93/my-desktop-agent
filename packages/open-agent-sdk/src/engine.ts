@@ -9,6 +9,7 @@ import type {
   ToolDefinition,
   ToolResult,
   ToolContext,
+  ToolUseContext,
   TokenUsage,
 } from "./types.js";
 import type {
@@ -854,6 +855,76 @@ export class QueryEngine {
         is_error: true,
         tool_name: block.name,
       });
+    }
+
+    const useContext: ToolUseContext = { ...context, toolUseId: block.id };
+
+    // Tool-level input validation (before permission check)
+    if (tool.validateInput) {
+      try {
+        const validation = await tool.validateInput(block.input, useContext);
+        if (validation.behavior === "deny") {
+          emitToolCall();
+          const msg =
+            validation.message || `Validation failed for tool "${block.name}"`;
+          emitToolResult(msg, true, block.name);
+          return withTrace({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: msg,
+            is_error: true,
+            tool_name: block.name,
+          });
+        }
+        if (validation.updatedInput !== undefined) {
+          block = { ...block, input: validation.updatedInput };
+        }
+      } catch (err: any) {
+        emitToolCall();
+        const msg = `Validation error: ${err.message}`;
+        emitToolResult(msg, true, block.name);
+        return withTrace({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: msg,
+          is_error: true,
+          tool_name: block.name,
+        });
+      }
+    }
+
+    // Tool-level permission check (supplements host canUseTool)
+    if (tool.checkPermissions) {
+      try {
+        const permission = await tool.checkPermissions(block.input, useContext);
+        if (permission.behavior === "deny") {
+          emitToolCall();
+          const msg =
+            permission.message || `Permission denied for tool "${block.name}"`;
+          emitToolResult(msg, true, block.name);
+          return withTrace({
+            type: "tool_result",
+            tool_use_id: block.id,
+            content: msg,
+            is_error: true,
+            tool_name: block.name,
+          });
+        }
+        if (permission.updatedInput !== undefined) {
+          block = { ...block, input: permission.updatedInput };
+        }
+      } catch (err: any) {
+        emitToolCall();
+        const msg = `Permission check error: ${err.message}`;
+        emitToolResult(msg, true, block.name);
+        return withTrace({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: msg,
+          is_error: true,
+          tool_name: block.name,
+        });
+      }
     }
 
     // Check permissions

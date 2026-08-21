@@ -5,7 +5,7 @@
  * Skills are prompt templates that provide specialized capabilities.
  */
 
-import type { ToolDefinition, ToolResult, ToolContext } from "../types.js";
+import type { ToolDefinition, ToolResult, ToolContext } from "./types.js";
 import { getSkill, getUserInvocableSkills } from "../skills/registry.js";
 
 export const SkillTool: ToolDefinition = {
