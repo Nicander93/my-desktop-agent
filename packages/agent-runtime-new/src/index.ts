@@ -36,3 +36,29 @@ export type {
 
 export { createToolRegistry, generalTools } from "@/registry/general-tools.js";
 export type { AnyTool } from "@/registry/general-tools.js";
+
+export { runAgentLoop } from "@/agent/agent-loop.js";
+export type {
+  AgentLoopInput,
+  AgentLoopResult,
+  AgentStopReason,
+} from "@/agent/types.js";
+export type { Model } from "@/model/model.js";
+export type { ModelInput, ModelResponse } from "@/model/model.js";
+export type {
+  AssistantContent,
+  AssistantMessage,
+  Message,
+  ToolCall,
+  ToolDefinition,
+  ToolMessage,
+  UserMessage,
+} from "@/model/types.js";
+export {
+  createToolExecutor,
+  DefaultToolExecutor,
+} from "@/tools/tool-executor.js";
+export type {
+  ToolExecutor,
+  ToolExecutorOptions,
+} from "@/tools/tool-executor.js";
