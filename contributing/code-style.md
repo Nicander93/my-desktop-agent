@@ -20,18 +20,18 @@
 
 ## Documentation Comments
 
-- 类、函数、接口和导出的类型使用多行 JSDoc，不使用单行 `/** ... */`。
-- 注释说明“为什么”、约束、优先级、副作用或失败路径，不复述函数名和实现步骤。
-- 文件头说明职责和边界；关键策略表、session map、魔法数说明生命周期或含义。
-- 行为改变时同步更新或删除过时注释；新增或修改导出符号时补充注释。
+- 源码注释统一使用英文，只记录代码无法自证的契约、原因、边界和非显然行为。
+- 公共 API 或核心抽象有额外契约时使用多行 TSDoc，禁止单行 `/** ... */`；实现原因使用 `//`。
+- 不强制文件头或导出符号注释，不重复函数名、参数名和 TypeScript 类型。
+- 行为改变时同步更新或删除相邻注释；完整规则见 [代码注释](./comments.md)。
 
 示例：
 
 ```ts
 /**
- * 保留显式 profile；未指定时使用通用策略。
+ * Preserves an explicit profile so caller policy is never replaced by inference.
  */
 export function resolveProfile(profile?: Profile): Profile {
-  return profile ?? 'general';
+  return profile ?? "general";
 }
 ```

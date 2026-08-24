@@ -13,6 +13,7 @@ const sdkOnly = process.argv.includes("--sdk-only");
 const sdkDir = join(root, "packages/open-agent-sdk");
 const sdkDist = join(sdkDir, "dist/index.js");
 const agentDist = join(root, "packages/agent-runtime/dist/index.js");
+const newAgentDist = join(root, "packages/agent-runtime-new/dist/index.js");
 
 /**
  * 在仓库根执行构建命令，并将子进程输出直接交给调用终端。
@@ -55,11 +56,11 @@ function ensureSdk() {
 
 /** 缺 dist 时编译 agent-runtime 等 workspace 包 */
 function ensurePackages() {
-  if (!force && existsSync(agentDist)) {
+  if (!force && existsSync(agentDist) && existsSync(newAgentDist)) {
     console.log("[build] workspace packages already built, skipping");
     return;
   }
-  run("pnpm exec tsc -b packages/agent-runtime");
+  run("pnpm exec tsc -b packages/agent-runtime packages/agent-runtime-new");
 }
 
 ensureSdk();

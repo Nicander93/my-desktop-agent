@@ -282,7 +282,7 @@ pnpm eval:report -- --group-by domain,difficulty
 
 按改动所在层勾。分层别破、IPC 别漂、行为能手测或单测。
 
-改 profile / 会话编排 / 流式同步时，先扫一遍 [comments.md](../contributing/comments.md) 里那 10 个文件，看注释还对不对。
+改 profile / 会话编排 / 流式同步时，按 [comments.md](../contributing/comments.md) 检查受影响链路的相邻注释是否仍然准确。
 
 ### 9.1 通用
 
@@ -291,7 +291,7 @@ pnpm eval:report -- --group-by domain,difficulty
 - [ ] 没有把密钥、本地路径、`.env` 提交进仓库
 - [ ] 没有无关大重构 / 格式化噪音混进功能 PR
 - [ ] 有测的地方：覆盖的是分支/变换，不是镜像实现
-- [ ] 新加或改过的导出符号，按 [comments.md](../contributing/comments.md) 补了注释
+- [ ] 公共契约或非显然决策需要说明时，按 [comments.md](../contributing/comments.md) 补充了有效注释
 
 ### 9.2 分层与依赖
 

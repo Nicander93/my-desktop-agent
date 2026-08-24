@@ -37,7 +37,7 @@ module.exports = {
       name: 'runtime-no-electron',
       comment: 'agent-runtime must not import electron or renderer',
       severity: 'error',
-      from: { path: '^packages/agent-runtime/' },
+      from: { path: '^packages/agent-runtime(?:-new)?/' },
       to: {
         path: '^(electron|apps/electron|apps/renderer)',
       },
@@ -66,7 +66,7 @@ module.exports = {
   ],
   options: {
     tsConfig: {
-      fileName: 'tsconfig.depcruise.json',
+      fileName: process.env.DEPCRUISE_TSCONFIG ?? 'tsconfig.depcruise.json',
     },
     tsPreCompilationDeps: true,
     includeOnly: '^(apps|packages)/',

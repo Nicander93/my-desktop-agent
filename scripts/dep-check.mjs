@@ -13,6 +13,7 @@ const targets = [
   'apps/electron/src',
   'packages/shared/src',
   'packages/agent-runtime/src',
+  'packages/agent-runtime-new/src',
   'packages/agent-eval/src',
   'packages/open-agent-sdk/src',
 ];
@@ -20,5 +21,14 @@ const targets = [
 for (const target of targets) {
   const cmd = `pnpm exec depcruise "${join(root, target)}" --config "${config}"`;
   console.log(`> ${cmd}`);
-  execSync(cmd, { cwd: root, stdio: 'inherit', env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' } });
+  const tsConfig = target === 'packages/agent-runtime-new/src' ? 'depcruise.agent-runtime-new.json' : undefined;
+  execSync(cmd, {
+    cwd: root,
+    stdio: 'inherit',
+    env: {
+      ...process.env,
+      NODE_OPTIONS: '--max-old-space-size=4096',
+      ...(tsConfig ? { DEPCRUISE_TSCONFIG: tsConfig } : {}),
+    },
+  });
 }

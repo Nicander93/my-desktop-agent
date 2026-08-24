@@ -1,0 +1,26 @@
+{
+  "name": "@desktop-agent/agent-runtime-new",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Agent Runtime implementation",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc && tsc-alias",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  }
+}

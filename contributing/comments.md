@@ -1,56 +1,32 @@
 # 代码注释
 
-靠 Agent 改代码时，人要靠注释看清边界。注释写「为什么」和约束，别复述代码在干什么。
+代码负责表达 **what**，命名和类型负责表达结构；注释只记录代码无法清楚表达的
+**why、constraint、contract** 和非显然行为。项目不追求注释覆盖率。
 
-## 要写什么
+## 何时写
 
-源码默认都写（`apps/`、`packages/`、`scripts/`）：
+- 公共 API、Tool 输入输出和 Runtime 核心抽象存在默认值、限制、副作用、生命周期或失败契约时，使用 TSDoc。
+- 安全与权限边界、模型上下文成本、性能硬限制、跨平台差异、第三方工具特殊语义和 workaround 必须说明原因。
+- 调用方需要处理的异常、兼容性要求或删除 workaround 的条件，应写进契约。
+- TODO 必须写清缺少什么、暂缓原因和下一步；已有 issue 时附 issue。长期设计决策放进 ADR 或 docs。
 
-- **文件头**：这个文件管什么、别在这里找什么、改错容易踩哪
-- **导出的类 / 函数 / 类型**：一两句用途；有副作用、失败路径、优先级就写上
-- **关键变量**：session map、策略表、关键词表、故意空串/魔法数——写清含义和生命周期
+简单 helper、getter、赋值、循环、条件和临时变量通常不需要注释。文件头也不强制；只有文件职责或边界无法从目录、命名和导出看清时才写。
 
-可以很短：
+## 怎么写
 
-- `dist/`、`node_modules/`、生成物
-- 测试：文件头说测哪块就行
-- `vite`/`vitest` 配置：一行
-- `components/ui/*`：标明 shadcn 原语、无业务
+- 源码注释统一使用英文；产品和设计文档可使用中文。
+- 面向调用方的契约使用多行 TSDoc，`/**`、正文和 `*/` 分别独占行；禁止单行 `/** ... */`。实现原因使用紧邻代码的 `// ...`。
+- 第一段直接写职责、约束或原因，不写 “This function…”、“Gets…”、“Creates…” 等模板句。
+- 不机械填写 `@param`、`@returns`；TypeScript 已表达的类型不要在 TSDoc 中重复。
+- 只在有额外契约时使用 `@remarks`、`@throws`、`@defaultValue`、`@example` 等标签。
+- 修改实现时同步修改或删除相邻注释。错误注释比没有注释更危险；历史代码交给 Git。
 
-## 写法
+## 不要写
 
-- 中文
-- 先写约束和取舍，少写「该函数用于…」
-- 类、函数、接口和导出的类型统一使用多行 JSDoc，即使只有一句话：
+- 代码、函数名或字段类型的自然语言翻译。
+- 为每个导出、字段或 JSX 节点批量生成的模板注释。
+- 用长注释掩盖命名差、职责混乱或结构过深；先重命名、提取或拆分代码。
+- 注释掉的旧实现、无原因的 `TODO` / `FIXME`、装饰性分区块。
 
-  ```ts
-  /**
-   * 说明约束、取舍或副作用。
-   */
-  export function example(): void {}
-  ```
-
-- 普通局部变量注释可使用单行；别写职责/不负责/上下游排比模板
-- docs 里已有的流程，代码里指一下路径即可
-
-## 别写
-
-- 复述函数名
-- JSX 每个节点旁注
-- `index.ts` 功能清单、大横幅分区
-- 过时注释（行为变了就改或删）
-
-## 改策略时先看这些
-
-1. `packages/agent-runtime/src/runtime.ts`
-2. `packages/agent-runtime/src/policies/resolver.ts`
-3. `packages/agent-runtime/src/profiles.ts`
-4. `apps/electron/src/ipc/agentHandlers.ts`
-5. `apps/electron/src/runtime/policy.ts`
-6. `packages/open-agent-sdk/src/engine.ts`
-7. `packages/open-agent-sdk/src/providers/openai.ts`
-8. `apps/renderer/src/hooks/useAgent.ts`
-9. `packages/agent-eval/src/runner.ts`
-10. `packages/shared/src/types/mcp.ts`
-
-新文件或这次改到的导出符号，合并前按上面补齐。
+判断一条注释是否值得保留：删掉后，不熟悉背景的维护者是否会失去影响正确性、
+安全性或兼容性的重要信息？如果不会，通常应删除。

@@ -12,7 +12,7 @@
     "build": "pnpm run build:packages && pnpm --filter @desktop-agent/renderer build && pnpm --filter @desktop-agent/electron build",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "typecheck": "tsc -b packages/shared packages/open-agent-sdk packages/agent-runtime packages/agent-eval apps/renderer apps/electron",
+    "typecheck": "tsc -b packages/shared packages/open-agent-sdk packages/agent-runtime packages/agent-runtime-new packages/agent-eval apps/renderer apps/electron",
     "dep-check": "node scripts/dep-check.mjs",
     "knip": "knip",
     "check": "pnpm typecheck && pnpm lint && pnpm dep-check && pnpm knip && pnpm test",

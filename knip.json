@@ -27,6 +27,10 @@
       "entry": ["src/index.ts", "tests/**/*.test.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
+    "packages/agent-runtime-new": {
+      "entry": ["src/index.ts", "vitest.config.ts", "tests/**/*.test.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+    },
     "packages/agent-eval": {
       "entry": ["src/index.ts", "src/cli.ts", "vitest.config.ts", "tests/**/*.test.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]

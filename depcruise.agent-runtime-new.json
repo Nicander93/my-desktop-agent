@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["packages/agent-runtime-new/src/*"]
+    },
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": ["packages/agent-runtime-new/src/**/*"]
+}
