@@ -33,9 +33,8 @@ function countOccurrences(content: string, needle: string): number {
 }
 
 export const editTool: Tool<EditInput, EditOutput> = {
-  metadata: {
+  definition: {
     name: "edit",
-    category: "general",
     description:
       "Replace an exact text fragment in an existing UTF-8 text file.",
   },

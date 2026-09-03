@@ -10,7 +10,7 @@
 
 用户通过 Chat 下发任务；Agent 在工作区目录里调工具（读改文件、Bash、MCP、Skill 等）完成 coding / 文件 / Office 类工作。V0 **不做** Computer Use（不控鼠标键盘、不操作任意 GUI）。
 
-产品范围见 [v0.md](./v0.md)。
+产品范围见 [v0.md](./specs/v0.md)。
 
 ---
 
@@ -191,7 +191,7 @@ Chat UI (features/chat)
 
 `classifyRuntimeProfile(content)`（同模型短调用，枚举校验）或显式 `profile` → `getRuntimeProfilePolicy` → 覆盖 `allowedTools` / `maxTurns` / `appendSystemPrompt` / tool result 压缩等。Profile 列表见 shared `AGENT_RUNTIME_PROFILES`（含 `office-pptx`）。
 
-当前重点：`office` 走窄工具集 + Office CLI 约束 prompt；`coding` 等保留更宽策略。设计背景：[agent-runtime-profiles-plan.md](./agent-runtime-profiles-plan.md)。
+当前重点：`office` 走窄工具集 + Office CLI 约束 prompt；`coding` 等保留更宽策略。设计背景：[agent-runtime-profiles-plan.md](./specs/agent-runtime-profiles-plan.md)。
 
 ### 5.3 持久化
 
@@ -313,7 +313,7 @@ pnpm eval:report -- --group-by domain,difficulty
 - [ ] session 与 workspace cwd 绑定是否正确
 - [ ] 新工具默认权限是否过宽（`bypassPermissions` vs `default` + path check）
 - [ ] Profile 变更是否误伤非目标任务（office 规则会不会误触发）
-- [ ] 流式事件：`partial_message` / token 流是否正常；边角见 [spec-streaming.md](./spec-streaming.md)
+- [ ] 流式事件：`partial_message` / token 流是否正常；边角见 [spec-streaming.md](./specs/spec-streaming.md)
 - [ ] tool / MCP / Skill 变更是否同步到 mention 与 system prompt
 
 ### 9.5 DB
@@ -381,7 +381,7 @@ pnpm eval:report -- --group-by domain,difficulty
 
 - shared 与 open-agent-sdk 的 trace 类型仍有部分重复
 - renderer 部分依赖（如 `date-fns`、`jszip`）knip 侧已 ignore，待清理
-- 流式已接 SDK `stream` + `partial_message`；边角见 [spec-streaming.md](./spec-streaming.md)
+- 流式已接 SDK `stream` + `partial_message`；边角见 [spec-streaming.md](./specs/spec-streaming.md)
 - 评测：Structured Verifier、超时 cancel 竞态等见 [Evaluation-Roadmap-v2.md](./eval/Evaluation-Roadmap-v2.md)
 
 ---
@@ -396,12 +396,13 @@ pnpm eval:report -- --group-by domain,difficulty
 | [ipc-contract.md](../contributing/ipc-contract.md) | IPC 流程与 channel |
 | [testing.md](../contributing/testing.md) | 测什么、放哪 |
 | [comments.md](../contributing/comments.md) | 注释怎么写 |
-| [v0.md](./v0.md) | 产品范围 |
-| [agent-runtime-profiles-plan.md](./agent-runtime-profiles-plan.md) | Profile 设计（Phase 1–3 已落地） |
-| [spec-streaming.md](./spec-streaming.md) | 流式：已实现 + 剩余边角 |
+| [v0.md](./specs/v0.md) | 产品范围 |
+| [agent-runtime-profiles-plan.md](./specs/agent-runtime-profiles-plan.md) | Profile 设计（Phase 1–3 已落地） |
+| [spec-streaming.md](./specs/spec-streaming.md) | 流式：已实现 + 剩余边角 |
 | [benchmarks/README.md](../benchmarks/README.md) | 评测任务与 fixture（含 DWB） |
 | [packages/agent-eval/README.md](../packages/agent-eval/README.md) | 评测 CLI |
 | [docs/eval/](./eval/) | 评测入口 / 架构 / 路线图 |
 | [docs/eval/dwb/](./eval/dwb/) | DWB 36 Golden Tasks 设计 |
 | [docs/eval/archive/](./eval/archive/) | 评测历史稿 |
+| [docs/archive/](./archive/) | 项目级历史文档及归档条件 |
 | [open-agent-sdk README](../packages/open-agent-sdk/README.md) | SDK 独立用法 |

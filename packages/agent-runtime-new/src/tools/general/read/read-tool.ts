@@ -40,9 +40,8 @@ function positiveInteger(
 }
 
 export const readTool: Tool<ReadInput, ReadOutput> = {
-  metadata: {
+  definition: {
     name: "read",
-    category: "general",
     description: "Read a UTF-8 text file, optionally selecting a line range.",
   },
 

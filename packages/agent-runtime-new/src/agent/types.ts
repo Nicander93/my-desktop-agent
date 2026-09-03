@@ -1,6 +1,7 @@
 import type { Model } from "@/model/model.js";
 import type { ToolExecutor } from "@/tools/tool-executor.js";
-import type { Message, ToolDefinition } from "@/model/types.js";
+import type { Message } from "@/core/message.js";
+import type { ToolDefinition } from "@/core/tool.js";
 
 export type AgentStopReason = "completed" | "max_turns";
 

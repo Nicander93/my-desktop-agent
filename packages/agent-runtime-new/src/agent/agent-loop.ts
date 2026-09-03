@@ -1,4 +1,4 @@
-import type { ToolCall } from "@/model/types.js";
+import type { ToolCall } from "@/core/message.js";
 import type { AgentLoopInput, AgentLoopResult } from "@/agent/types.js";
 
 function isToolCall(content: { type: string }): content is ToolCall {

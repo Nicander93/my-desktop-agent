@@ -2,17 +2,18 @@ import { ToolError } from "@/core/errors.js";
 import type { PermissionRequirement } from "@/core/permission.js";
 import type { ToolContext } from "@/core/tool-context.js";
 
-export interface ToolMetadata {
+export interface ToolDefinition {
   name: string;
   description: string;
-  category: "general" | "domain";
+  inputSchema?: Readonly<Record<string, unknown>>;
 }
 
 /**
- * Separates permission discovery from execution; schema and model formatting live outside this contract.
+ * Separates permission discovery from execution while keeping the model-facing
+ * definition attached to the executable tool.
  */
 export interface Tool<TInput, TOutput> {
-  metadata: ToolMetadata;
+  definition: ToolDefinition;
   getPermissionRequirements(
     input: TInput,
     context: ToolContext,

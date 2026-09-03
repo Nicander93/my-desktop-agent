@@ -45,4 +45,4 @@ pnpm eval:dwb -- --model <model> --base-url <url>
 - [评测](docs/eval/)
 - [DWB（36 Golden Tasks）](docs/eval/dwb/)
 - [AI 贡献指引](AGENTS.md)
-- [V0 产品范围](docs/v0.md)
+- [V0 产品范围](docs/specs/v0.md)

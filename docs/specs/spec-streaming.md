@@ -2,7 +2,7 @@
 
 > 状态：**已落地**（SDK `stream` + `partial_message`；runtime / UI 已接）  
 > 最后更新：2026-07-26  
-> 关联：`docs/v0.md`、对话 UI
+> 关联：`docs/specs/v0.md`、对话 UI
 
 ---
 
@@ -33,7 +33,7 @@
 - 工具结果很大时 UI 是否仍保持可读
 - 与评测无头路径的差异（eval 主要看 Verifier，不依赖 UI 流式）
 
-已知评测侧超时 cancel 竞态见 [Evaluation-Roadmap-v2.md](./eval/Evaluation-Roadmap-v2.md) 与 [archive/Code-Review-v0-v1.md](./eval/archive/Code-Review-v0-v1.md)。
+已知评测侧超时 cancel 竞态见 [Evaluation-Roadmap-v2.md](../eval/Evaluation-Roadmap-v2.md) 与 [archive/Code-Review-v0-v1.md](../eval/archive/Code-Review-v0-v1.md)。
 
 ## 5. 历史方案记录（已选型）
 

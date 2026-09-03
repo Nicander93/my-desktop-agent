@@ -33,7 +33,9 @@ function createInput(model: Model, toolExecutor: ToolExecutor, messages: readonl
 
 describe("runAgentLoop", () => {
   it("completes after a direct assistant response without changing input history", async () => {
-    const initialMessages: Message[] = [{ role: "user", content: "hello" }];
+    const initialMessages: Message[] = [
+      { role: "user", content: [{ type: "text", text: "hello" }] },
+    ];
     const model: Model = {
       generate: vi.fn(async () => ({ message: assistant({ type: "text", text: "hi" }) })),
     };
@@ -46,7 +48,9 @@ describe("runAgentLoop", () => {
       turns: 1,
       stopReason: "completed",
     });
-    expect(initialMessages).toEqual([{ role: "user", content: "hello" }]);
+    expect(initialMessages).toEqual([
+      { role: "user", content: [{ type: "text", text: "hello" }] },
+    ]);
     expect(toolExecutor.execute).not.toHaveBeenCalled();
   });
 

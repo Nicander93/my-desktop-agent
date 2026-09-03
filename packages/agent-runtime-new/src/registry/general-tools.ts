@@ -25,5 +25,5 @@ export const generalTools: readonly AnyTool[] = [
 export function createToolRegistry(
   tools: readonly AnyTool[] = generalTools,
 ): Map<string, AnyTool> {
-  return new Map(tools.map((tool) => [tool.metadata.name, tool]));
+  return new Map(tools.map((tool) => [tool.definition.name, tool]));
 }

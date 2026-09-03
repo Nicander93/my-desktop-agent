@@ -14,9 +14,8 @@ export interface WriteOutput {
 }
 
 export const writeTool: Tool<WriteInput, WriteOutput> = {
-  metadata: {
+  definition: {
     name: "write",
-    category: "general",
     description:
       "Create or fully replace a UTF-8 text file using an atomic write.",
   },

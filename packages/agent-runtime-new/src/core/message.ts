@@ -1,6 +1,8 @@
+export type UserContent = { type: "text"; text: string };
+
 export interface UserMessage {
   role: "user";
-  content: string;
+  content: UserContent[];
 }
 
 export interface ToolCall {
@@ -27,13 +29,3 @@ export interface ToolMessage {
 }
 
 export type Message = UserMessage | AssistantMessage | ToolMessage;
-
-/**
- * Provider-facing metadata for a tool; input schema support is reserved for a later phase.
- */
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  category?: "general" | "domain";
-  inputSchema?: unknown;
-}

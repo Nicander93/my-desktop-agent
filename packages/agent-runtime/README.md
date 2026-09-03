@@ -31,4 +31,4 @@ Desktop Host 与 `@codeany/open-agent-sdk` 之间的 Runtime 层。它管理会�
 - Skill 同步：`src/skills.ts`
 - 工具结果压缩：`src/tool-results/`
 
-改动 session、profile 或流式调用时，同步检查 [`contributing/comments.md`](../../contributing/comments.md) 和 [`docs/spec-streaming.md`](../../docs/spec-streaming.md)。
+改动 session、profile 或流式调用时，同步检查 [`contributing/comments.md`](../../contributing/comments.md) 和 [`docs/specs/spec-streaming.md`](../../docs/specs/spec-streaming.md)。

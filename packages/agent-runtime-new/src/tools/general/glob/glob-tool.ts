@@ -28,9 +28,8 @@ export type GlobOutput =
   | { mode: "count"; count: number };
 
 export const globTool: Tool<GlobInput, GlobOutput> = {
-  metadata: {
+  definition: {
     name: "glob",
-    category: "general",
     description:
       "Find file paths by glob pattern without reading file contents.",
   },

@@ -6,7 +6,7 @@
 
 Desktop Agent 是一个本地桌面 AI 工作台。用户在 Chat 中提出 coding、文件处理、Office 或 MCP 任务；Agent 在选定工作区内通过工具执行任务并反馈过程与结果。
 
-V0 不提供 Computer Use（鼠标、键盘、屏幕或任意 GUI 自动化）、多 Agent 编排、账号/云端同步。完整产品范围见 [V0 PRD](v0.md)。
+V0 不提供 Computer Use（鼠标、键盘、屏幕或任意 GUI 自动化）、多 Agent 编排、账号/云端同步。完整产品范围见 [V0 PRD](specs/v0.md)。
 
 ## 真实分层
 
@@ -68,4 +68,4 @@ chat feature -> preload -> agent:send-message handler
 
 ## 已知文档不一致
 
-`docs/v0.md` 的技术栈章节写有 Tauri 2，但当前工作区、`apps/electron/` 和 [开发者手册](developer-guide.md) 都表明实际桌面宿主为 Electron。未在本次上下文重建中改写 PRD；涉及技术选型时以代码和开发者手册为准，后续应确认产品文档是否需要单独修订。
+`docs/specs/v0.md` 的技术栈章节写有 Tauri 2，但当前工作区、`apps/electron/` 和 [开发者手册](developer-guide.md) 都表明实际桌面宿主为 Electron。未在本次上下文重建中改写 PRD；涉及技术选型时以代码和开发者手册为准，后续应确认产品文档是否需要单独修订。

@@ -168,9 +168,8 @@ function toContentMatches(
 }
 
 export const grepTool: Tool<GrepInput, GrepOutput> = {
-  metadata: {
+  definition: {
     name: "grep",
-    category: "general",
     description:
       "Search text contents with ripgrep. Defaults to returning only matching file paths.",
   },
