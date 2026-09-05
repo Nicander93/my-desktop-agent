@@ -34,8 +34,8 @@ export type {
   WriteOutput,
 } from "@/tools/general/write/write-tool.js";
 
-export { createToolRegistry, generalTools } from "@/registry/general-tools.js";
-export type { AnyTool } from "@/registry/general-tools.js";
+export { createToolRegistry, generalTools } from "@/tools/registry.js";
+export type { AnyTool } from "@/tools/registry.js";
 
 export { runAgentLoop } from "@/agent/agent-loop.js";
 export type {
@@ -43,18 +43,18 @@ export type {
   AgentLoopResult,
   AgentStopReason,
 } from "@/agent/types.js";
-export type { Model, StreamingModel } from "@/model/model.js";
+export { LLM, listModels } from "@/llm/llm.js";
 export type {
-  ModelInput,
-  ModelResponse,
-  ModelStreamEvent,
-  ModelUsage,
-} from "@/model/model.js";
-export {
-  OpenAICompatibleError,
-  OpenAICompatibleModel,
-} from "@/model/openai-compatible-model.js";
-export type { OpenAICompatibleModelOptions } from "@/model/openai-compatible-model.js";
+  LLMEvent,
+  LLMInput,
+  LLMModelInfo,
+  LLMOptions,
+  LLMResponse,
+  LLMUsage,
+  ListModelsOptions,
+} from "@/llm/llm.js";
+export { resolveProvider } from "@/llm/provider.js";
+export type { Provider, ProviderConfig } from "@/llm/provider.js";
 export type {
   AssistantContent,
   AssistantMessage,
@@ -67,31 +67,8 @@ export type {
 export {
   createToolExecutor,
   DefaultToolExecutor,
-} from "@/tools/tool-executor.js";
+} from "@/tools/executor.js";
 export type {
   ToolExecutor,
   ToolExecutorOptions,
-} from "@/tools/tool-executor.js";
-
-// Keep scaffold modules internal until each contract is designed and promoted deliberately.
-export {} from "@/core/agent-loop.js";
-export {} from "@/core/agent.js";
-export {} from "@/core/context.js";
-export {} from "@/core/event.js";
-export {} from "@/core/state.js";
-export {} from "@/services/compaction/compaction-service.js";
-export {} from "@/services/context/context-manager.js";
-export {} from "@/services/execution/execution-environment.js";
-export {} from "@/services/permission/permission-engine.js";
-export {} from "@/services/persistence/persistence.js";
-export {} from "@/services/queue/execution-queue.js";
-export {} from "@/services/session/session.js";
-export {} from "@/services/tool/executor.js";
-export {} from "@/services/tool/registry.js";
-export {} from "@/tools/agent/subagent-tool.js";
-export {} from "@/tools/filesystem/edit-tool.js";
-export {} from "@/tools/filesystem/read-tool.js";
-export {} from "@/tools/filesystem/write-tool.js";
-export {} from "@/tools/search/glob-tool.js";
-export {} from "@/tools/search/grep-tool.js";
-export {} from "@/tools/shell/bash-tool.js";
+} from "@/tools/executor.js";

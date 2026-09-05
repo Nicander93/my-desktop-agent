@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   runAgentLoop,
+  type AgentLoopInput,
   type AssistantMessage,
   type Message,
-  type Model,
   type ToolExecutor,
   type ToolMessage,
 } from "@/index.js";
@@ -21,10 +21,14 @@ function toolMessage(callId: string, content: unknown, isError = false): ToolMes
   };
 }
 
-function createInput(model: Model, toolExecutor: ToolExecutor, messages: readonly Message[] = []) {
+function createInput(
+  llm: { generate: AgentLoopInput["llm"]["generate"] },
+  toolExecutor: ToolExecutor,
+  messages: readonly Message[] = [],
+) {
   return {
     messages,
-    model,
+    llm,
     tools: [],
     toolExecutor,
     maxTurns: 10,
@@ -36,12 +40,12 @@ describe("runAgentLoop", () => {
     const initialMessages: Message[] = [
       { role: "user", content: [{ type: "text", text: "hello" }] },
     ];
-    const model: Model = {
+    const llm = {
       generate: vi.fn(async () => ({ message: assistant({ type: "text", text: "hi" }) })),
     };
     const toolExecutor: ToolExecutor = { execute: vi.fn() };
 
-    const result = await runAgentLoop(createInput(model, toolExecutor, initialMessages));
+    const result = await runAgentLoop(createInput(llm, toolExecutor, initialMessages));
 
     expect(result).toEqual({
       newMessages: [assistant({ type: "text", text: "hi" })],
@@ -59,7 +63,7 @@ describe("runAgentLoop", () => {
       { type: "tool-call", id: "call-1", name: "read", input: { path: "a.txt" } },
       { type: "tool-call", id: "call-2", name: "read", input: { path: "b.txt" } },
     );
-    const model: Model = {
+    const llm = {
       generate: vi
         .fn()
         .mockResolvedValueOnce({ message: first })
@@ -73,7 +77,7 @@ describe("runAgentLoop", () => {
       }),
     };
 
-    const result = await runAgentLoop(createInput(model, toolExecutor));
+    const result = await runAgentLoop(createInput(llm, toolExecutor));
 
     expect(result.turns).toBe(2);
     expect(result.stopReason).toBe("completed");
@@ -84,7 +88,7 @@ describe("runAgentLoop", () => {
       toolMessage("call-2", { ok: true }),
       assistant({ type: "text", text: "done" }),
     ]);
-    expect(model.generate).toHaveBeenLastCalledWith({
+    expect(llm.generate).toHaveBeenLastCalledWith({
       messages: [
         first,
         toolMessage("call-1", { ok: true }),
@@ -95,7 +99,7 @@ describe("runAgentLoop", () => {
   });
 
   it("continues after an error tool message", async () => {
-    const model: Model = {
+    const llm = {
       generate: vi
         .fn()
         .mockResolvedValueOnce({
@@ -114,7 +118,7 @@ describe("runAgentLoop", () => {
       ),
     };
 
-    const result = await runAgentLoop(createInput(model, toolExecutor));
+    const result = await runAgentLoop(createInput(llm, toolExecutor));
 
     expect(result.stopReason).toBe("completed");
     expect(result.turns).toBe(2);
@@ -125,7 +129,7 @@ describe("runAgentLoop", () => {
   });
 
   it("stops normally at maxTurns", async () => {
-    const model: Model = {
+    const llm = {
       generate: vi.fn(async (input) => ({
         message: assistant({
           type: "tool-call",
@@ -140,13 +144,13 @@ describe("runAgentLoop", () => {
     };
 
     const result = await runAgentLoop({
-      ...createInput(model, toolExecutor),
+      ...createInput(llm, toolExecutor),
       maxTurns: 2,
     });
 
     expect(result.stopReason).toBe("max_turns");
     expect(result.turns).toBe(2);
-    expect(model.generate).toHaveBeenCalledTimes(2);
+    expect(llm.generate).toHaveBeenCalledTimes(2);
     expect(toolExecutor.execute).toHaveBeenCalledTimes(2);
   });
 });

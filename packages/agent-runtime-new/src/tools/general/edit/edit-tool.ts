@@ -1,7 +1,7 @@
 import { ToolError } from "@/core/errors.js";
 import type { Tool } from "@/core/tool.js";
-import { atomicWriteTextFile, readTextFile } from "@/utils/file.js";
-import { resolveToolPath, toWorkspaceRelative } from "@/utils/path.js";
+import { atomicWriteTextFile, readTextFile } from "@/tools/utils/file.js";
+import { resolveToolPath, toWorkspaceRelative } from "@/tools/utils/path.js";
 
 export interface EditInput {
   path: string;

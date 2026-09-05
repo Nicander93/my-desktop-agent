@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   OpenAICompatibleError,
-  OpenAICompatibleModel,
-} from "@/model/openai-compatible-model.js";
+  OpenAICompatibleClient,
+} from "@/llm/openai-compatible.js";
 
-describe("OpenAICompatibleModel", () => {
+describe("OpenAICompatibleClient", () => {
   it("converts conversation history, tools, and the assistant response", async () => {
     let requestBody: Record<string, unknown> | undefined;
     let requestHeaders: HeadersInit | undefined;
@@ -43,7 +43,7 @@ describe("OpenAICompatibleModel", () => {
         );
       },
     );
-    const model = new OpenAICompatibleModel({
+    const client = new OpenAICompatibleClient({
       baseURL: "https://example.test/v1/",
       model: "test-model",
       apiKey: "secret",
@@ -53,7 +53,7 @@ describe("OpenAICompatibleModel", () => {
       fetch: fetchMock as typeof fetch,
     });
 
-    const result = await model.generate({
+    const result = await client.generate({
       systemPrompt: "Be concise.",
       messages: [
         { role: "user", content: [{ type: "text", text: "Read a.txt" }] },
@@ -221,7 +221,7 @@ describe("OpenAICompatibleModel", () => {
         });
       },
     );
-    const model = new OpenAICompatibleModel({
+    const client = new OpenAICompatibleClient({
       baseURL: "https://example.test/v1",
       model: "test-model",
       apiKey: "secret",
@@ -229,7 +229,7 @@ describe("OpenAICompatibleModel", () => {
     });
 
     const events = [];
-    for await (const event of model.stream({
+    for await (const event of client.stream({
       messages: [{ role: "user", content: [{ type: "text", text: "read" }] }],
       tools: [],
     })) {
@@ -262,7 +262,7 @@ describe("OpenAICompatibleModel", () => {
   });
 
   it("preserves HTTP failure details without exposing credentials", async () => {
-    const model = new OpenAICompatibleModel({
+    const client = new OpenAICompatibleClient({
       baseURL: "https://example.test/v1",
       model: "test-model",
       apiKey: "secret",
@@ -275,7 +275,7 @@ describe("OpenAICompatibleModel", () => {
       ) as typeof fetch,
     });
 
-    const promise = model.generate({
+    const promise = client.generate({
       messages: [{ role: "user", content: [{ type: "text", text: "hello" }] }],
       tools: [],
     });
@@ -289,7 +289,7 @@ describe("OpenAICompatibleModel", () => {
   });
 
   it("rejects malformed successful responses", async () => {
-    const model = new OpenAICompatibleModel({
+    const client = new OpenAICompatibleClient({
       baseURL: "http://localhost:11434/v1",
       model: "local-model",
       fetch: vi.fn(
@@ -298,7 +298,7 @@ describe("OpenAICompatibleModel", () => {
     });
 
     await expect(
-      model.generate({
+      client.generate({
         messages: [
           { role: "user", content: [{ type: "text", text: "hello" }] },
         ],

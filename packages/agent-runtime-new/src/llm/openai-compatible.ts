@@ -1,11 +1,12 @@
 import OpenAI, { APIError, APIUserAbortError } from "openai";
 import type {
-  ModelInput,
-  ModelResponse,
-  ModelStreamEvent,
-  ModelUsage,
-  StreamingModel,
-} from "@/model/model.js";
+  LLMClient,
+  LLMEvent,
+  LLMInput,
+  LLMModelInfo,
+  LLMResponse,
+  LLMUsage,
+} from "@/llm/llm.js";
 import type {
   AssistantContent,
   AssistantMessage,
@@ -14,13 +15,20 @@ import type {
 } from "@/core/message.js";
 import type { ToolDefinition } from "@/core/tool.js";
 
-export interface OpenAICompatibleModelOptions {
+export interface OpenAICompatibleClientOptions {
   baseURL: string;
   model: string;
   apiKey?: string;
   headers?: Readonly<Record<string, string>>;
   maxTokens?: number;
   temperature?: number;
+  fetch?: typeof globalThis.fetch;
+}
+
+interface OpenAICompatibleListModelsOptions {
+  baseURL: string;
+  apiKey?: string;
+  headers?: Readonly<Record<string, string>>;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -39,29 +47,16 @@ export class OpenAICompatibleError extends Error {
 }
 
 /**
- * Adapts OpenAI-compatible Chat Completions endpoints to the runtime model contract.
+ * Adapts OpenAI-compatible Chat Completions endpoints to the internal LLM protocol.
  */
-export class OpenAICompatibleModel implements StreamingModel {
+export class OpenAICompatibleClient implements LLMClient {
   private readonly client: OpenAI;
 
-  constructor(private readonly options: OpenAICompatibleModelOptions) {
-    const hasApiKey = Boolean(options.apiKey);
-    this.client = new OpenAI({
-      baseURL: normalizeBaseURL(options.baseURL),
-      // The SDK requires a non-empty key during construction. Removing the generated
-      // Authorization header preserves support for unauthenticated local endpoints.
-      apiKey: hasApiKey ? options.apiKey : "openai-compatible-no-key",
-      defaultHeaders: {
-        ...(hasApiKey ? {} : { Authorization: null }),
-        ...options.headers,
-      },
-      fetch: options.fetch ?? globalThis.fetch,
-      // Preserve one network attempt per generate call until retry policy is designed.
-      maxRetries: 0,
-    });
+  constructor(private readonly options: OpenAICompatibleClientOptions) {
+    this.client = createOpenAIClient(options);
   }
 
-  async generate(input: ModelInput): Promise<ModelResponse> {
+  async generate(input: LLMInput): Promise<LLMResponse> {
     try {
       const data = await this.client.chat.completions.create(
         createRequest(this.options, input),
@@ -80,11 +75,11 @@ export class OpenAICompatibleModel implements StreamingModel {
     }
   }
 
-  async *stream(input: ModelInput): AsyncIterable<ModelStreamEvent> {
+  async *stream(input: LLMInput): AsyncIterable<LLMEvent> {
     const pendingToolCalls = new Map<number, PendingToolCall>();
     let text = "";
     let finishReason: string | undefined;
-    let usage: ModelUsage | undefined;
+    let usage: LLMUsage | undefined;
 
     try {
       const stream = await this.client.chat.completions.create(
@@ -97,7 +92,7 @@ export class OpenAICompatibleModel implements StreamingModel {
       );
 
       for await (const chunk of stream) {
-        if (chunk.usage != null) usage = toModelUsage(chunk.usage);
+        if (chunk.usage != null) usage = toLLMUsage(chunk.usage);
 
         const choice = chunk.choices[0];
         if (choice === undefined) continue;
@@ -144,15 +139,51 @@ export class OpenAICompatibleModel implements StreamingModel {
   }
 }
 
+export async function listOpenAICompatibleModels(
+  options: OpenAICompatibleListModelsOptions,
+): Promise<LLMModelInfo[]> {
+  try {
+    const response = await createOpenAIClient(options).models.list();
+    return response.data.map((model) => {
+      const name = (model as OpenAI.Model & { name?: unknown }).name;
+      return {
+        id: model.id,
+        ...(typeof name === "string" ? { name } : {}),
+      };
+    });
+  } catch (error) {
+    rethrowOpenAIError(error);
+  }
+}
+
 interface PendingToolCall {
   id?: string;
   name?: string;
   arguments: string;
 }
 
+function createOpenAIClient(
+  options: OpenAICompatibleClientOptions | OpenAICompatibleListModelsOptions,
+): OpenAI {
+  const hasApiKey = Boolean(options.apiKey);
+  return new OpenAI({
+    baseURL: normalizeBaseURL(options.baseURL),
+    // The SDK requires a non-empty key during construction. Removing the generated
+    // Authorization header preserves support for unauthenticated local endpoints.
+    apiKey: hasApiKey ? options.apiKey : "openai-compatible-no-key",
+    defaultHeaders: {
+      ...(hasApiKey ? {} : { Authorization: null }),
+      ...options.headers,
+    },
+    fetch: options.fetch ?? globalThis.fetch,
+    // Preserve one network attempt per call until retry policy is designed.
+    maxRetries: 0,
+  });
+}
+
 function createRequest(
-  options: OpenAICompatibleModelOptions,
-  input: ModelInput,
+  options: OpenAICompatibleClientOptions,
+  input: LLMInput,
 ): OpenAI.ChatCompletionCreateParamsNonStreaming {
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     ...(input.systemPrompt === undefined
@@ -300,12 +331,12 @@ function parseAssistantMessage(
   return { role: "assistant", content };
 }
 
-function parseUsage(response: OpenAI.ChatCompletion): ModelUsage | undefined {
+function parseUsage(response: OpenAI.ChatCompletion): LLMUsage | undefined {
   if (response.usage === undefined) return undefined;
-  return toModelUsage(response.usage);
+  return toLLMUsage(response.usage);
 }
 
-function toModelUsage(usage: OpenAI.CompletionUsage): ModelUsage {
+function toLLMUsage(usage: OpenAI.CompletionUsage): LLMUsage {
   const inputTokens = usage.prompt_tokens ?? 0;
   const outputTokens = usage.completion_tokens ?? 0;
   return {
@@ -319,8 +350,8 @@ function createStreamResponse(
   text: string,
   pendingToolCalls: ReadonlyMap<number, PendingToolCall>,
   finishReason?: string,
-  usage?: ModelUsage,
-): ModelResponse {
+  usage?: LLMUsage,
+): LLMResponse {
   const content: AssistantContent[] = [];
   if (text.length > 0) content.push({ type: "text", text });
 

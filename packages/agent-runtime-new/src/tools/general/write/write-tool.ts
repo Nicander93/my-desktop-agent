@@ -1,6 +1,6 @@
 import type { Tool } from "@/core/tool.js";
-import { atomicWriteTextFile, pathExists } from "@/utils/file.js";
-import { resolveToolPath, toWorkspaceRelative } from "@/utils/path.js";
+import { atomicWriteTextFile, pathExists } from "@/tools/utils/file.js";
+import { resolveToolPath, toWorkspaceRelative } from "@/tools/utils/path.js";
 
 export interface WriteInput {
   path: string;
