@@ -54,10 +54,15 @@ describe("OpenAICompatibleClient", () => {
     });
 
     const result = await client.generate({
-      systemPrompt: "Be concise.",
       messages: [
-        { role: "user", content: [{ type: "text", text: "Read a.txt" }] },
+        { id: "system-1", role: "system", content: "Be concise." },
         {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "Read a.txt" }],
+        },
+        {
+          id: "assistant-1",
           role: "assistant",
           content: [
             {
@@ -69,6 +74,7 @@ describe("OpenAICompatibleClient", () => {
           ],
         },
         {
+          id: "tool-1",
           role: "tool",
           toolCallId: "call-1",
           content: { content: "hello" },
@@ -137,7 +143,7 @@ describe("OpenAICompatibleClient", () => {
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(headers.get("Authorization")).toBe("Bearer secret");
     expect(headers.get("X-Test")).toBe("yes");
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       message: {
         role: "assistant",
         content: [
@@ -153,9 +159,10 @@ describe("OpenAICompatibleClient", () => {
       finishReason: "tool_calls",
       usage: { inputTokens: 12, outputTokens: 7, totalTokens: 19 },
     });
+    expect(result.message.id).toEqual(expect.any(String));
   });
 
-  it("streams text deltas and assembles the final tool call", async () => {
+  it("streams standardized text and tool call chunks", async () => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, init?: RequestInit) => {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -230,33 +237,55 @@ describe("OpenAICompatibleClient", () => {
 
     const events = [];
     for await (const event of client.stream({
-      messages: [{ role: "user", content: [{ type: "text", text: "read" }] }],
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "read" }],
+        },
+      ],
       tools: [],
     })) {
       events.push(event);
     }
 
-    expect(events).toEqual([
-      { type: "text-delta", delta: "Reading " },
-      { type: "text-delta", delta: "the file." },
+    expect(events).toHaveLength(5);
+    expect(events).toMatchObject([
       {
-        type: "response",
-        response: {
-          message: {
-            role: "assistant",
-            content: [
-              { type: "text", text: "Reading the file." },
-              {
-                type: "tool-call",
-                id: "call-1",
-                name: "read",
-                input: { path: "a.txt" },
-              },
-            ],
-          },
-          finishReason: "tool_calls",
-          usage: { inputTokens: 8, outputTokens: 5, totalTokens: 13 },
+        sequence: 0,
+        timestamp: expect.any(Number),
+        delta: { type: "text-delta", delta: "Reading " },
+      },
+      {
+        sequence: 1,
+        timestamp: expect.any(Number),
+        delta: { type: "text-delta", delta: "the file." },
+      },
+      {
+        sequence: 2,
+        timestamp: expect.any(Number),
+        delta: {
+          type: "tool-call-delta",
+          contentIndex: 0,
+          id: "call-1",
+          name: "read",
+          arguments: '{"path":',
         },
+      },
+      {
+        sequence: 3,
+        timestamp: expect.any(Number),
+        delta: {
+          type: "tool-call-delta",
+          contentIndex: 0,
+          arguments: '"a.txt"}',
+        },
+        finishReason: "tool_calls",
+      },
+      {
+        sequence: 4,
+        timestamp: expect.any(Number),
+        usage: { inputTokens: 8, outputTokens: 5, totalTokens: 13 },
       },
     ]);
   });
@@ -276,7 +305,13 @@ describe("OpenAICompatibleClient", () => {
     });
 
     const promise = client.generate({
-      messages: [{ role: "user", content: [{ type: "text", text: "hello" }] }],
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "hello" }],
+        },
+      ],
       tools: [],
     });
 
@@ -300,7 +335,11 @@ describe("OpenAICompatibleClient", () => {
     await expect(
       client.generate({
         messages: [
-          { role: "user", content: [{ type: "text", text: "hello" }] },
+          {
+            id: "user-1",
+            role: "user",
+            content: [{ type: "text", text: "hello" }],
+          },
         ],
         tools: [],
       }),

@@ -1,18 +1,20 @@
 import OpenAI, { APIError, APIUserAbortError } from "openai";
 import type {
   LLMClient,
-  LLMEvent,
   LLMInput,
   LLMModelInfo,
   LLMResponse,
+  LLMStreamChunk,
   LLMUsage,
 } from "@/llm/llm.js";
+import type { MessageDelta } from "@/core/message-delta.js";
 import type {
   AssistantContent,
   AssistantMessage,
   Message,
   ToolCall,
 } from "@/core/message.js";
+import { createMessageId } from "@/core/message.js";
 import type { ToolDefinition } from "@/core/tool.js";
 
 export interface OpenAICompatibleClientOptions {
@@ -65,21 +67,16 @@ export class OpenAICompatibleClient implements LLMClient {
       const usage = parseUsage(data);
       return {
         message: parseAssistantMessage(data),
-        ...(data.choices[0]?.finish_reason
-          ? { finishReason: data.choices[0].finish_reason }
-          : {}),
-        ...(usage === undefined ? {} : { usage }),
+        finishReason: data.choices[0]?.finish_reason,
+        usage,
       };
     } catch (error) {
       rethrowOpenAIError(error, input.signal);
     }
   }
 
-  async *stream(input: LLMInput): AsyncIterable<LLMEvent> {
-    const pendingToolCalls = new Map<number, PendingToolCall>();
-    let text = "";
-    let finishReason: string | undefined;
-    let usage: LLMUsage | undefined;
+  async *stream(input: LLMInput): AsyncIterable<LLMStreamChunk> {
+    let sequence = 0;
 
     try {
       const stream = await this.client.chat.completions.create(
@@ -92,50 +89,61 @@ export class OpenAICompatibleClient implements LLMClient {
       );
 
       for await (const chunk of stream) {
-        if (chunk.usage != null) usage = toLLMUsage(chunk.usage);
-
         const choice = chunk.choices[0];
-        if (choice === undefined) continue;
-        if (choice.finish_reason !== null) {
-          finishReason = choice.finish_reason;
+        const usage = chunk.usage == null ? undefined : toLLMUsage(chunk.usage);
+        // empty chunk:  only yield usage if there is no choice
+        if (choice === undefined) {
+          if (usage !== undefined) {
+            yield createStreamChunk(sequence++, undefined, undefined, usage);
+          }
+          continue;
         }
 
-        const delta = choice.delta.content;
-        if (delta !== undefined && delta !== null && delta.length > 0) {
-          text += delta;
-          yield { type: "text-delta", delta };
+        // normal output chunk: yield deltas and usage
+        const deltas: MessageDelta[] = [];
+        const text = choice.delta.content;
+        if (text !== undefined && text !== null && text.length > 0) {
+          deltas.push({ type: "text-delta", delta: text });
         }
 
+        // tool call delta: add to deltas
         for (const call of choice.delta.tool_calls ?? []) {
           if (call.type !== undefined && call.type !== "function") {
             throw new OpenAICompatibleError(
               "OpenAI-compatible stream contains an unsupported tool call.",
             );
           }
-          const pending = pendingToolCalls.get(call.index) ?? { arguments: "" };
-          if (call.id !== undefined) pending.id = call.id;
-          if (call.function?.name !== undefined) {
-            pending.name = call.function.name;
+          deltas.push({
+            type: "tool-call-delta",
+            contentIndex: call.index,
+            id: call.id,
+            name: call.function?.name,
+            arguments: call.function?.arguments,
+          });
+        }
+        
+        const finishReason =
+          choice.finish_reason === null ? undefined : choice.finish_reason;
+        //
+        if (deltas.length > 0) {
+          // flatten deltas into stream chunks, because some providers (e.g. OpenAI)
+          // may return multiple deltas in a single chunk.
+          for (const [index, delta] of deltas.entries()) {
+            const isLast = index === deltas.length - 1;
+            yield createStreamChunk(
+              sequence++,
+              delta,
+              isLast ? finishReason : undefined,
+              isLast ? usage : undefined,
+            );
           }
-          if (call.function?.arguments !== undefined) {
-            pending.arguments += call.function.arguments;
-          }
-          pendingToolCalls.set(call.index, pending);
+        } else if (finishReason !== undefined || usage !== undefined) {
+          yield createStreamChunk(sequence++, undefined, finishReason, usage);
         }
       }
     } catch (error) {
       rethrowOpenAIError(error, input.signal);
     }
-
-    yield {
-      type: "response",
-      response: createStreamResponse(
-        text,
-        pendingToolCalls,
-        finishReason,
-        usage,
-      ),
-    };
   }
 }
 
@@ -154,12 +162,6 @@ export async function listOpenAICompatibleModels(
   } catch (error) {
     rethrowOpenAIError(error);
   }
-}
-
-interface PendingToolCall {
-  id?: string;
-  name?: string;
-  arguments: string;
 }
 
 function createOpenAIClient(
@@ -185,24 +187,16 @@ function createRequest(
   options: OpenAICompatibleClientOptions,
   input: LLMInput,
 ): OpenAI.ChatCompletionCreateParamsNonStreaming {
-  const messages: OpenAI.ChatCompletionMessageParam[] = [
-    ...(input.systemPrompt === undefined
-      ? []
-      : [{ role: "system" as const, content: input.systemPrompt }]),
-    ...input.messages.map(toOpenAIMessage),
-  ];
+  const messages: OpenAI.ChatCompletionMessageParam[] =
+    input.messages.map(toOpenAIMessage);
   return {
     model: options.model,
     messages,
     ...(input.tools.length === 0
       ? {}
       : { tools: input.tools.map(toOpenAITool) }),
-    ...(options.maxTokens === undefined
-      ? {}
-      : { max_tokens: options.maxTokens }),
-    ...(options.temperature === undefined
-      ? {}
-      : { temperature: options.temperature }),
+    max_tokens: options.maxTokens,
+    temperature: options.temperature,
   };
 }
 
@@ -238,6 +232,9 @@ function toOpenAIToolCall(
 }
 
 function toOpenAIMessage(message: Message): OpenAI.ChatCompletionMessageParam {
+  if (message.role === "system") {
+    return { role: "system", content: message.content };
+  }
   if (message.role === "user") {
     return {
       role: "user",
@@ -328,7 +325,7 @@ function parseAssistantMessage(
     });
   }
   if (content.length === 0) content.push({ type: "text", text: "" });
-  return { role: "assistant", content };
+  return { id: createMessageId(), role: "assistant", content };
 }
 
 function parseUsage(response: OpenAI.ChatCompletion): LLMUsage | undefined {
@@ -336,6 +333,11 @@ function parseUsage(response: OpenAI.ChatCompletion): LLMUsage | undefined {
   return toLLMUsage(response.usage);
 }
 
+/**
+ * get LLMUsage from OpenAI.CompletionUsage
+ * @param usage OpenAI.CompletionUsage
+ * @returns 
+ */
 function toLLMUsage(usage: OpenAI.CompletionUsage): LLMUsage {
   const inputTokens = usage.prompt_tokens ?? 0;
   const outputTokens = usage.completion_tokens ?? 0;
@@ -346,36 +348,18 @@ function toLLMUsage(usage: OpenAI.CompletionUsage): LLMUsage {
   };
 }
 
-function createStreamResponse(
-  text: string,
-  pendingToolCalls: ReadonlyMap<number, PendingToolCall>,
-  finishReason?: string,
-  usage?: LLMUsage,
-): LLMResponse {
-  const content: AssistantContent[] = [];
-  if (text.length > 0) content.push({ type: "text", text });
-
-  for (const [, call] of [...pendingToolCalls].sort(
-    ([left], [right]) => left - right,
-  )) {
-    if (call.id === undefined || call.name === undefined) {
-      throw new OpenAICompatibleError(
-        "OpenAI-compatible stream contains an incomplete tool call.",
-      );
-    }
-    content.push({
-      type: "tool-call",
-      id: call.id,
-      name: call.name,
-      input: parseToolInput(call.arguments),
-    });
-  }
-
-  if (content.length === 0) content.push({ type: "text", text: "" });
+function createStreamChunk(
+  sequence: number,
+  delta: MessageDelta | undefined,
+  finishReason: string | undefined,
+  usage: LLMUsage | undefined,
+): LLMStreamChunk {
   return {
-    message: { role: "assistant", content },
-    ...(finishReason === undefined ? {} : { finishReason }),
-    ...(usage === undefined ? {} : { usage }),
+    sequence,
+    timestamp: Date.now(),
+    delta,
+    finishReason,
+    usage,
   };
 }
 

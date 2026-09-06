@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PathScopeError } from "@/index.js";
-import { resolveToolPath } from "@/utils/path.js";
+import { resolveToolPath } from "@/tools/utils/path.js";
 import { createToolContext } from "../helpers/context.js";
 
 describe("resolveToolPath", () => {

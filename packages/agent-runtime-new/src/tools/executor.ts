@@ -1,6 +1,10 @@
 import { ToolError } from "@/core/errors.js";
 import { runTool } from "@/core/tool.js";
-import type { ToolCall, ToolMessage } from "@/core/message.js";
+import {
+  createMessageId,
+  type ToolCall,
+  type ToolMessage,
+} from "@/core/message.js";
 import type { AnyTool } from "@/tools/registry.js";
 import { createToolRegistry } from "@/tools/registry.js";
 import type { ToolContext } from "@/core/tool-context.js";
@@ -46,13 +50,12 @@ function toRecoverableToolError(error: unknown): ToolError | undefined {
     EPERM: "PERMISSION_DENIED",
   };
   const code = codeBySystemError[error.code ?? ""];
-  return code === undefined
-    ? undefined
-    : new ToolError(error.message, code);
+  return code === undefined ? undefined : new ToolError(error.message, code);
 }
 
 function errorMessage(call: ToolCall, error: ToolError): ToolMessage {
   return {
+    id: createMessageId(),
     role: "tool",
     toolCallId: call.id,
     content: { code: error.code, message: error.message },
@@ -69,16 +72,16 @@ export class DefaultToolExecutor implements ToolExecutor {
 
   constructor(options: ToolExecutorOptions);
   constructor(tools: readonly AnyTool[], context: ToolContext);
-  constructor(
-    registry: ReadonlyMap<string, AnyTool>,
-    context: ToolContext,
-  );
+  constructor(registry: ReadonlyMap<string, AnyTool>, context: ToolContext);
   constructor(
     source: ToolExecutorOptions | readonly AnyTool[],
     context?: ToolContext,
   );
   constructor(
-    source: ToolExecutorOptions | readonly AnyTool[] | ReadonlyMap<string, AnyTool>,
+    source:
+      | ToolExecutorOptions
+      | readonly AnyTool[]
+      | ReadonlyMap<string, AnyTool>,
     context?: ToolContext,
   ) {
     if (Array.isArray(source)) {
@@ -124,7 +127,12 @@ export class DefaultToolExecutor implements ToolExecutor {
 
     try {
       const content = await runTool(tool, call.input, this.context);
-      return { role: "tool", toolCallId: call.id, content };
+      return {
+        id: createMessageId(),
+        role: "tool",
+        toolCallId: call.id,
+        content,
+      };
     } catch (error) {
       const recoverableError = toRecoverableToolError(error);
       if (recoverableError === undefined) throw error;
@@ -133,9 +141,7 @@ export class DefaultToolExecutor implements ToolExecutor {
   }
 }
 
-export function createToolExecutor(
-  options: ToolExecutorOptions,
-): ToolExecutor;
+export function createToolExecutor(options: ToolExecutorOptions): ToolExecutor;
 export function createToolExecutor(
   tools: readonly AnyTool[],
   context: ToolContext,

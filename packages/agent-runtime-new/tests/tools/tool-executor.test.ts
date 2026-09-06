@@ -1,16 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {
-  DefaultToolExecutor,
-  ToolError,
-  type Tool,
-} from "@/index.js";
+import { DefaultToolExecutor, ToolError, type Tool } from "@/index.js";
 import { createToolContext } from "../helpers/context.js";
 
 describe("DefaultToolExecutor", () => {
   it("runs a registered tool through the permission-aware tool boundary", async () => {
     const context = await createToolContext();
     const tool: Tool<{ value: string }, { value: string }> = {
-      metadata: { name: "echo", description: "Echo", category: "general" },
+      definition: { name: "echo", description: "Echo" },
       getPermissionRequirements: async () => [],
       execute: async (input) => input,
     };
@@ -23,7 +19,8 @@ describe("DefaultToolExecutor", () => {
         name: "echo",
         input: { value: "hello" },
       }),
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
+      id: expect.any(String),
       role: "tool",
       toolCallId: "echo-call",
       content: { value: "hello" },
@@ -33,7 +30,7 @@ describe("DefaultToolExecutor", () => {
   it("converts expected tool failures into structured error messages", async () => {
     const context = await createToolContext();
     const tool: Tool<Record<string, never>, never> = {
-      metadata: { name: "fail", description: "Fail", category: "general" },
+      definition: { name: "fail", description: "Fail" },
       getPermissionRequirements: async () => [],
       execute: async () => {
         throw new ToolError("not found", "FILE_NOT_FOUND");
@@ -48,7 +45,8 @@ describe("DefaultToolExecutor", () => {
         name: "fail",
         input: {},
       }),
-    ).resolves.toEqual({
+    ).resolves.toMatchObject({
+      id: expect.any(String),
       role: "tool",
       toolCallId: "fail-call",
       content: { code: "FILE_NOT_FOUND", message: "not found" },

@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  listModels,
-  LLM,
-  resolveProvider,
-} from "@/index.js";
+import { listModels, LLM, resolveProvider } from "@/index.js";
 
 describe("provider", () => {
   it("resolves built-in endpoints and custom OpenAI-compatible endpoints", () => {
@@ -15,7 +11,9 @@ describe("provider", () => {
       baseURL: "http://localhost:11434/v1",
       apiKeyRequired: false,
     });
-    expect(resolveProvider("openai-compatible", "http://localhost:8000/v1")).toEqual({
+    expect(
+      resolveProvider("openai-compatible", "http://localhost:8000/v1"),
+    ).toEqual({
       baseURL: "http://localhost:8000/v1",
       apiKeyRequired: false,
     });
@@ -64,7 +62,13 @@ describe("LLM", () => {
 
     await expect(
       llm.generate({
-        messages: [{ role: "user", content: [{ type: "text", text: "Hi" }] }],
+        messages: [
+          {
+            id: "user-1",
+            role: "user",
+            content: [{ type: "text", text: "Hi" }],
+          },
+        ],
         tools: [],
       }),
     ).resolves.toMatchObject({
@@ -106,7 +110,9 @@ describe("LLM", () => {
     });
 
     await llm.generate({
-      messages: [{ role: "user", content: [{ type: "text", text: "Hi" }] }],
+      messages: [
+        { id: "user-1", role: "user", content: [{ type: "text", text: "Hi" }] },
+      ],
       tools: [],
     });
     expect(fetchMock).toHaveBeenCalledWith(
@@ -122,10 +128,7 @@ describe("listModels", () => {
       async () =>
         new Response(
           JSON.stringify({
-            data: [
-              { id: "model-a", name: "Model A" },
-              { id: "model-b" },
-            ],
+            data: [{ id: "model-a", name: "Model A" }, { id: "model-b" }],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         ),
@@ -137,10 +140,7 @@ describe("listModels", () => {
         apiKey: "secret",
         fetch: fetchMock as typeof fetch,
       }),
-    ).resolves.toEqual([
-      { id: "model-a", name: "Model A" },
-      { id: "model-b" },
-    ]);
+    ).resolves.toEqual([{ id: "model-a", name: "Model A" }, { id: "model-b" }]);
     expect(fetchMock).toHaveBeenCalledWith(
       "https://openrouter.ai/api/v1/models",
       expect.objectContaining({ method: "GET" }),
