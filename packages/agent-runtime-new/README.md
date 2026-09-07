@@ -6,7 +6,7 @@
 src/
 ├── agent/      # agent、agent-loop、event
 ├── core/       # message、tool、permission、context
-├── llm/        # provider、llm、openai-compatible
+├── llm/        # provider、llm、llm-client、openai-compatible-client
 └── tools/      # registry、executor、specific tools、tool utils
 ```
 
@@ -31,7 +31,7 @@ pnpm --filter @desktop-agent/agent-runtime-new test
 ## LLM
 
 ```ts
-import { LLM, listModels } from "@desktop-agent/agent-runtime-new";
+import { LLM } from "@desktop-agent/agent-runtime-new";
 
 const llm = new LLM({
   provider: "ollama",
@@ -61,11 +61,5 @@ const custom = new LLM({
 ```
 
 `stream()` 逐步返回文本增量，并以完整的 `response` 事件结束；tool call 在最终响应中提供。
-
-可用模型通过共享的 Provider 配置查询：
-
-```ts
-const models = await listModels({ provider: "openrouter", apiKey });
-```
 
 reasoning 字段兼容和重试策略将在后续增量中单独设计。

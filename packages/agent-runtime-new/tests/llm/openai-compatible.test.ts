@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   OpenAICompatibleError,
   OpenAICompatibleClient,
-} from "@/llm/openai-compatible.js";
+} from "@/llm/openai-compatible-client.js";
 
 describe("OpenAICompatibleClient", () => {
   it("converts conversation history, tools, and the assistant response", async () => {

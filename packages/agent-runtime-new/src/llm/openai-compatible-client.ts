@@ -2,11 +2,10 @@ import OpenAI, { APIError, APIUserAbortError } from "openai";
 import type {
   LLMClient,
   LLMInput,
-  LLMModelInfo,
   LLMResponse,
   LLMStreamChunk,
   LLMUsage,
-} from "@/llm/llm.js";
+} from "@/llm/llm-client.js";
 import type { MessageDelta } from "@/core/message-delta.js";
 import type {
   AssistantContent,
@@ -24,13 +23,6 @@ export interface OpenAICompatibleClientOptions {
   headers?: Readonly<Record<string, string>>;
   maxTokens?: number;
   temperature?: number;
-  fetch?: typeof globalThis.fetch;
-}
-
-interface OpenAICompatibleListModelsOptions {
-  baseURL: string;
-  apiKey?: string;
-  headers?: Readonly<Record<string, string>>;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -147,26 +139,7 @@ export class OpenAICompatibleClient implements LLMClient {
   }
 }
 
-export async function listOpenAICompatibleModels(
-  options: OpenAICompatibleListModelsOptions,
-): Promise<LLMModelInfo[]> {
-  try {
-    const response = await createOpenAIClient(options).models.list();
-    return response.data.map((model) => {
-      const name = (model as OpenAI.Model & { name?: unknown }).name;
-      return {
-        id: model.id,
-        ...(typeof name === "string" ? { name } : {}),
-      };
-    });
-  } catch (error) {
-    rethrowOpenAIError(error);
-  }
-}
-
-function createOpenAIClient(
-  options: OpenAICompatibleClientOptions | OpenAICompatibleListModelsOptions,
-): OpenAI {
+function createOpenAIClient(options: OpenAICompatibleClientOptions): OpenAI {
   const hasApiKey = Boolean(options.apiKey);
   return new OpenAI({
     baseURL: normalizeBaseURL(options.baseURL),

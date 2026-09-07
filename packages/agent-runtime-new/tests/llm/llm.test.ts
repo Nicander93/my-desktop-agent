@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { listModels, LLM, resolveProvider } from "@/index.js";
+import { LLM, resolveProvider } from "@/index.js";
 
 describe("provider", () => {
   it("resolves built-in endpoints and custom OpenAI-compatible endpoints", () => {
@@ -118,53 +118,6 @@ describe("LLM", () => {
     expect(fetchMock).toHaveBeenCalledWith(
       "https://proxy.example/v1/chat/completions",
       expect.objectContaining({ method: "POST" }),
-    );
-  });
-});
-
-describe("listModels", () => {
-  it("lists models through the provider endpoint", async () => {
-    const fetchMock = vi.fn(
-      async () =>
-        new Response(
-          JSON.stringify({
-            data: [{ id: "model-a", name: "Model A" }, { id: "model-b" }],
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-    );
-
-    await expect(
-      listModels({
-        provider: "openrouter",
-        apiKey: "secret",
-        fetch: fetchMock as typeof fetch,
-      }),
-    ).resolves.toEqual([{ id: "model-a", name: "Model A" }, { id: "model-b" }]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://openrouter.ai/api/v1/models",
-      expect.objectContaining({ method: "GET" }),
-    );
-  });
-
-  it("uses an explicit baseURL instead of the named provider default", async () => {
-    const fetchMock = vi.fn(
-      async () =>
-        new Response(JSON.stringify({ data: [{ id: "model-a" }] }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-    );
-
-    await listModels({
-      provider: "openrouter",
-      apiKey: "secret",
-      baseURL: "https://proxy.example/v1",
-      fetch: fetchMock as typeof fetch,
-    });
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://proxy.example/v1/models",
-      expect.objectContaining({ method: "GET" }),
     );
   });
 });

@@ -49,15 +49,13 @@ export type {
   MessageEndEvent,
   MessageStartEvent,
 } from "@/agent/event.js";
-export { LLM, listModels } from "@/llm/llm.js";
+export { LLM } from "@/llm/llm.js";
 export type {
   LLMInput,
-  LLMModelInfo,
   LLMOptions,
   LLMResponse,
   LLMStreamChunk,
   LLMUsage,
-  ListModelsOptions,
 } from "@/llm/llm.js";
 export { resolveProvider } from "@/llm/provider.js";
 export type { Provider, ProviderConfig } from "@/llm/provider.js";
