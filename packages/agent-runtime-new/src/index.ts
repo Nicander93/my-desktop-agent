@@ -43,13 +43,19 @@ export type {
   AgentLoopResult,
   AgentStopReason,
 } from "@/agent/types.js";
+export type {
+  AgentEvent,
+  MessageDeltaEvent,
+  MessageEndEvent,
+  MessageStartEvent,
+} from "@/agent/event.js";
 export { LLM, listModels } from "@/llm/llm.js";
 export type {
-  LLMEvent,
   LLMInput,
   LLMModelInfo,
   LLMOptions,
   LLMResponse,
+  LLMStreamChunk,
   LLMUsage,
   ListModelsOptions,
 } from "@/llm/llm.js";
@@ -59,16 +65,18 @@ export type {
   AssistantContent,
   AssistantMessage,
   Message,
+  MessageId,
   ToolCall,
   ToolMessage,
+  SystemMessage,
   UserContent,
   UserMessage,
 } from "@/core/message.js";
-export {
-  createToolExecutor,
-  DefaultToolExecutor,
-} from "@/tools/executor.js";
+export { createMessageId } from "@/core/message.js";
 export type {
-  ToolExecutor,
-  ToolExecutorOptions,
-} from "@/tools/executor.js";
+  MessageDelta,
+  TextDelta,
+  ToolCallDelta,
+} from "@/core/message-delta.js";
+export { createToolExecutor, DefaultToolExecutor } from "@/tools/executor.js";
+export type { ToolExecutor, ToolExecutorOptions } from "@/tools/executor.js";

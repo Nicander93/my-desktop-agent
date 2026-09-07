@@ -87,6 +87,10 @@ web_modules/
 .next
 out
 
+# editor
+.vscode
+
+
 # Nuxt.js build / generate output
 .nuxt
 dist
@@ -137,6 +141,7 @@ apps/electron/resources/binaries/archives/*
 .cursor
 .codex
 .mimo
+.codegraph
 
 # Headless evaluation artifacts
 eval-results/

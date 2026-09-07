@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  listModels,
-  LLM,
-  resolveProvider,
-} from "@/index.js";
+import { listModels, LLM, resolveProvider } from "@/index.js";
 
 describe("provider", () => {
   it("resolves built-in endpoints and custom OpenAI-compatible endpoints", () => {
@@ -15,10 +11,19 @@ describe("provider", () => {
       baseURL: "http://localhost:11434/v1",
       apiKeyRequired: false,
     });
-    expect(resolveProvider("openai-compatible", "http://localhost:8000/v1")).toEqual({
+    expect(
+      resolveProvider("openai-compatible", "http://localhost:8000/v1"),
+    ).toEqual({
       baseURL: "http://localhost:8000/v1",
       apiKeyRequired: false,
     });
+    expect(resolveProvider("openrouter", "https://proxy.example/v1")).toEqual({
+      baseURL: "https://proxy.example/v1",
+      apiKeyRequired: true,
+    });
+    expect(() => resolveProvider("openai-compatible")).toThrow(
+      "baseURL is required for openai-compatible provider",
+    );
   });
 
   it("requires credentials for providers that need an API key", () => {
@@ -57,7 +62,13 @@ describe("LLM", () => {
 
     await expect(
       llm.generate({
-        messages: [{ role: "user", content: [{ type: "text", text: "Hi" }] }],
+        messages: [
+          {
+            id: "user-1",
+            role: "user",
+            content: [{ type: "text", text: "Hi" }],
+          },
+        ],
         tools: [],
       }),
     ).resolves.toMatchObject({
@@ -74,6 +85,41 @@ describe("LLM", () => {
       expect.objectContaining({ method: "POST" }),
     );
   });
+
+  it("uses an explicit baseURL instead of the named provider default", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: { role: "assistant", content: "Hello" },
+                finish_reason: "stop",
+              },
+            ],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+    );
+    const llm = new LLM({
+      provider: "openai",
+      model: "gpt-4o",
+      apiKey: "secret",
+      baseURL: "https://proxy.example/v1",
+      fetch: fetchMock as typeof fetch,
+    });
+
+    await llm.generate({
+      messages: [
+        { id: "user-1", role: "user", content: [{ type: "text", text: "Hi" }] },
+      ],
+      tools: [],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://proxy.example/v1/chat/completions",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });
 
 describe("listModels", () => {
@@ -82,10 +128,7 @@ describe("listModels", () => {
       async () =>
         new Response(
           JSON.stringify({
-            data: [
-              { id: "model-a", name: "Model A" },
-              { id: "model-b" },
-            ],
+            data: [{ id: "model-a", name: "Model A" }, { id: "model-b" }],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         ),
@@ -97,12 +140,30 @@ describe("listModels", () => {
         apiKey: "secret",
         fetch: fetchMock as typeof fetch,
       }),
-    ).resolves.toEqual([
-      { id: "model-a", name: "Model A" },
-      { id: "model-b" },
-    ]);
+    ).resolves.toEqual([{ id: "model-a", name: "Model A" }, { id: "model-b" }]);
     expect(fetchMock).toHaveBeenCalledWith(
       "https://openrouter.ai/api/v1/models",
+      expect.objectContaining({ method: "GET" }),
+    );
+  });
+
+  it("uses an explicit baseURL instead of the named provider default", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ data: [{ id: "model-a" }] }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+    );
+
+    await listModels({
+      provider: "openrouter",
+      apiKey: "secret",
+      baseURL: "https://proxy.example/v1",
+      fetch: fetchMock as typeof fetch,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://proxy.example/v1/models",
       expect.objectContaining({ method: "GET" }),
     );
   });

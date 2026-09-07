@@ -1,4 +1,5 @@
 import type { AssistantMessage, Message } from "@/core/message.js";
+import type { MessageDelta } from "@/core/message-delta.js";
 import type { ToolDefinition } from "@/core/tool.js";
 import {
   resolveProvider,
@@ -13,7 +14,6 @@ import {
 export interface LLMInput {
   messages: readonly Message[];
   tools: readonly ToolDefinition[];
-  systemPrompt?: string;
   signal?: AbortSignal;
 }
 
@@ -29,16 +29,20 @@ export interface LLMResponse {
   usage?: LLMUsage;
 }
 
-export type LLMEvent =
-  | { type: "text-delta"; delta: string }
-  | { type: "response"; response: LLMResponse };
+export interface LLMStreamChunk {
+  sequence: number;
+  timestamp: number;
+  delta?: MessageDelta;
+  finishReason?: string;
+  usage?: LLMUsage;
+}
 
 export interface LLMOptions {
   provider: Provider;
   model: string;
   apiKey?: string;
   /**
-   * Mainly for openai-compatible providers.
+   * Overrides the provider default endpoint. Required for openai-compatible.
    */
   baseURL?: string;
   temperature?: number;
@@ -50,6 +54,9 @@ export interface LLMOptions {
 export interface ListModelsOptions {
   provider: Provider;
   apiKey?: string;
+  /**
+   * Overrides the provider default endpoint. Required for openai-compatible.
+   */
   baseURL?: string;
   headers?: Readonly<Record<string, string>>;
   fetch?: typeof globalThis.fetch;
@@ -65,7 +72,7 @@ export interface LLMModelInfo {
  */
 export interface LLMClient {
   generate(input: LLMInput): Promise<LLMResponse>;
-  stream(input: LLMInput): AsyncIterable<LLMEvent>;
+  stream(input: LLMInput): AsyncIterable<LLMStreamChunk>;
 }
 
 /**
@@ -79,7 +86,7 @@ export class LLM {
   readonly model: string;
 
   constructor(options: LLMOptions) {
-    this.provider = options.provider;
+    this.provider = options.provider; 
     this.model = options.model;
 
     const providerConfig = resolveProvider(options.provider, options.baseURL);
@@ -91,7 +98,7 @@ export class LLM {
     return this.client.generate(input);
   }
 
-  stream(input: LLMInput): AsyncIterable<LLMEvent> {
+  stream(input: LLMInput): AsyncIterable<LLMStreamChunk> {
     return this.client.stream(input);
   }
 }
@@ -107,9 +114,9 @@ export async function listModels(
 
   return listOpenAICompatibleModels({
     baseURL: providerConfig.baseURL,
-    ...(options.apiKey === undefined ? {} : { apiKey: options.apiKey }),
-    ...(options.headers === undefined ? {} : { headers: options.headers }),
-    ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+    apiKey: options.apiKey,
+    headers: options.headers,
+    fetch: options.fetch,
   });
 }
 
@@ -127,15 +134,11 @@ function createLLMClient(
       return new OpenAICompatibleClient({
         baseURL: providerConfig.baseURL,
         model: options.model,
-        ...(options.apiKey === undefined ? {} : { apiKey: options.apiKey }),
-        ...(options.headers === undefined ? {} : { headers: options.headers }),
-        ...(options.maxTokens === undefined
-          ? {}
-          : { maxTokens: options.maxTokens }),
-        ...(options.temperature === undefined
-          ? {}
-          : { temperature: options.temperature }),
-        ...(options.fetch === undefined ? {} : { fetch: options.fetch }),
+        apiKey: options.apiKey,
+        headers: options.headers,
+        maxTokens: options.maxTokens,
+        temperature: options.temperature,
+        fetch: options.fetch,
       });
   }
 }

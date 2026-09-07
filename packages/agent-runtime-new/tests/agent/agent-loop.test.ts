@@ -9,11 +9,16 @@ import {
 } from "@/index.js";
 
 function assistant(...content: AssistantMessage["content"]): AssistantMessage {
-  return { role: "assistant", content };
+  return { id: "assistant-test", role: "assistant", content };
 }
 
-function toolMessage(callId: string, content: unknown, isError = false): ToolMessage {
+function toolMessage(
+  callId: string,
+  content: unknown,
+  isError = false,
+): ToolMessage {
   return {
+    id: `tool-${callId}`,
     role: "tool",
     toolCallId: callId,
     content,
@@ -22,7 +27,7 @@ function toolMessage(callId: string, content: unknown, isError = false): ToolMes
 }
 
 function createInput(
-  llm: { generate: AgentLoopInput["llm"]["generate"] },
+  llm: AgentLoopInput["llm"],
   toolExecutor: ToolExecutor,
   messages: readonly Message[] = [],
 ) {
@@ -38,14 +43,22 @@ function createInput(
 describe("runAgentLoop", () => {
   it("completes after a direct assistant response without changing input history", async () => {
     const initialMessages: Message[] = [
-      { role: "user", content: [{ type: "text", text: "hello" }] },
+      {
+        id: "user-1",
+        role: "user",
+        content: [{ type: "text", text: "hello" }],
+      },
     ];
     const llm = {
-      generate: vi.fn(async () => ({ message: assistant({ type: "text", text: "hi" }) })),
+      generate: vi.fn(async () => ({
+        message: assistant({ type: "text", text: "hi" }),
+      })),
     };
     const toolExecutor: ToolExecutor = { execute: vi.fn() };
 
-    const result = await runAgentLoop(createInput(llm, toolExecutor, initialMessages));
+    const result = await runAgentLoop(
+      createInput(llm, toolExecutor, initialMessages),
+    );
 
     expect(result).toEqual({
       newMessages: [assistant({ type: "text", text: "hi" })],
@@ -53,21 +66,37 @@ describe("runAgentLoop", () => {
       stopReason: "completed",
     });
     expect(initialMessages).toEqual([
-      { role: "user", content: [{ type: "text", text: "hello" }] },
+      {
+        id: "user-1",
+        role: "user",
+        content: [{ type: "text", text: "hello" }],
+      },
     ]);
     expect(toolExecutor.execute).not.toHaveBeenCalled();
   });
 
   it("executes multiple tool calls serially and sends their results to the next model turn", async () => {
     const first = assistant(
-      { type: "tool-call", id: "call-1", name: "read", input: { path: "a.txt" } },
-      { type: "tool-call", id: "call-2", name: "read", input: { path: "b.txt" } },
+      {
+        type: "tool-call",
+        id: "call-1",
+        name: "read",
+        input: { path: "a.txt" },
+      },
+      {
+        type: "tool-call",
+        id: "call-2",
+        name: "read",
+        input: { path: "b.txt" },
+      },
     );
     const llm = {
       generate: vi
         .fn()
         .mockResolvedValueOnce({ message: first })
-        .mockResolvedValueOnce({ message: assistant({ type: "text", text: "done" }) }),
+        .mockResolvedValueOnce({
+          message: assistant({ type: "text", text: "done" }),
+        }),
     };
     const order: string[] = [];
     const toolExecutor: ToolExecutor = {
@@ -110,7 +139,9 @@ describe("runAgentLoop", () => {
             input: { path: "missing.txt" },
           }),
         })
-        .mockResolvedValueOnce({ message: assistant({ type: "text", text: "recovered" }) }),
+        .mockResolvedValueOnce({
+          message: assistant({ type: "text", text: "recovered" }),
+        }),
     };
     const toolExecutor: ToolExecutor = {
       execute: vi.fn(async () =>
@@ -152,5 +183,74 @@ describe("runAgentLoop", () => {
     expect(result.turns).toBe(2);
     expect(llm.generate).toHaveBeenCalledTimes(2);
     expect(toolExecutor.execute).toHaveBeenCalledTimes(2);
+  });
+
+  it("emits one stable message id across a streaming assistant turn", async () => {
+    const llm = {
+      generate: vi.fn(),
+      stream: vi.fn(async function* () {
+        yield {
+          sequence: 0,
+          timestamp: 100,
+          delta: { type: "text-delta" as const, delta: "hello" },
+        };
+        yield {
+          sequence: 1,
+          timestamp: 101,
+          delta: { type: "text-delta" as const, delta: " world" },
+          finishReason: "stop",
+          usage: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
+        };
+      }),
+    };
+    const events: Array<import("@/index.js").AgentEvent> = [];
+    const toolExecutor: ToolExecutor = { execute: vi.fn() };
+
+    const result = await runAgentLoop({
+      ...createInput(llm, toolExecutor),
+      onEvent: (event) => events.push(event),
+    });
+
+    const start = events[0];
+    const end = events.at(-1);
+    expect(start).toMatchObject({
+      type: "message-start",
+      messageId: expect.any(String),
+    });
+    expect(events.filter((event) => event.type === "message-delta")).toEqual([
+      {
+        type: "message-delta",
+        messageId: (start as { messageId: string }).messageId,
+        delta: { type: "text-delta", delta: "hello" },
+        sequence: 0,
+        timestamp: 100,
+      },
+      {
+        type: "message-delta",
+        messageId: (start as { messageId: string }).messageId,
+        delta: { type: "text-delta", delta: " world" },
+        sequence: 1,
+        timestamp: 101,
+      },
+    ]);
+    expect(end).toMatchObject({
+      type: "message-end",
+      messageId: (start as { messageId: string }).messageId,
+      message: {
+        id: (start as { messageId: string }).messageId,
+        role: "assistant",
+        content: [{ type: "text", text: "hello world" }],
+      },
+      finishReason: "stop",
+      usage: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
+    });
+    expect(result.newMessages).toEqual([
+      expect.objectContaining({
+        id: (start as { messageId: string }).messageId,
+        role: "assistant",
+        content: [{ type: "text", text: "hello world" }],
+      }),
+    ]);
+    expect(llm.generate).not.toHaveBeenCalled();
   });
 });

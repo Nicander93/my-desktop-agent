@@ -35,7 +35,7 @@ const PROVIDERS: Record<Exclude<Provider, "openai-compatible">, ProviderConfig> 
 };
 
 /**
- * Resolves a provider into its default endpoint and credential requirement.
+ * Resolves endpoint and credential rules. An explicit baseURL overrides the default.
  */
 export function resolveProvider(
   provider: Provider,
@@ -52,5 +52,12 @@ export function resolveProvider(
     };
   }
 
-  return PROVIDERS[provider];
+  const config = PROVIDERS[provider];
+  if (!baseURL) {
+    return config;
+  }
+  // override the baseURL
+  return { ...config, baseURL };
+
+
 }

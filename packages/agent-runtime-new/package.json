@@ -15,6 +15,7 @@
   "scripts": {
     "build": "tsc && tsc-alias",
     "test": "vitest run",
+    "test:live": "vitest run tests/llm/llm.live.test.ts --reporter=verbose --disableConsoleIntercept",
     "test:watch": "vitest"
   },
   "devDependencies": {
