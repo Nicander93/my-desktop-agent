@@ -6,7 +6,7 @@ function isToolCall(content: { type: string }): content is ToolCall {
 }
 
 /**
- * Runs model turns against a caller-owned message history and returns only messages produced here.
+ * Runs LLM turns against a caller-owned message history and returns only messages produced here.
  */
 export async function runAgentLoop(
   input: AgentLoopInput,
@@ -15,14 +15,14 @@ export async function runAgentLoop(
   const newMessages: AgentLoopResult["newMessages"] = [];
 
   for (let turn = 0; turn < input.maxTurns; turn += 1) {
-    const modelInput = {
+    const llmInput = {
       messages: [...messages],
       tools: input.tools,
       ...(input.systemPrompt === undefined
         ? {}
         : { systemPrompt: input.systemPrompt }),
     };
-    const response = await input.model.generate(modelInput);
+    const response = await input.llm.generate(llmInput);
     const assistantMessage = response.message;
 
     messages.push(assistantMessage);

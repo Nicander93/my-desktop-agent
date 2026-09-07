@@ -1,9 +1,9 @@
 import { stat } from "node:fs/promises";
 import { ToolError } from "@/core/errors.js";
 import type { Tool } from "@/core/tool.js";
-import { resolveSearchLimit } from "@/utils/limit.js";
-import { resolveToolPath, searchOutputPathToWorkspace } from "@/utils/path.js";
-import { runProcess } from "@/utils/process.js";
+import { resolveSearchLimit } from "@/tools/utils/limit.js";
+import { resolveToolPath, searchOutputPathToWorkspace } from "@/tools/utils/path.js";
+import { runProcess } from "@/tools/utils/process.js";
 
 export interface GlobInput {
   pattern: string;

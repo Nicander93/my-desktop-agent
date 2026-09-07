@@ -1,8 +1,8 @@
 import { ToolError } from "@/core/errors.js";
 import { runTool } from "@/core/tool.js";
 import type { ToolCall, ToolMessage } from "@/core/message.js";
-import type { AnyTool } from "@/registry/general-tools.js";
-import { createToolRegistry } from "@/registry/general-tools.js";
+import type { AnyTool } from "@/tools/registry.js";
+import { createToolRegistry } from "@/tools/registry.js";
 import type { ToolContext } from "@/core/tool-context.js";
 
 export interface ToolExecutor {
