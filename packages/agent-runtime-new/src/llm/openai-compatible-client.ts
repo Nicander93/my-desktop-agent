@@ -1,10 +1,11 @@
 import OpenAI, { APIError, APIUserAbortError } from "openai";
-import type {
-  LLMClient,
-  LLMInput,
-  LLMResponse,
-  LLMStreamChunk,
-  LLMUsage,
+import {
+  createStreamChunk,
+  type LLMClient,
+  type LLMInput,
+  type LLMResponse,
+  type LLMStreamChunk,
+  type LLMUsage,
 } from "@/llm/llm-client.js";
 import type { MessageDelta } from "@/core/message-delta.js";
 import type {
@@ -53,7 +54,7 @@ export class OpenAICompatibleClient implements LLMClient {
   async generate(input: LLMInput): Promise<LLMResponse> {
     try {
       const data = await this.client.chat.completions.create(
-        createRequest(this.options, input),
+        buildOpenAIParams(this.options, input),
         input.signal === undefined ? undefined : { signal: input.signal },
       );
       const usage = parseUsage(data);
@@ -73,7 +74,7 @@ export class OpenAICompatibleClient implements LLMClient {
     try {
       const stream = await this.client.chat.completions.create(
         {
-          ...createRequest(this.options, input),
+          ...buildOpenAIParams(this.options, input),
           stream: true,
           stream_options: { include_usage: true },
         },
@@ -156,7 +157,7 @@ function createOpenAIClient(options: OpenAICompatibleClientOptions): OpenAI {
   });
 }
 
-function createRequest(
+function buildOpenAIParams(
   options: OpenAICompatibleClientOptions,
   input: LLMInput,
 ): OpenAI.ChatCompletionCreateParamsNonStreaming {
@@ -318,21 +319,6 @@ function toLLMUsage(usage: OpenAI.CompletionUsage): LLMUsage {
     inputTokens,
     outputTokens,
     totalTokens: usage.total_tokens ?? inputTokens + outputTokens,
-  };
-}
-
-function createStreamChunk(
-  sequence: number,
-  delta: MessageDelta | undefined,
-  finishReason: string | undefined,
-  usage: LLMUsage | undefined,
-): LLMStreamChunk {
-  return {
-    sequence,
-    timestamp: Date.now(),
-    delta,
-    finishReason,
-    usage,
   };
 }
 

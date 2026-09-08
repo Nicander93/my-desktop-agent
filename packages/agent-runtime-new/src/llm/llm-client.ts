@@ -28,6 +28,21 @@ export interface LLMStreamChunk {
   usage?: LLMUsage;
 }
 
+export function createStreamChunk(
+  sequence: number,
+  delta: MessageDelta | undefined,
+  finishReason: string | undefined,
+  usage: LLMUsage | undefined,
+): LLMStreamChunk {
+  return {
+    sequence,
+    timestamp: Date.now(),
+    delta,
+    finishReason,
+    usage,
+  };
+}
+
 /**
  * Internal protocol implemented by provider clients.
  */

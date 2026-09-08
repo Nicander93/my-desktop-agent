@@ -1,5 +1,6 @@
 export type Provider =
   | "openai"
+  | "anthropic"
   | "openrouter"
   | "dashscope"
   | "siliconflow"
@@ -14,6 +15,10 @@ export interface ProviderConfig {
 const PROVIDERS: Record<Exclude<Provider, "openai-compatible">, ProviderConfig> = {
   openai: {
     baseURL: "https://api.openai.com/v1",
+    apiKeyRequired: true,
+  },
+  anthropic: {
+    baseURL: "https://api.anthropic.com",
     apiKeyRequired: true,
   },
   openrouter: {

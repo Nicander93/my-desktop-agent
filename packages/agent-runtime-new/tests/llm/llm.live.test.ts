@@ -25,7 +25,8 @@ describe.skipIf(!liveTestEnabled)("live LLM streaming", () => {
       const draft = createAssistantMessageDraft(messageId);
       const chunks: LLMStreamChunk[] = [];
 
-      for await (const chunk of llm.stream({
+
+      const stream = await llm.stream({
         messages: [
           {
             id: createMessageId(),
@@ -56,7 +57,9 @@ describe.skipIf(!liveTestEnabled)("live LLM streaming", () => {
             },
           },
         ],
-      })) {
+      })
+      
+      for await (const chunk of stream) {
         chunks.push(chunk);
         writeDebugOutput("chunk", chunk);
 

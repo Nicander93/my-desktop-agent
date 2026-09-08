@@ -4,6 +4,7 @@ import {
   type ProviderConfig,
 } from "@/llm/provider.js";
 import { OpenAICompatibleClient } from "@/llm/openai-compatible-client.js";
+import { AnthropicClient } from "@/llm/anthropic-client.js";
 import type {
   LLMClient,
   LLMInput,
@@ -65,6 +66,16 @@ function createLLMClient(
   providerConfig: ProviderConfig,
 ): LLMClient {
   switch (options.provider) {
+    case "anthropic":
+      return new AnthropicClient({
+        baseURL: providerConfig.baseURL,
+        model: options.model,
+        apiKey: options.apiKey,
+        headers: options.headers,
+        maxTokens: options.maxTokens,
+        temperature: options.temperature,
+        fetch: options.fetch,
+      });
     case "openai":
     case "openrouter":
     case "dashscope":
@@ -82,6 +93,7 @@ function createLLMClient(
       });
   }
 }
+
 
 function validateApiKey(
   provider: Provider,
