@@ -173,4 +173,82 @@ describe("LLM", () => {
       expect.objectContaining({ method: "POST" }),
     );
   });
+
+  it("applies catalog thinking defaults on the request body", async () => {
+    const openaiCapture: { body?: Record<string, unknown> } = {};
+    const openai = new LLM({
+      provider: "openai",
+      model: "o3",
+      apiKey: "secret",
+      fetch: chatCompletionsFetch(openaiCapture) as typeof fetch,
+    });
+    expect(openai.thinking).toEqual({ type: "effort", level: "medium" });
+    await openai.generate(userTurn());
+    expect(openaiCapture.body).toMatchObject({ reasoning_effort: "medium" });
+
+    const chatCapture: { body?: Record<string, unknown> } = {};
+    const chat = new LLM({
+      provider: "openai",
+      model: "gpt-4o",
+      apiKey: "secret",
+      fetch: chatCompletionsFetch(chatCapture) as typeof fetch,
+    });
+    expect(chat.thinking).toEqual({ type: "off" });
+    await chat.generate(userTurn());
+    expect(chatCapture.body).not.toHaveProperty("reasoning_effort");
+    expect(chatCapture.body).not.toHaveProperty("enable_thinking");
+
+    const dashscopeCapture: { body?: Record<string, unknown> } = {};
+    const dashscope = new LLM({
+      provider: "dashscope",
+      model: "qwen3-plus",
+      apiKey: "secret",
+      fetch: chatCompletionsFetch(dashscopeCapture) as typeof fetch,
+    });
+    expect(dashscope.thinking).toEqual({ type: "off" });
+    await dashscope.generate(userTurn());
+    expect(dashscopeCapture.body).toMatchObject({ enable_thinking: false });
+  });
+
+  it("rejects thinking that the selected model cannot use", () => {
+    expect(
+      () =>
+        new LLM({
+          provider: "openai",
+          model: "gpt-4o",
+          apiKey: "secret",
+          thinking: { type: "effort", level: "high" },
+        }),
+    ).toThrow(/not supported/);
+  });
 });
+
+function userTurn() {
+  return {
+    messages: [
+      {
+        id: "user-1",
+        role: "user" as const,
+        content: [{ type: "text" as const, text: "Hi" }],
+      },
+    ],
+    tools: [],
+  };
+}
+
+function chatCompletionsFetch(capture: { body?: Record<string, unknown> }) {
+  return vi.fn(async (_input: string | URL | Request, init?: RequestInit) => {
+    capture.body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    return new Response(
+      JSON.stringify({
+        choices: [
+          {
+            message: { role: "assistant", content: "Hello" },
+            finish_reason: "stop",
+          },
+        ],
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    );
+  });
+}

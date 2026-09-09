@@ -27,7 +27,7 @@ export interface ToolCall {
   input: unknown;
 }
 
-export type AssistantContent = { type: "text"; text: string } | ToolCall;
+export type AssistantContent = { type: "text"; text: string } | { type: "thinking"; text: string } | ToolCall;
 
 export interface AssistantMessage {
   id: MessageId;

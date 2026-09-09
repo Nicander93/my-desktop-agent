@@ -5,7 +5,7 @@ import {
 } from "@/llm/openai-compatible-client.js";
 
 describe("OpenAICompatibleClient", () => {
-  it("converts conversation history, tools, and the assistant response", async () => {
+  it("encodes history and tools, and parses text plus tool calls", async () => {
     let requestBody: Record<string, unknown> | undefined;
     let requestHeaders: HeadersInit | undefined;
     const fetchMock = vi.fn(
@@ -162,7 +162,7 @@ describe("OpenAICompatibleClient", () => {
     expect(result.message.id).toEqual(expect.any(String));
   });
 
-  it("streams standardized text and tool call chunks", async () => {
+  it("streams text-delta and tool-call-delta chunks", async () => {
     const fetchMock = vi.fn(
       async (_input: string | URL | Request, init?: RequestInit) => {
         const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -345,4 +345,220 @@ describe("OpenAICompatibleClient", () => {
       }),
     ).rejects.toThrow("does not contain choices");
   });
+
+  it("maps reasoning_content to a thinking block before text", async () => {
+    const client = new OpenAICompatibleClient({
+      baseURL: "https://example.test/v1",
+      model: "o3",
+      apiKey: "secret",
+      fetch: vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    reasoning_content: "check the file",
+                    content: "done",
+                  },
+                  finish_reason: "stop",
+                },
+              ],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ) as typeof fetch,
+    });
+
+    const result = await client.generate(helloTurn());
+    expect(result.message.content).toEqual([
+      { type: "thinking", text: "check the file" },
+      { type: "text", text: "done" },
+    ]);
+  });
+
+  it("omits empty text when only reasoning is returned", async () => {
+    const client = new OpenAICompatibleClient({
+      baseURL: "https://example.test/v1",
+      model: "o3",
+      apiKey: "secret",
+      fetch: vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    reasoning: "still thinking",
+                    content: "",
+                  },
+                  finish_reason: "stop",
+                },
+              ],
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ) as typeof fetch,
+    });
+
+    const result = await client.generate(helloTurn());
+    expect(result.message.content).toEqual([
+      { type: "thinking", text: "still thinking" },
+    ]);
+  });
+
+  it("maps streamed reasoning_content to thinking-delta before text-delta", async () => {
+    const fetchMock = vi.fn(async () => {
+      const chunks = [
+        {
+          choices: [
+            {
+              index: 0,
+              delta: { reasoning_content: "plan " },
+              finish_reason: null,
+            },
+          ],
+        },
+        {
+          choices: [
+            {
+              index: 0,
+              delta: { reasoning_content: "first", content: "ok" },
+              finish_reason: "stop",
+            },
+          ],
+        },
+      ].map((chunk, index) => ({
+        id: `chunk-${index}`,
+        object: "chat.completion.chunk",
+        created: 1,
+        model: "o3",
+        ...chunk,
+      }));
+      return new Response(
+        `${chunks.map((chunk) => `data: ${JSON.stringify(chunk)}\n\n`).join("")}data: [DONE]\n\n`,
+        { status: 200, headers: { "Content-Type": "text/event-stream" } },
+      );
+    });
+    const client = new OpenAICompatibleClient({
+      baseURL: "https://example.test/v1",
+      model: "o3",
+      apiKey: "secret",
+      fetch: fetchMock as typeof fetch,
+    });
+
+    const events = [];
+    for await (const event of client.stream(helloTurn())) {
+      events.push(event);
+    }
+
+    expect(events).toMatchObject([
+      { delta: { type: "thinking-delta", delta: "plan " } },
+      { delta: { type: "thinking-delta", delta: "first" } },
+      { delta: { type: "text-delta", delta: "ok" }, finishReason: "stop" },
+    ]);
+  });
+
+  it("writes thinking blocks back as reasoning_content", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const client = new OpenAICompatibleClient({
+      provider: "openai",
+      baseURL: "https://example.test/v1",
+      model: "o3",
+      apiKey: "secret",
+      fetch: vi.fn(async (_input, init) => {
+        requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return emptyChatResponse();
+      }) as typeof fetch,
+    });
+
+    await client.generate({
+      messages: [
+        {
+          id: "assistant-1",
+          role: "assistant",
+          content: [
+            { type: "thinking", text: "inspect first" },
+            { type: "text", text: "done" },
+          ],
+        },
+        {
+          id: "user-2",
+          role: "user",
+          content: [{ type: "text", text: "continue" }],
+        },
+      ],
+      tools: [],
+    });
+
+    expect(requestBody?.messages).toEqual([
+      {
+        role: "assistant",
+        content: "done",
+        reasoning_content: "inspect first",
+      },
+      { role: "user", content: "continue" },
+    ]);
+  });
+
+  it("puts enable_thinking and reasoning_effort on the request", async () => {
+    let dashscopeBody: Record<string, unknown> | undefined;
+    const dashscope = new OpenAICompatibleClient({
+      provider: "dashscope",
+      baseURL: "https://dashscope.test/v1",
+      model: "qwen3-plus",
+      apiKey: "secret",
+      thinking: { type: "on" },
+      fetch: vi.fn(async (_input, init) => {
+        dashscopeBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return emptyChatResponse();
+      }) as typeof fetch,
+    });
+    await dashscope.generate(helloTurn());
+    expect(dashscopeBody).toMatchObject({ enable_thinking: true });
+
+    let openaiBody: Record<string, unknown> | undefined;
+    const openai = new OpenAICompatibleClient({
+      provider: "openai",
+      baseURL: "https://api.openai.com/v1",
+      model: "o3",
+      apiKey: "secret",
+      thinking: { type: "effort", level: "high" },
+      fetch: vi.fn(async (_input, init) => {
+        openaiBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return emptyChatResponse();
+      }) as typeof fetch,
+    });
+    await openai.generate(helloTurn());
+    expect(openaiBody).toMatchObject({ reasoning_effort: "high" });
+  });
 });
+
+function helloTurn() {
+  return {
+    messages: [
+      {
+        id: "user-1",
+        role: "user" as const,
+        content: [{ type: "text" as const, text: "hello" }],
+      },
+    ],
+    tools: [],
+  };
+}
+
+function emptyChatResponse() {
+  return new Response(
+    JSON.stringify({
+      choices: [
+        {
+          message: { role: "assistant", content: "ok" },
+          finish_reason: "stop",
+        },
+      ],
+    }),
+    { status: 200, headers: { "Content-Type": "application/json" } },
+  );
+}

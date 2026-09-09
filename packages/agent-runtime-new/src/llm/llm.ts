@@ -5,6 +5,10 @@ import {
 } from "@/llm/provider.js";
 import { OpenAICompatibleClient } from "@/llm/openai-compatible-client.js";
 import { AnthropicClient } from "@/llm/anthropic-client.js";
+import {
+  resolveThinking,
+  type ThinkingConfig,
+} from "@/llm/thinking.js";
 import type {
   LLMClient,
   LLMInput,
@@ -29,6 +33,10 @@ export interface LLMOptions {
   baseURL?: string;
   temperature?: number;
   maxTokens?: number;
+  /**
+   * Omitted values use the catalog default for this provider and model.
+   */
+  thinking?: ThinkingConfig;
   headers?: Readonly<Record<string, string>>;
   fetch?: typeof globalThis.fetch;
 }
@@ -42,14 +50,20 @@ export class LLM {
 
   readonly provider: Provider;
   readonly model: string;
+  readonly thinking: ThinkingConfig;
 
   constructor(options: LLMOptions) {
     this.provider = options.provider;
     this.model = options.model;
+    this.thinking = resolveThinking(
+      options.provider,
+      options.model,
+      options.thinking,
+    );
 
     const providerConfig = resolveProvider(options.provider, options.baseURL);
     validateApiKey(options.provider, providerConfig, options.apiKey);
-    this.client = createLLMClient(options, providerConfig);
+    this.client = createLLMClient(options, providerConfig, this.thinking);
   }
 
   generate(input: LLMInput): Promise<LLMResponse> {
@@ -64,6 +78,7 @@ export class LLM {
 function createLLMClient(
   options: LLMOptions,
   providerConfig: ProviderConfig,
+  thinking: ThinkingConfig,
 ): LLMClient {
   switch (options.provider) {
     case "anthropic":
@@ -74,6 +89,7 @@ function createLLMClient(
         headers: options.headers,
         maxTokens: options.maxTokens,
         temperature: options.temperature,
+        thinking,
         fetch: options.fetch,
       });
     case "openai":
@@ -83,12 +99,14 @@ function createLLMClient(
     case "ollama":
     case "openai-compatible":
       return new OpenAICompatibleClient({
+        provider: options.provider,
         baseURL: providerConfig.baseURL,
         model: options.model,
         apiKey: options.apiKey,
         headers: options.headers,
         maxTokens: options.maxTokens,
         temperature: options.temperature,
+        thinking,
         fetch: options.fetch,
       });
   }

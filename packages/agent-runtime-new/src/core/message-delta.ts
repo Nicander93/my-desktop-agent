@@ -10,6 +10,11 @@ export interface TextDelta {
   delta: string;
 }
 
+export interface ThinkingDelta {
+  type: "thinking-delta";
+  delta: string;
+}
+
 export interface ToolCallDelta {
   type: "tool-call-delta";
   contentIndex: number;
@@ -18,7 +23,7 @@ export interface ToolCallDelta {
   arguments?: string;
 }
 
-export type MessageDelta = TextDelta | ToolCallDelta;
+export type MessageDelta = TextDelta | ThinkingDelta | ToolCallDelta;
 
 interface PendingToolCall {
   id: string;
@@ -26,8 +31,12 @@ interface PendingToolCall {
   arguments: string;
 }
 
+/**
+ * the intermediate state of the assistant message
+ */
 interface AssistantMessageDraft {
   id: MessageId;
+  thinking: string;
   text: string;
   toolCalls: Map<number, PendingToolCall>;
 }
@@ -35,15 +44,23 @@ interface AssistantMessageDraft {
 export function createAssistantMessageDraft(
   messageId: MessageId = createMessageId(),
 ): AssistantMessageDraft {
-  return { id: messageId, text: "", toolCalls: new Map() };
+  return { id: messageId, thinking: "", text: "", toolCalls: new Map() };
 }
 
+/**
+ * organize the delta into the assistant message draft
+ */
 export function applyMessageDelta(
   draft: AssistantMessageDraft,
   delta: MessageDelta,
 ): void {
   if (delta.type === "text-delta") {
     draft.text += delta.delta;
+    return;
+  }
+
+  if (delta.type === "thinking-delta") {
+    draft.thinking += delta.delta;
     return;
   }
 
@@ -62,6 +79,9 @@ export function finalizeAssistantMessage(
   draft: AssistantMessageDraft,
 ): AssistantMessage {
   const content: AssistantContent[] = [];
+  if (draft.thinking.length > 0) {
+    content.push({ type: "thinking", text: draft.thinking });
+  }
   if (draft.text.length > 0) content.push({ type: "text", text: draft.text });
 
   for (const [, call] of [...draft.toolCalls].sort(

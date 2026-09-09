@@ -59,6 +59,12 @@ export type {
 } from "@/llm/llm.js";
 export { resolveProvider } from "@/llm/provider.js";
 export type { Provider, ProviderConfig } from "@/llm/provider.js";
+export { getThinkingOptions, resolveThinking } from "@/llm/thinking.js";
+export type {
+  ThinkingConfig,
+  ThinkingEffort,
+  ThinkingOptions,
+} from "@/llm/thinking.js";
 export type {
   AssistantContent,
   AssistantMessage,
@@ -74,6 +80,7 @@ export { createMessageId } from "@/core/message.js";
 export type {
   MessageDelta,
   TextDelta,
+  ThinkingDelta,
   ToolCallDelta,
 } from "@/core/message-delta.js";
 export { createToolExecutor, DefaultToolExecutor } from "@/tools/executor.js";

@@ -16,6 +16,11 @@ import type {
 } from "@/core/message.js";
 import { createMessageId } from "@/core/message.js";
 import type { ToolDefinition } from "@/core/tool.js";
+import type { Provider } from "@/llm/provider.js";
+import {
+  toOpenAIThinkingParams,
+  type ThinkingConfig,
+} from "@/llm/thinking.js";
 
 export interface OpenAICompatibleClientOptions {
   baseURL: string;
@@ -24,6 +29,8 @@ export interface OpenAICompatibleClientOptions {
   headers?: Readonly<Record<string, string>>;
   maxTokens?: number;
   temperature?: number;
+  provider?: Exclude<Provider, "anthropic">;
+  thinking?: ThinkingConfig;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -94,6 +101,10 @@ export class OpenAICompatibleClient implements LLMClient {
 
         // normal output chunk: yield deltas and usage
         const deltas: MessageDelta[] = [];
+        const reasoning = readReasoning(choice.delta);
+        if (reasoning !== undefined) {
+          deltas.push({ type: "thinking-delta", delta: reasoning });
+        }
         const text = choice.delta.content;
         if (text !== undefined && text !== null && text.length > 0) {
           deltas.push({ type: "text-delta", delta: text });
@@ -117,7 +128,7 @@ export class OpenAICompatibleClient implements LLMClient {
         
         const finishReason =
           choice.finish_reason === null ? undefined : choice.finish_reason;
-        //
+        // finish 
         if (deltas.length > 0) {
           // flatten deltas into stream chunks, because some providers (e.g. OpenAI)
           // may return multiple deltas in a single chunk.
@@ -162,7 +173,9 @@ function buildOpenAIParams(
   input: LLMInput,
 ): OpenAI.ChatCompletionCreateParamsNonStreaming {
   const messages: OpenAI.ChatCompletionMessageParam[] =
-    input.messages.map(toOpenAIMessage);
+    input.messages.map((message) =>
+      toOpenAIMessage(message, options.provider),
+    );
   return {
     model: options.model,
     messages,
@@ -171,7 +184,12 @@ function buildOpenAIParams(
       : { tools: input.tools.map(toOpenAITool) }),
     max_tokens: options.maxTokens,
     temperature: options.temperature,
-  };
+    ...toOpenAIThinkingParams(
+      options.provider ?? "openai-compatible",
+      options.model,
+      options.thinking ?? { type: "off" },
+    ),
+  } as OpenAI.ChatCompletionCreateParamsNonStreaming;
 }
 
 function normalizeBaseURL(baseURL: string): string {
@@ -205,7 +223,10 @@ function toOpenAIToolCall(
   };
 }
 
-function toOpenAIMessage(message: Message): OpenAI.ChatCompletionMessageParam {
+function toOpenAIMessage(
+  message: Message,
+  provider?: Exclude<Provider, "anthropic">,
+): OpenAI.ChatCompletionMessageParam {
   if (message.role === "system") {
     return { role: "system", content: message.content };
   }
@@ -230,6 +251,13 @@ function toOpenAIMessage(message: Message): OpenAI.ChatCompletionMessageParam {
     )
     .map((block) => block.text)
     .join("");
+  const thinking = message.content
+    .filter(
+      (block): block is Extract<AssistantContent, { type: "thinking" }> =>
+        block.type === "thinking",
+    )
+    .map((block) => block.text)
+    .join("");
   const toolCalls = message.content
     .filter((block): block is ToolCall => block.type === "tool-call")
     .map(toOpenAIToolCall);
@@ -238,7 +266,12 @@ function toOpenAIMessage(message: Message): OpenAI.ChatCompletionMessageParam {
     role: "assistant",
     content: text || null,
     ...(toolCalls.length === 0 ? {} : { tool_calls: toolCalls }),
-  };
+    ...(thinking.length === 0
+      ? {}
+      : provider === "ollama"
+        ? { reasoning: thinking }
+        : { reasoning_content: thinking }),
+  } as OpenAI.ChatCompletionMessageParam;
 }
 
 function toOpenAITool(tool: ToolDefinition): OpenAI.ChatCompletionFunctionTool {
@@ -277,6 +310,10 @@ function parseAssistantMessage(
   }
 
   const content: AssistantContent[] = [];
+  const reasoning = readReasoning(source);
+  if (reasoning !== undefined) {
+    content.push({ type: "thinking", text: reasoning });
+  }
   if (typeof source.content === "string" && source.content.length > 0) {
     content.push({ type: "text", text: source.content });
   }
@@ -300,6 +337,17 @@ function parseAssistantMessage(
   }
   if (content.length === 0) content.push({ type: "text", text: "" });
   return { id: createMessageId(), role: "assistant", content };
+}
+
+function readReasoning(source: unknown): string | undefined {
+  if (source === null || typeof source !== "object") return undefined;
+  const record = source as {
+    reasoning_content?: unknown;
+    reasoning?: unknown;
+  };
+  const value = record.reasoning_content ?? record.reasoning;
+  if (typeof value !== "string" || value.length === 0) return undefined;
+  return value;
 }
 
 function parseUsage(response: OpenAI.ChatCompletion): LLMUsage | undefined {

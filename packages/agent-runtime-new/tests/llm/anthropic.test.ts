@@ -380,4 +380,286 @@ describe("AnthropicClient", () => {
       }),
     ).rejects.toThrow("does not contain content");
   });
+
+  it("maps thinking blocks to a thinking content block before text", async () => {
+    const client = new AnthropicClient({
+      baseURL: "https://example.test",
+      model: "claude-sonnet-4",
+      apiKey: "secret",
+      fetch: vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              id: "msg_1",
+              type: "message",
+              role: "assistant",
+              model: "claude-sonnet-4",
+              content: [
+                {
+                  type: "thinking",
+                  thinking: "check the file",
+                  signature: "sig",
+                },
+                { type: "text", text: "done" },
+              ],
+              stop_reason: "end_turn",
+              stop_sequence: null,
+              usage: { input_tokens: 4, output_tokens: 2 },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ) as typeof fetch,
+    });
+
+    const result = await client.generate({
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "hello" }],
+        },
+      ],
+      tools: [],
+    });
+    expect(result.message.content).toEqual([
+      { type: "thinking", text: "check the file" },
+      { type: "text", text: "done" },
+    ]);
+  });
+
+  it("omits empty text when only thinking is returned", async () => {
+    const client = new AnthropicClient({
+      baseURL: "https://example.test",
+      model: "claude-sonnet-4",
+      apiKey: "secret",
+      fetch: vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              id: "msg_1",
+              type: "message",
+              role: "assistant",
+              model: "claude-sonnet-4",
+              content: [
+                {
+                  type: "thinking",
+                  thinking: "still thinking",
+                  signature: "sig",
+                },
+              ],
+              stop_reason: "end_turn",
+              stop_sequence: null,
+              usage: { input_tokens: 4, output_tokens: 2 },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          ),
+      ) as typeof fetch,
+    });
+
+    const result = await client.generate({
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "hello" }],
+        },
+      ],
+      tools: [],
+    });
+    expect(result.message.content).toEqual([
+      { type: "thinking", text: "still thinking" },
+    ]);
+  });
+
+  it("maps streamed thinking_delta to thinking-delta before text-delta", async () => {
+    const fetchMock = vi.fn(async () => {
+      const bodyText = [
+        anthropicSSE("message_start", {
+          type: "message_start",
+          message: {
+            id: "msg_1",
+            type: "message",
+            role: "assistant",
+            model: "claude-sonnet-4",
+            content: [],
+            stop_reason: null,
+            stop_sequence: null,
+            usage: { input_tokens: 8, output_tokens: 1 },
+          },
+        }),
+        anthropicSSE("content_block_start", {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "thinking", thinking: "", signature: "" },
+        }),
+        anthropicSSE("content_block_delta", {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "thinking_delta", thinking: "plan " },
+        }),
+        anthropicSSE("content_block_delta", {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "thinking_delta", thinking: "first" },
+        }),
+        anthropicSSE("content_block_delta", {
+          type: "content_block_delta",
+          index: 0,
+          delta: { type: "signature_delta", signature: "sig" },
+        }),
+        anthropicSSE("content_block_stop", {
+          type: "content_block_stop",
+          index: 0,
+        }),
+        anthropicSSE("content_block_start", {
+          type: "content_block_start",
+          index: 1,
+          content_block: { type: "text", text: "" },
+        }),
+        anthropicSSE("content_block_delta", {
+          type: "content_block_delta",
+          index: 1,
+          delta: { type: "text_delta", text: "ok" },
+        }),
+        anthropicSSE("content_block_stop", {
+          type: "content_block_stop",
+          index: 1,
+        }),
+        anthropicSSE("message_delta", {
+          type: "message_delta",
+          delta: { stop_reason: "end_turn", stop_sequence: null },
+          usage: { output_tokens: 5 },
+        }),
+        anthropicSSE("message_stop", { type: "message_stop" }),
+      ].join("");
+
+      return new Response(bodyText, {
+        status: 200,
+        headers: { "Content-Type": "text/event-stream" },
+      });
+    });
+    const client = new AnthropicClient({
+      baseURL: "https://example.test",
+      model: "claude-sonnet-4",
+      apiKey: "secret",
+      fetch: fetchMock as typeof fetch,
+    });
+
+    const events = [];
+    for await (const event of client.stream({
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "hello" }],
+        },
+      ],
+      tools: [],
+    })) {
+      events.push(event);
+    }
+
+    expect(events).toMatchObject([
+      { delta: { type: "thinking-delta", delta: "plan " } },
+      { delta: { type: "thinking-delta", delta: "first" } },
+      { delta: { type: "text-delta", delta: "ok" } },
+      { finishReason: "end_turn" },
+    ]);
+  });
+
+  it("drops thinking blocks when encoding assistant history", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const client = new AnthropicClient({
+      baseURL: "https://example.test",
+      model: "claude-sonnet-4",
+      apiKey: "secret",
+      fetch: vi.fn(async (_input, init) => {
+        requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            id: "msg_1",
+            type: "message",
+            role: "assistant",
+            model: "claude-sonnet-4",
+            content: [{ type: "text", text: "ok" }],
+            stop_reason: "end_turn",
+            stop_sequence: null,
+            usage: { input_tokens: 4, output_tokens: 1 },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }) as typeof fetch,
+    });
+
+    await client.generate({
+      messages: [
+        {
+          id: "assistant-1",
+          role: "assistant",
+          content: [
+            { type: "thinking", text: "inspect first" },
+            { type: "text", text: "done" },
+          ],
+        },
+        {
+          id: "user-2",
+          role: "user",
+          content: [{ type: "text", text: "continue" }],
+        },
+      ],
+      tools: [],
+    });
+
+    expect(requestBody?.messages).toEqual([
+      {
+        role: "assistant",
+        content: [{ type: "text", text: "done" }],
+      },
+      {
+        role: "user",
+        content: [{ type: "text", text: "continue" }],
+      },
+    ]);
+  });
+
+  it("sends extended thinking when a token budget is set", async () => {
+    let requestBody: Record<string, unknown> | undefined;
+    const client = new AnthropicClient({
+      baseURL: "https://example.test",
+      model: "claude-sonnet-4",
+      apiKey: "secret",
+      thinking: { type: "budget", tokens: 2048 },
+      fetch: vi.fn(async (_input, init) => {
+        requestBody = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return new Response(
+          JSON.stringify({
+            id: "msg_1",
+            type: "message",
+            role: "assistant",
+            model: "claude-sonnet-4",
+            content: [{ type: "text", text: "Hello" }],
+            stop_reason: "end_turn",
+            stop_sequence: null,
+            usage: { input_tokens: 4, output_tokens: 2 },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }) as typeof fetch,
+    });
+
+    await client.generate({
+      messages: [
+        {
+          id: "user-1",
+          role: "user",
+          content: [{ type: "text", text: "hello" }],
+        },
+      ],
+      tools: [],
+    });
+
+    expect(requestBody).toMatchObject({
+      thinking: { type: "enabled", budget_tokens: 2048 },
+    });
+  });
 });

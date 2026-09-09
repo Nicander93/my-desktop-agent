@@ -14,6 +14,10 @@ import type {
 } from "@/core/message.js";
 import { createMessageId } from "@/core/message.js";
 import type { ToolDefinition } from "@/core/tool.js";
+import {
+  toAnthropicThinkingParams,
+  type ThinkingConfig,
+} from "@/llm/thinking.js";
 
 export interface AnthropicClientOptions {
   baseURL: string;
@@ -22,6 +26,7 @@ export interface AnthropicClientOptions {
   headers?: Readonly<Record<string, string>>;
   maxTokens?: number;
   temperature?: number;
+  thinking?: ThinkingConfig;
   fetch?: typeof globalThis.fetch;
 }
 
@@ -125,6 +130,16 @@ export class AnthropicClient implements LLMClient {
               undefined,
               undefined,
             );
+          } else if (
+            event.delta.type === "thinking_delta" &&
+            event.delta.thinking.length > 0
+          ) {
+            yield createStreamChunk(
+              sequence++,
+              { type: "thinking-delta", delta: event.delta.thinking },
+              undefined,
+              undefined,
+            );
           } else if (event.delta.type === "input_json_delta") {
             yield createStreamChunk(
               sequence++,
@@ -187,7 +202,8 @@ function buildAnthropicParams(
     ...(options.temperature === undefined
       ? {}
       : { temperature: options.temperature }),
-  };
+    ...toAnthropicThinkingParams(options.thinking ?? { type: "off" }),
+  } as Anthropic.MessageCreateParamsNonStreaming;
 }
 
 function normalizeBaseURL(baseURL: string): string {
@@ -273,6 +289,8 @@ function toAnthropicAssistantContent(
       }
       continue;
     }
+    // Anthropic requires a signature on thinking blocks; we do not store it yet.
+    if (block.type === "thinking") continue;
     blocks.push({
       type: "tool_use",
       id: block.id,
@@ -330,7 +348,13 @@ function parseAssistantMessage(response: Anthropic.Message): AssistantMessage {
       });
       continue;
     }
-    if (block.type === "thinking" || block.type === "redacted_thinking") {
+    if (block.type === "thinking") {
+      if (block.thinking.length > 0) {
+        content.push({ type: "thinking", text: block.thinking });
+      }
+      continue;
+    }
+    if (block.type === "redacted_thinking") {
       continue;
     }
     throw new AnthropicError(
