@@ -16,7 +16,10 @@ export interface AgentLoopInput {
 }
 
 export interface AgentLoopResult {
-  newMessages: Message[];
+  /**
+   * Messages produced by this run. Does not include the caller-owned input history.
+   */
+  messages: Message[];
   turns: number;
   stopReason: AgentStopReason;
 }

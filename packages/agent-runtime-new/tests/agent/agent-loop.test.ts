@@ -61,7 +61,7 @@ describe("runAgentLoop", () => {
     );
 
     expect(result).toEqual({
-      newMessages: [assistant({ type: "text", text: "hi" })],
+      messages: [assistant({ type: "text", text: "hi" })],
       turns: 1,
       stopReason: "completed",
     });
@@ -111,7 +111,7 @@ describe("runAgentLoop", () => {
     expect(result.turns).toBe(2);
     expect(result.stopReason).toBe("completed");
     expect(order).toEqual(["call-1", "call-2"]);
-    expect(result.newMessages).toEqual([
+    expect(result.messages).toEqual([
       first,
       toolMessage("call-1", { ok: true }),
       toolMessage("call-2", { ok: true }),
@@ -153,7 +153,7 @@ describe("runAgentLoop", () => {
 
     expect(result.stopReason).toBe("completed");
     expect(result.turns).toBe(2);
-    expect(result.newMessages[1]).toMatchObject({
+    expect(result.messages[1]).toMatchObject({
       role: "tool",
       isError: true,
     });
@@ -244,7 +244,7 @@ describe("runAgentLoop", () => {
       finishReason: "stop",
       usage: { inputTokens: 2, outputTokens: 2, totalTokens: 4 },
     });
-    expect(result.newMessages).toEqual([
+    expect(result.messages).toEqual([
       expect.objectContaining({
         id: (start as { messageId: string }).messageId,
         role: "assistant",

@@ -76,9 +76,10 @@ export async function runAgentLoop(
   input: AgentLoopInput,
 ): Promise<AgentLoopResult> {
   const messages = [...input.messages];
-  const newMessages: AgentLoopResult["newMessages"] = [];
+  const assistantMessages: AgentLoopResult["messages"] = [];
 
   for (let turn = 0; turn < input.maxTurns; turn += 1) {
+    
     const response = input.llm.stream
       ? await runStreamTurn(input, messages)
       : await input.llm.generate({
@@ -88,7 +89,7 @@ export async function runAgentLoop(
     const assistantMessage = response.message;
 
     messages.push(assistantMessage);
-    newMessages.push(assistantMessage);
+    assistantMessages.push(assistantMessage);
 
     if (input.llm.stream) {
       emit(input, {
@@ -104,7 +105,7 @@ export async function runAgentLoop(
     const toolCalls = assistantMessage.content.filter(isToolCall);
     if (toolCalls.length === 0) {
       return {
-        newMessages,
+        messages: assistantMessages,
         turns: turn + 1,
         stopReason: "completed",
       };
@@ -113,12 +114,12 @@ export async function runAgentLoop(
     for (const call of toolCalls) {
       const toolMessage = await input.toolExecutor.execute(call);
       messages.push(toolMessage);
-      newMessages.push(toolMessage);
+      assistantMessages.push(toolMessage);
     }
   }
 
   return {
-    newMessages,
+    messages: assistantMessages,
     turns: input.maxTurns,
     stopReason: "max_turns",
   };
